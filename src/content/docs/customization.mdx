@@ -1,0 +1,42 @@
+---
+title: Customization
+description: Change navigation, sidebars, search, footer links, and source links.
+sidebar:
+  order: 3
+---
+
+Most starter customization happens in `src/theme.config.ts`.
+
+```ts title="src/theme.config.ts"
+import { defineLotusConfig } from '@prosefly/astro-theme-lotus';
+
+export default defineLotusConfig({
+  name: 'Lotus Starter',
+  description: 'Documentation built with Astro Theme Lotus.',
+  search: {
+    provider: 'local',
+  },
+});
+```
+
+## Navigation
+
+Use `navbar` for top-level links and `sidebars` for docs navigation.
+
+```ts title="src/theme.config.ts"
+export default defineLotusConfig({
+  docsBase: '/',
+  navbar: [{ label: 'Docs', href: '/overview/' }],
+  sidebars: [
+    {
+      label: 'Start Here',
+      items: ['overview', 'installation', 'customization'],
+    },
+  ],
+});
+```
+
+## Content
+
+Add pages under `src/content/docs`. This starter sets `docsBase: '/'`, so
+`src/content/docs/guides/deploy.mdx` renders at `/guides/deploy/`.
