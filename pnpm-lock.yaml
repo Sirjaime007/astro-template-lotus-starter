@@ -15,8 +15,8 @@ importers:
         specifier: latest
         version: 7.0.3(@astrojs/markdown-satteri@0.3.4)(astro@7.1.1(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.2)(jiti@2.7.0)(yaml@2.9.0))
       '@prosefly/astro-components':
-        specifier: ^0.1.0
-        version: 0.1.0(astro@7.1.1(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.2)(jiti@2.7.0)(yaml@2.9.0))
+        specifier: ^0.2.0
+        version: 0.2.0(astro@7.1.1(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.2)(jiti@2.7.0)(yaml@2.9.0))
       '@prosefly/astro-theme-lotus':
         specifier: ^0.2.0
         version: 0.2.0(@astrojs/markdown-satteri@0.3.4)(astro@7.1.1(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.2)(jiti@2.7.0)(yaml@2.9.0))(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
@@ -676,6 +676,11 @@ packages:
 
   '@prosefly/astro-components@0.1.0':
     resolution: {integrity: sha512-IXwcJSDGkssEf4sK9qoofIeoUUfItgnW1i7gKevxQlCzh5HqZ3s6cIoEdSPXxSf2YJijo5xesRUb7lYejX209Q==}
+    peerDependencies:
+      astro: ^7.0.0
+
+  '@prosefly/astro-components@0.2.0':
+    resolution: {integrity: sha512-tXmJgoLAhZsg9PHOHeG8oGXK+2daMUVtw7ecykmbf/ulSETdlJxHCas1x71yDg+aLhMuB7gOxGNJaxpXMmWLOA==}
     peerDependencies:
       astro: ^7.0.0
 
@@ -2986,6 +2991,16 @@ snapshots:
     optional: true
 
   '@prosefly/astro-components@0.1.0(astro@7.1.1(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.2)(jiti@2.7.0)(yaml@2.9.0))':
+    dependencies:
+      '@astrojs/markdown-remark': 7.2.1
+      '@iconify/utils': 3.1.4
+      astro: 7.1.1(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.2)(jiti@2.7.0)(yaml@2.9.0)
+      rehype: 13.0.2
+      rehype-format: 5.0.1
+    transitivePeerDependencies:
+      - supports-color
+
+  '@prosefly/astro-components@0.2.0(astro@7.1.1(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.2)(jiti@2.7.0)(yaml@2.9.0))':
     dependencies:
       '@astrojs/markdown-remark': 7.2.1
       '@iconify/utils': 3.1.4
