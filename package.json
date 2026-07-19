@@ -13,8 +13,8 @@
   "dependencies": {
     "@astrojs/check": "latest",
     "@astrojs/mdx": "latest",
-    "@prosefly/astro-components": "^0.2.1",
-    "@prosefly/astro-theme-lotus": "^0.2.0",
+    "@prosefly/astro-components": "^0.3.0",
+    "@prosefly/astro-theme-lotus": "^0.4.0",
     "@tailwindcss/vite": "latest",
     "astro": "^7.1.1",
     "tailwindcss": "latest",
