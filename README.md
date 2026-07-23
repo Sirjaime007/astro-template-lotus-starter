@@ -28,8 +28,8 @@ pnpm dev
 ```text
 src/
   content.config.ts      Registers the Lotus docs collection
-  theme.config.ts        Configures navigation, sidebar, search, and footer
   content/docs/          Your MDX documentation pages
+theme.config.json        Configures navigation, docs navigation, search, and footer
 ```
 
 Lotus reads MDX files from `src/content/docs` by default. This starter sets
@@ -47,5 +47,5 @@ Lotus reads MDX files from `src/content/docs` by default. This starter sets
 
 ## Customize
 
-Edit `src/theme.config.ts` to change the site name, navigation, sidebar,
+Edit `theme.config.json` to change the site name, navigation, docs navigation,
 appearance, search, footer links, and source links.

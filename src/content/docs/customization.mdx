@@ -5,35 +5,34 @@ sidebar:
   order: 3
 ---
 
-Most starter customization happens in `src/theme.config.ts`.
+Most starter customization happens in `theme.config.json`.
 
-```ts title="src/theme.config.ts"
-import { defineLotusConfig } from '@prosefly/astro-theme-lotus';
-
-export default defineLotusConfig({
-  name: 'Lotus Starter',
-  description: 'Documentation built with Astro Theme Lotus.',
-  search: {
-    provider: 'local',
-  },
-});
+```json title="theme.config.json"
+{
+  "$schema": "https://astro-theme-lotus.prosefly.dev/schema.json",
+  "name": "Lotus Starter",
+  "description": "Documentation built with Astro Theme Lotus.",
+  "search": {
+    "provider": "local"
+  }
+}
 ```
 
 ## Navigation
 
-Use `navbar` for top-level links and `sidebars` for docs navigation.
+Use `siteNav` for top-level links and `docsNav` for docs navigation.
 
-```ts title="src/theme.config.ts"
-export default defineLotusConfig({
-  docsBase: '/',
-  navbar: [{ label: 'Docs', href: '/overview/' }],
-  sidebars: [
+```json title="theme.config.json"
+{
+  "docsBase": "/",
+  "siteNav": [{ "label": "Docs", "href": "/overview/" }],
+  "docsNav": [
     {
-      label: 'Start Here',
-      items: ['overview', 'installation', 'customization'],
-    },
-  ],
-});
+      "label": "Start Here",
+      "items": ["overview", "installation", "customization"]
+    }
+  ]
+}
 ```
 
 ## Content
