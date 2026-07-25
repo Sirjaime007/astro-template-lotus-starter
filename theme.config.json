@@ -1,5 +1,5 @@
 {
-  "$schema": "https://astro-theme-lotus.prosefly.dev/schema.json",
+  "$schema": "https://prosefly.dev/schema/lotus.json",
   "name": "Lotus Starter",
   "description": "Documentation built with Astro Theme Lotus.",
   "favicon": "/favicon.svg",
@@ -76,12 +76,12 @@
         "links": [
           {
             "label": "Astro Theme Lotus",
-            "href": "https://astro-theme-lotus.prosefly.dev",
+            "href": "https://prosefly.dev/themes/lotus/",
             "external": true
           },
           {
             "label": "Astro Components",
-            "href": "https://astro-components.prosefly.dev",
+            "href": "https://prosefly.dev/docs/astro-components/",
             "external": true
           }
         ]
