@@ -62,7 +62,7 @@
         "links": [
           {
             "label": "Documentation",
-            "href": "/overview/"
+            "href": "https://astro-theme-lotus.prosefly.dev/docs/overview/"
           },
           {
             "label": "Source",
