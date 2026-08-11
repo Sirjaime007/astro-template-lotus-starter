@@ -10,8 +10,8 @@
       "href": "/overview/"
     },
     {
-      "label": "GitHub",
-      "href": "https://github.com/prosefly/astro-template-lotus-starter",
+      "label": "Theme",
+      "href": "https://astro-theme-lotus.prosefly.dev",
       "external": true,
       "trailingIcon": "lucide:arrow-up-right"
     }
