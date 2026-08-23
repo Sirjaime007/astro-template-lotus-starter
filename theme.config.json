@@ -55,7 +55,7 @@
     }
   ],
   "footer": {
-    "copyright": "Copyright © 2026.",
+    "copyright": "Copyright © 2026 Prosefly.",
     "sections": [
       {
         "title": "Project",
@@ -72,17 +72,32 @@
         ]
       },
       {
-        "title": "Prosefly",
+        "title": "Prosefly Projects",
         "links": [
           {
             "label": "Astro Theme Lotus",
-            "href": "https://prosefly.dev/themes/lotus/",
-            "external": true
+            "href": "https://prosefly.dev/themes/lotus/"
           },
           {
             "label": "Astro Components",
-            "href": "https://prosefly.dev/docs/astro-components/",
-            "external": true
+            "href": "https://prosefly.dev/docs/astro-components/"
+          }
+        ]
+      },
+      {
+        "title": "Community",
+        "links": [
+          {
+            "label": "GitHub",
+            "href": "https://github.com/prosefly"
+          },
+          {
+            "label": "X (Twitter)",
+            "href": "https://x.com/prosefly"
+          },
+          {
+            "label": "Sponsors",
+            "href": "https://prosefly.dev/sponsors/"
           }
         ]
       }
