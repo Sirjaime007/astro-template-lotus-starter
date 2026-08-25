@@ -65,7 +65,12 @@
             "href": "https://astro-theme-lotus.prosefly.dev/docs/overview/"
           },
           {
-            "label": "Source",
+            "label": "Theme Source",
+            "href": "https://github.com/prosefly/astro-theme-lotus",
+            "external": true
+          }
+          {
+            "label": "Template Source",
             "href": "https://github.com/prosefly/astro-template-lotus-starter",
             "external": true
           }
@@ -77,6 +82,10 @@
           {
             "label": "Astro Theme Lotus",
             "href": "https://prosefly.dev/themes/lotus/"
+          },
+          {
+            "label": "Astro Theme Dahlia",
+            "href": "https://prosefly.dev/themes/dahlia/"
           },
           {
             "label": "Astro Components",
