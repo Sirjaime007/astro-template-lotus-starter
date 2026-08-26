@@ -55,7 +55,7 @@
     }
   ],
   "footer": {
-    "copyright": "Copyright © 2026 Prosefly.",
+    "copyright": "Copyright \u00a9 2026 Prosefly.",
     "sections": [
       {
         "title": "Project",
@@ -64,16 +64,16 @@
             "label": "Documentation",
             "href": "https://astro-theme-lotus.prosefly.dev/docs/overview/"
           },
-        {
-          "label": "Theme Source",
-          "href": "https://github.com/prosefly/astro-theme-lotus",
-          "external": true
-        },
-        {
-          "label": "Template Source",
-          "href": "https://github.com/prosefly/astro-template-lotus-starter",
-          "external": true
-        }
+          {
+            "label": "Theme Source",
+            "href": "https://github.com/prosefly/astro-theme-lotus",
+            "external": true
+          },
+          {
+            "label": "Template Source",
+            "href": "https://github.com/prosefly/astro-template-lotus-starter",
+            "external": true
+          }
         ]
       },
       {
