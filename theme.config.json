@@ -1,6 +1,6 @@
 {
   "$schema": "https://prosefly.dev/schema/lotus.json",
-  "name": "Lotus Starter",
+  "name": "Lotus Startr",
   "description": "Documentation built with Astro Theme Lotus.",
   "favicon": "/favicon.svg",
   "docsBase": "/",
