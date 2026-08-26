@@ -68,7 +68,7 @@ hero:
 </video>
 
 <style>{`
-  /* Diseño del video de fondo */
+  /* Acomodamos el video y le subimos la opacidad a 0.4 para probar que se vea */
   #video-fondo {
     position: fixed;
     top: 0;
@@ -77,13 +77,19 @@ hero:
     height: 100%;
     object-fit: cover;
     z-index: -1;
-    opacity: 0.12;
+    opacity: 0.4; 
     pointer-events: none;
   }
   
-  /* Color de fondo base */
-  body {
+  /* Ponemos el color crema bien al fondo de todo (en el HTML) */
+  html {
     background-color: #f8f6f0 !important;
+  }
+  
+  /* Hacemos que todas las cajas de la plantilla sean transparentes para que dejen ver el video */
+  body, main, .page, [class*="container"] {
+    background-color: transparent !important;
+    background: transparent !important;
   }
   
   /* Magia para desaparecer toda la barra superior */
