@@ -10,7 +10,7 @@ hero:
   tagline: Diseño exclusivo para el mundo del café de especialidad.
   actions:
     - text: Ver Servicios
-      link: "#servicis"
+      link: "#servicios"
       variant: primary
       icon: lucide:terminal
     - text: Portafolio
@@ -26,13 +26,13 @@ hero:
       variant: primary
 ---
 
-<!-- VIDEO DE FONDO -->
+{/* VIDEO DE FONDO */}
 <video id="video-fondo" autoplay muted playsinline loop>
   <source src="/video-1.mp4" type="video/mp4" />
 </video>
 
-<!-- ROTACIÓN DE VIDEOS -->
-<script is:inline>
+{/* ROTACIÓN DE VIDEOS */}
+<script is:inline>{`
   document.addEventListener('DOMContentLoaded', () => {
     const video = document.getElementById('video-fondo');
     const playlist = ['/video-1.mp4', '/video-2.mp4', '/video-3.mp4'];
@@ -46,21 +46,21 @@ hero:
       });
     }
   });
-</script>
+`}</script>
 
-<!-- LIGHTBOX PARA PORTAFOLIO -->
-<script is:inline>
+{/* LIGHTBOX PARA PORTAFOLIO */}
+<script is:inline>{`
   document.addEventListener('DOMContentLoaded', () => {
     // Crear el lightbox dinámicamente
     const lightbox = document.createElement('div');
     lightbox.id = 'lightbox';
-    lightbox.innerHTML = `
+    lightbox.innerHTML = \`
       <div class="lightbox-overlay">
         <span class="lightbox-close">&times;</span>
         <img class="lightbox-img" src="" alt="Ampliación" />
         <span class="lightbox-caption"></span>
       </div>
-    `;
+    \`;
     document.body.appendChild(lightbox);
 
     const overlay = lightbox.querySelector('.lightbox-overlay');
@@ -94,7 +94,7 @@ hero:
       if (e.key === 'Escape') closeLightbox();
     });
   });
-</script>
+`}</script>
 
 ---
 
@@ -194,7 +194,7 @@ Cada decisión está cruzada con Cofiteca, la base de datos de café de especial
 
 ---
 
-<style>
+<style>{`
   /* ========== VIDEO DE FONDO ========== */
   #video-fondo {
     position: fixed;
@@ -480,4 +480,4 @@ Cada decisión está cruzada con Cofiteca, la base de datos de café de especial
   ::-webkit-scrollbar-thumb:hover {
     background: #8b4513;
   }
-</style>
+`}</style>
