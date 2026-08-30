@@ -217,9 +217,10 @@ hero:
 
 ---
 
-{/* ANIMACIONES Y CONTADORES */}
+{/* ANIMACIONES, CONTADORES Y LECTURA DE GOOGLE SHEETS */}
 <script is:inline>{`
   document.addEventListener('DOMContentLoaded', () => {
+    // 1. Animaciones Fade-in
     const fadeElements = document.querySelectorAll('.fade-on-scroll');
     const fadeObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -232,31 +233,66 @@ hero:
 
     fadeElements.forEach(el => fadeObserver.observe(el));
 
+    // 2. Lógica de Contadores
     const counters = document.querySelectorAll('.metric-number');
-    const counterObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const target = +entry.target.getAttribute('data-target');
-          const duration = 2000;
-          const step = target / (duration / 16); 
-          
-          let current = 0;
-          const updateCounter = () => {
-            current += step;
-            if (current < target) {
-              entry.target.innerText = Math.ceil(current);
-              requestAnimationFrame(updateCounter);
-            } else {
-              entry.target.innerText = target;
-            }
-          };
-          updateCounter();
-          counterObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.5 });
+    const initCounters = () => {
+      const counterObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const target = +entry.target.getAttribute('data-target');
+            const duration = 2000;
+            const step = target / (duration / 16); 
+            
+            let current = 0;
+            const updateCounter = () => {
+              current += step;
+              if (current < target) {
+                entry.target.innerText = Math.ceil(current);
+                requestAnimationFrame(updateCounter);
+              } else {
+                entry.target.innerText = target;
+              }
+            };
+            updateCounter();
+            counterObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.5 });
 
-    counters.forEach(counter => counterObserver.observe(counter));
+      counters.forEach(counter => counterObserver.observe(counter));
+    };
+
+    // 3. Obtener datos de Google Sheets (CSV)
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKWHZjUoyHujPoj5kaTJzj-O8K-GBReU2XS_ul1zNhV9nKkDC6ndE2YPgPjElaY-IHXVxcxKWKqs6t/pub?gid=984622585&single=true&output=csv';
+    
+    fetch(csvUrl)
+      .then(response => response.text())
+      .then(csvText => {
+        const rows = csvText.trim().split('\\n');
+        const values = [];
+        
+        // Asume que la columna 2 (índice 1) tiene los números
+        rows.forEach(row => {
+          const cols = row.split(',');
+          if (cols.length >= 2) {
+            const num = parseInt(cols[1].trim(), 10);
+            if (!isNaN(num)) values.push(num);
+          }
+        });
+
+        // Actualiza los objetivos si el Excel tiene al menos 3 números
+        if (values.length >= 3 && counters.length >= 3) {
+          counters[0].setAttribute('data-target', values[0]);
+          counters[1].setAttribute('data-target', values[1]);
+          counters[2].setAttribute('data-target', values[2]);
+        }
+        
+        initCounters();
+      })
+      .catch(error => {
+        console.error('Error obteniendo datos de Cofiteca:', error);
+        initCounters(); // Inicializa con los valores por defecto del HTML si falla la conexión
+      });
   });
 `}</script>
 
