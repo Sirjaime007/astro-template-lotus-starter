@@ -268,33 +268,38 @@ hero:
     fetch(csvUrl)
       .then(response => response.text())
       .then(csvText => {
-        const rows = csvText.trim().split('\\n');
+        // CORRECCIÓN: Separador por salto de línea universal (Regex)
+        const rows = csvText.trim().split(/\\r?\\n/);
         const values = [];
         
-        // Asume que la columna 2 (índice 1) tiene los números
+        // Extraer cualquier número válido encontrado en las filas
         rows.forEach(row => {
           const cols = row.split(',');
-          if (cols.length >= 2) {
-            const num = parseInt(cols[1].trim(), 10);
-            if (!isNaN(num)) values.push(num);
-          }
+          cols.forEach(col => {
+             const num = parseInt(col.trim(), 10);
+             // Guardamos si es un número válido
+             if (!isNaN(num) && col.trim() !== '') {
+                 values.push(num);
+             }
+          });
         });
 
-        // Actualiza los objetivos si el Excel tiene al menos 3 números
+        // Actualizar el HTML si encontramos al menos 3 números en el CSV
         if (values.length >= 3 && counters.length >= 3) {
-          counters[0].setAttribute('data-target', values[0]);
-          counters[1].setAttribute('data-target', values[1]);
-          counters[2].setAttribute('data-target', values[2]);
+          counters[0].setAttribute('data-target', values[0]); // Cafeterías
+          counters[1].setAttribute('data-target', values[1]); // Provincias
+          counters[2].setAttribute('data-target', values[2]); // Data Real
         }
         
         initCounters();
       })
       .catch(error => {
-        console.error('Error obteniendo datos de Cofiteca:', error);
-        initCounters(); // Inicializa con los valores por defecto del HTML si falla la conexión
+        console.error('Error obteniendo datos del CSV:', error);
+        initCounters(); // Inicializa con los valores estáticos si falla
       });
   });
 `}</script>
+
 
 <style>{`
   /* ========== ANULAR FONDOS DEL TEMA ========== */
