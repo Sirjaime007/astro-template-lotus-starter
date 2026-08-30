@@ -123,11 +123,28 @@ hero:
 
 ---
 
+<div class="metrics-banner fade-on-scroll">
+  <div class="metric-item">
+    <span class="metric-number" data-target="420">0</span>
+    <span class="metric-label">Cafeterías en Base</span>
+  </div>
+  <div class="metric-item">
+    <span class="metric-number" data-target="18">0</span>
+    <span class="metric-label">Provincias Mapeadas</span>
+  </div>
+  <div class="metric-item">
+    <span class="metric-number" data-target="100">0</span><span class="metric-symbol">%</span>
+    <span class="metric-label">Data Real</span>
+  </div>
+</div>
+
+---
+
 <div id="portafolio"></div>
 
 ## Casos de Éxito
 
-<div class="portfolio-section">
+<div class="portfolio-section fade-on-scroll">
   <h3>Café Ina</h3>
   <p><strong>Identidad Visual y Experiencia de Barra</strong><br/>
   <em>El Desafío:</em> Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local, atrayendo tanto al consumidor experto como al cliente de paso.</p>
@@ -147,7 +164,7 @@ hero:
 
 ---
 
-<div class="portfolio-section">
+<div class="portfolio-section fade-on-scroll">
   <h3>Café de Obra</h3>
   <p><strong>Branding Institucional y Diseño de Flujo</strong><br/>
   <em>El Desafío:</em> Integrar una cafetería de especialidad dentro del Centro de Constructores, respetando el entorno histórico y dotándolo de vida propia para un público profesional con tiempos acotados.</p>
@@ -167,7 +184,7 @@ hero:
 
 ---
 
-<div class="portfolio-section">
+<div class="portfolio-section fade-on-scroll">
   <h3>Black Bean</h3>
   <p><strong>Producto B2B, Packaging y Posicionamiento</strong><br/>
   <em>El Desafío:</em> Introducir brownies a base de porotos negros diseñados específicamente para maridar con perfiles complejos de café de especialidad y etiquetas de vinotecas.</p>
@@ -199,6 +216,49 @@ hero:
 </div>
 
 ---
+
+{/* ANIMACIONES Y CONTADORES */}
+<script is:inline>{`
+  document.addEventListener('DOMContentLoaded', () => {
+    const fadeElements = document.querySelectorAll('.fade-on-scroll');
+    const fadeObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          fadeObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    fadeElements.forEach(el => fadeObserver.observe(el));
+
+    const counters = document.querySelectorAll('.metric-number');
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const target = +entry.target.getAttribute('data-target');
+          const duration = 2000;
+          const step = target / (duration / 16); 
+          
+          let current = 0;
+          const updateCounter = () => {
+            current += step;
+            if (current < target) {
+              entry.target.innerText = Math.ceil(current);
+              requestAnimationFrame(updateCounter);
+            } else {
+              entry.target.innerText = target;
+            }
+          };
+          updateCounter();
+          counterObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    counters.forEach(counter => counterObserver.observe(counter));
+  });
+`}</script>
 
 <style>{`
   /* ========== ANULAR FONDOS DEL TEMA ========== */
@@ -232,7 +292,7 @@ hero:
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: -998; /* Sobre el beige, debajo del texto */
+    z-index: -998;
     opacity: 0.25;
     pointer-events: none;
   }
@@ -488,5 +548,59 @@ hero:
     height: 1px;
     background: linear-gradient(to right, transparent, #c4a77d, transparent);
     margin: 3rem 0;
+  }
+
+  /* ========== MÉTRICAS COFITECA ========== */
+  .metrics-banner {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin: 4rem 0;
+    padding: 3rem 2rem;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(196, 167, 125, 0.3);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+  }
+
+  .metric-item {
+    text-align: center;
+  }
+
+  .metric-number {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #1a0f0a !important;
+    line-height: 1;
+    display: inline-block;
+  }
+  
+  .metric-symbol {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #c4a77d !important;
+  }
+
+  .metric-label {
+    display: block;
+    font-size: 0.95rem;
+    color: #5c3d2e !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.5rem;
+  }
+
+  /* ========== MICRO-INTERACCIONES (FADE IN) ========== */
+  .fade-on-scroll {
+    opacity: 0;
+    transform: translateY(25px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    will-change: opacity, transform;
+  }
+
+  .fade-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
   }
 `}</style>
