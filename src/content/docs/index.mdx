@@ -8,6 +8,7 @@ sidebar:
 hero:
   title: Cofiteca x Mad Diseño
   tagline: Diseño exclusivo para el mundo del  café de especialidad.
+    actions:
     - text: Ver Servicios
       link: "#servicios"
       variant: primary
@@ -16,10 +17,13 @@ hero:
       link: "#portafolio"
       variant: secondary
       icon: lucide:palette
-    - text: Ir a Cofiteca
+    - text: Ir a Cofiteca.ar
       link: "https://cofiteca.ar"
       variant: secondary
       icon: lucide:globe
+    - text: Contacto
+      link: "#contacto"
+      variant: primary
 ---
 
 <div id="servicios"></div>
@@ -91,9 +95,38 @@ Cada decisión está cruzada con Cofiteca ,la base de datos de café de especial
   </a>
 </div>
 
-<video id="video-fondo" autoPlay loop muted playsInline>
-  <source src="/video-fondo.mp4" type="video/mp4" />
+<div id="contacto"></div>
+
+## Contacto
+
+¿Listos para elevar la experiencia de su café? Hablemos.
+
+**Email:** hola@cofiteca.ar  
+**Sede:** Mar del Plata, Argentina  
+
+---
+
+<!-- ACÁ EMPIEZA LA ROTACIÓN DE VIDEOS -->
+<video id="video-fondo" autoPlay muted playsInline>
+  <source src="/video-1.mp4" type="video/mp4" />
 </video>
+
+<script>{`
+  document.addEventListener('DOMContentLoaded', () => {
+    const video = document.getElementById('video-fondo');
+    // Acá ponés los nombres de todos los videos que hayas subido
+    const playlist = ['/video-1.mp4', '/video-2.mp4', '/video-3.mp4']; 
+    let currentVideo = 0;
+
+    if (video) {
+      video.addEventListener('ended', () => {
+        currentVideo = (currentVideo + 1) % playlist.length;
+        video.src = playlist[currentVideo];
+        video.play();
+      });
+    }
+  });
+`}</script>
 
 <style>{`
   /* Diseño del video de fondo */
@@ -126,7 +159,7 @@ Cada decisión está cruzada con Cofiteca ,la base de datos de café de especial
     color: #111111 !important;
   }
   
-  /* Magia para desaparecer toda la barra superior */
+  /* Ocultar barra superior */
   header, [class*="header"], nav {
     display: none !important;
   }
