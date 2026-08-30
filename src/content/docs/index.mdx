@@ -201,6 +201,29 @@ hero:
 ---
 
 <style>{`
+  /* ========== ANULAR FONDOS DEL TEMA ========== */
+  :root {
+    --sl-color-bg: transparent !important;
+    --theme-bg: transparent !important;
+  }
+
+  html, body, .page, main, .sl-container, .sl-page, article, [class*="lotus"] {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  /* ========== FONDO BEIGE BASE ========== */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f5f0e8;
+    z-index: -999;
+  }
+
   /* ========== VIDEO DE FONDO ========== */
   #video-fondo {
     position: fixed;
@@ -209,22 +232,9 @@ hero:
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: -1; /* Modificado para quedar por detrás del tema */
+    z-index: -998; /* Sobre el beige, debajo del texto */
     opacity: 0.25;
     pointer-events: none;
-  }
-
-  /* ========== BASE ========== */
-  html {
-    background-color: #f5f0e8 !important;
-    scroll-behavior: smooth;
-  }
-
-  body, main, .page, [class*="container"], [class*="wrapper"] {
-    background-color: transparent !important;
-    background: transparent !important;
-    position: relative;
-    z-index: 1;
   }
 
   /* ========== TIPOGRAFÍA Y COLORES ========== */
@@ -264,7 +274,6 @@ hero:
     color: #1a0f0a !important;
   }
 
-  /* Ajuste para que solo afecte enlaces de texto y no botones del Hero */
   p a, li a, .contact-info a {
     color: #8b4513 !important;
     text-decoration: none;
@@ -276,7 +285,6 @@ hero:
     border-bottom-color: #8b4513;
   }
 
-  /* Arreglo de botones del Hero para que la letra sea blanca/legible */
   .hero-actions a {
     color: #ffffff !important;
   }
@@ -385,9 +393,9 @@ hero:
 
   .portfolio-item img {
     width: 100%;
-    height: auto; /* Modificado para evitar cortes */
+    height: auto;
     aspect-ratio: 4 / 3;
-    object-fit: contain; /* Modificado de cover a contain */
+    object-fit: contain;
     display: block;
     transition: transform 0.4s ease;
     background-color: #f9f9f9;
@@ -481,23 +489,4 @@ hero:
     background: linear-gradient(to right, transparent, #c4a77d, transparent);
     margin: 3rem 0;
   }
-
-  /* ========== SCROLLBAR CAFÉ ========== */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: #f5f0e8;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #c4a77d;
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: #8b4513;
-  }
 `}</style>
-
