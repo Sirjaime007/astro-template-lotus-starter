@@ -1,6 +1,6 @@
 ---
-title: Lotus Starter
-description: Start a documentation site with Astro Theme Lotus.
+title: Cofiteca x Mad Diseño
+description: Diseño exclusivo para el mundo del café de especialidad. Identidad visual, packaging, señalética y diseño con data real.
 template: splash
 pagefind: false
 sidebar:
@@ -26,100 +26,16 @@ hero:
       variant: primary
 ---
 
-<div id="servicios"></div>
-
-## Nuestros Servicios
-Identidad Visual
-Creamos o renovamos tu marca: logo, paleta, tipografía y sistema visual. Ya seas una cafetería, un tostador, una tienda especializada o un evento, tu identidad tiene que sostenerse en cada punto de contacto.
-Piezas para tu Negocio
-Menús, packaging , etiquetas, gráfica de local o de stand — diseñamos las piezas que tu rubro específico necesita, adaptadas a cómo trabajás vos.
-Señalética y Espacio
-Cartelería y gráfica para locales, ferias y eventos del mundo del café: todo lo que hace falta para que tu marca ocupe el espacio físico de forma consistente.
-Diseño con Data Real
-Cada decisión está cruzada con Cofiteca ,la base de datos de café de especialidad mas grande de Argentina : Evaluamos y analizamos todo precios, tendencias y comportamiento del mercado en cafeterías, tostadores y tiendas de todo el país.
-
----
-
-<div id="portafolio"></div>
-
-## Casos de Éxito
-
-### CAFE INA
-**Identidad Visual y Experiencia de Barra**
-
-*El Desafío:* Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local, atrayendo tanto al consumidor experto como al cliente de paso.
-
-<div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '30px' }}>
-  <a href="/cafe-ina-1.jpg" target="_blank" style={{ cursor: 'zoom-in' }}>
-    <img src="/cafe-ina-1.jpg" alt="Café de Obra 1" style={{ borderRadius: '8px', width: '100%', height: 'auto' }} />
-  </a>
-  <a href="/cafe-ina-2.jpg" target="_blank" style={{ cursor: 'zoom-in' }}>
-    <img src="/cafe-ina-2.jpg" alt="Café de Obra 2" style={{ borderRadius: '8px', width: '100%', height: 'auto' }} />
-  </a>
-  <a href="/cafe-ina-3.jpg" target="_blank" style={{ cursor: 'zoom-in' }}>
-    <img src="/cafe-ina-3.jpg" alt="Café de Obra 3" style={{ borderRadius: '8px', width: '100%', height: 'auto' }} />
-  </a>
-</div>
-
-### Café de Obra
-**Branding Institucional y Diseño de Flujo**
-
-*El Desafío:* Integrar una cafetería de especialidad dentro del Centro de Constructores, respetando el entorno histórico y dotándolo de vida propia para un público profesional con tiempos acotados.
-
-<div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '30px' }}>
-  <a href="/cafe-obra-1.jpg" target="_blank" style={{ cursor: 'zoom-in' }}>
-    <img src="/cafe-obra-1.jpg" alt="Café de Obra 1" style={{ borderRadius: '8px', width: '100%', height: 'auto' }} />
-  </a>
-  <a href="/cafe-obra-2.jpg" target="_blank" style={{ cursor: 'zoom-in' }}>
-    <img src="/cafe-obra-2.jpg" alt="Café de Obra 2" style={{ borderRadius: '8px', width: '100%', height: 'auto' }} />
-  </a>
-  <a href="/cafe-obra-3.jpg" target="_blank" style={{ cursor: 'zoom-in' }}>
-    <img src="/cafe-obra-3.jpg" alt="Café de Obra 3" style={{ borderRadius: '8px', width: '100%', height: 'auto' }} />
-  </a>
-</div>
-
-### Black Bean
-**Producto B2B, Packaging y Posicionamiento**
-
-*El Desafío:* Introducir brownies a base de porotos negros diseñados específicamente para maridar con perfiles complejos de café de especialidad y etiquetas de vinotecas.
-
-<div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '30px' }}>
-  <a href="/black-bean-1.jpg" target="_blank" style={{ cursor: 'zoom-in' }}>
-    <img src="/black-bean-1.jpg" alt="Black Bean 1" style={{ borderRadius: '8px', width: '100%', height: 'auto' }} />
-  </a>
-  <a href="/black-bean-2.jpg" target="_blank" style={{ cursor: 'zoom-in' }}>
-    <img src="/black-bean-2.jpg" alt="Black Bean 2" style={{ borderRadius: '8px', width: '100%', height: 'auto' }} />
-  </a>
-  <a href="/black-bean-3.jpg" target="_blank" style={{ cursor: 'zoom-in' }}>
-    <img src="/black-bean-3.jpg" alt="Black Bean 3" style={{ borderRadius: '8px', width: '100%', height: 'auto' }} />
-  </a>
-</div>
-
-<div id="contacto"></div>
-
----
-
-<div id="contacto"></div>
-
-## Contacto
-
-¿Listos para elevar la experiencia de su café? Hablemos.
-
-**Email:** hola@cofiteca.ar  
-**Sede:** Mar del Plata, Argentina  
-
----
-
-<!-- ACÁ EMPIEZA LA ROTACIÓN DE VIDEOS -->
-<video id="video-fondo" autoPlay muted playsInline>
+<!-- VIDEO DE FONDO -->
+<video id="video-fondo" autoplay muted playsinline loop>
   <source src="/video-1.mp4" type="video/mp4" />
 </video>
 
-<script>
+<!-- ROTACIÓN DE VIDEOS -->
+<script is:inline>
   document.addEventListener('DOMContentLoaded', () => {
     const video = document.getElementById('video-fondo');
-    // Acá ponés los nombres de todos los videos que hayas subido
-    const playlist = ['/video-1.mp4', '/video-2.mp4', '/video-3.mp4']; 
+    const playlist = ['/video-1.mp4', '/video-2.mp4', '/video-3.mp4'];
     let currentVideo = 0;
 
     if (video) {
@@ -132,8 +48,154 @@ Cada decisión está cruzada con Cofiteca ,la base de datos de café de especial
   });
 </script>
 
-<style>{`
-  /* Diseño del video de fondo */
+<!-- LIGHTBOX PARA PORTAFOLIO -->
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Crear el lightbox dinámicamente
+    const lightbox = document.createElement('div');
+    lightbox.id = 'lightbox';
+    lightbox.innerHTML = `
+      <div class="lightbox-overlay">
+        <span class="lightbox-close">&times;</span>
+        <img class="lightbox-img" src="" alt="Ampliación" />
+        <span class="lightbox-caption"></span>
+      </div>
+    `;
+    document.body.appendChild(lightbox);
+
+    const overlay = lightbox.querySelector('.lightbox-overlay');
+    const img = lightbox.querySelector('.lightbox-img');
+    const close = lightbox.querySelector('.lightbox-close');
+    const caption = lightbox.querySelector('.lightbox-caption');
+
+    // Abrir lightbox al hacer click en imágenes del portafolio
+    document.querySelectorAll('.portfolio-grid img').forEach((image) => {
+      image.style.cursor = 'zoom-in';
+      image.parentElement.addEventListener('click', (e) => {
+        e.preventDefault();
+        img.src = image.src;
+        caption.textContent = image.alt;
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      });
+    });
+
+    // Cerrar lightbox
+    const closeLightbox = () => {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = '';
+    };
+
+    close.addEventListener('click', closeLightbox);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeLightbox();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+    });
+  });
+</script>
+
+---
+
+<div id="servicios"></div>
+
+## Nuestros Servicios
+
+<div class="services-grid">
+
+### Identidad Visual
+Creamos o renovamos tu marca: logo, paleta, tipografía y sistema visual. Ya seas una cafetería, un tostador, una tienda especializada o un evento, tu identidad tiene que sostenerse en cada punto de contacto.
+
+### Piezas para tu Negocio
+Menús, packaging, etiquetas, gráfica de local o de stand — diseñamos las piezas que tu rubro específico necesita, adaptadas a cómo trabajás vos.
+
+### Señalética y Espacio
+Cartelería y gráfica para locales, ferias y eventos del mundo del café: todo lo que hace falta para que tu marca ocupe el espacio físico de forma consistente.
+
+### Diseño con Data Real
+Cada decisión está cruzada con Cofiteca, la base de datos de café de especialidad más grande de Argentina: evaluamos y analizamos precios, tendencias y comportamiento del mercado en cafeterías, tostadores y tiendas de todo el país.
+
+</div>
+
+---
+
+<div id="portafolio"></div>
+
+## Casos de Éxito
+
+### Café Ina
+**Identidad Visual y Experiencia de Barra**
+
+*El Desafío:* Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local, atrayendo tanto al consumidor experto como al cliente de paso.
+
+<div class="portfolio-grid">
+  <a href="/cafe-ina-1.jpg" class="portfolio-item">
+    <img src="/cafe-ina-1.jpg" alt="Café Ina - Identidad Visual 1" loading="lazy" />
+  </a>
+  <a href="/cafe-ina-2.jpg" class="portfolio-item">
+    <img src="/cafe-ina-2.jpg" alt="Café Ina - Identidad Visual 2" loading="lazy" />
+  </a>
+  <a href="/cafe-ina-3.jpg" class="portfolio-item">
+    <img src="/cafe-ina-3.jpg" alt="Café Ina - Identidad Visual 3" loading="lazy" />
+  </a>
+</div>
+
+---
+
+### Café de Obra
+**Branding Institucional y Diseño de Flujo**
+
+*El Desafío:* Integrar una cafetería de especialidad dentro del Centro de Constructores, respetando el entorno histórico y dotándolo de vida propia para un público profesional con tiempos acotados.
+
+<div class="portfolio-grid">
+  <a href="/cafe-obra-1.jpg" class="portfolio-item">
+    <img src="/cafe-obra-1.jpg" alt="Café de Obra - Branding 1" loading="lazy" />
+  </a>
+  <a href="/cafe-obra-2.jpg" class="portfolio-item">
+    <img src="/cafe-obra-2.jpg" alt="Café de Obra - Branding 2" loading="lazy" />
+  </a>
+  <a href="/cafe-obra-3.jpg" class="portfolio-item">
+    <img src="/cafe-obra-3.jpg" alt="Café de Obra - Branding 3" loading="lazy" />
+  </a>
+</div>
+
+---
+
+### Black Bean
+**Producto B2B, Packaging y Posicionamiento**
+
+*El Desafío:* Introducir brownies a base de porotos negros diseñados específicamente para maridar con perfiles complejos de café de especialidad y etiquetas de vinotecas.
+
+<div class="portfolio-grid">
+  <a href="/black-bean-1.jpg" class="portfolio-item">
+    <img src="/black-bean-1.jpg" alt="Black Bean - Packaging 1" loading="lazy" />
+  </a>
+  <a href="/black-bean-2.jpg" class="portfolio-item">
+    <img src="/black-bean-2.jpg" alt="Black Bean - Packaging 2" loading="lazy" />
+  </a>
+  <a href="/black-bean-3.jpg" class="portfolio-item">
+    <img src="/black-bean-3.jpg" alt="Black Bean - Packaging 3" loading="lazy" />
+  </a>
+</div>
+
+---
+
+<div id="contacto"></div>
+
+## Contacto
+
+¿Listos para elevar la experiencia de su café? Hablemos.
+
+<div class="contact-info">
+  <p><strong>Email:</strong> <a href="mailto:hola@cofiteca.ar">hola@cofiteca.ar</a></p>
+  <p><strong>Sede:</strong> Mar del Plata, Argentina</p>
+</div>
+
+---
+
+<style>
+  /* ========== VIDEO DE FONDO ========== */
   #video-fondo {
     position: fixed;
     top: 0;
@@ -141,36 +203,281 @@ Cada decisión está cruzada con Cofiteca ,la base de datos de café de especial
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: -1;
-    opacity: 0.4; 
+    z-index: 0;
+    opacity: 0.25;
     pointer-events: none;
   }
-  
-  /* Ponemos el color crema bien al fondo de todo */
+
+  /* ========== BASE ========== */
   html {
-    background-color: #f8f6f0 !important;
-  }
-  
-  /* Cajas transparentes y TEXTO OSCURO para que resalte */
-  body, main, .page, [class*="container"] {
-    background-color: transparent !important;
-    background: transparent !important;
-    color: #1a1a1a !important; 
+    background-color: #f5f0e8 !important;
+    scroll-behavior: smooth;
   }
 
-  /* Refuerzo para que los Títulos se vean todavía más fuertes */
-  h1, h2, h3, h4, strong, p {
-    color: #111111 !important;
+  body, main, .page, [class*="container"], [class*="wrapper"] {
+    background-color: transparent !important;
+    background: transparent !important;
+    position: relative;
+    z-index: 1;
   }
-  
-  /* Ocultar barra superior */
-  header, [class*="header"], nav {
+
+  /* ========== TIPOGRAFÍA Y COLORES ========== */
+  body {
+    color: #2c1810 !important;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    line-height: 1.7;
+  }
+
+  h1, h2, h3, h4 {
+    color: #1a0f0a !important;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-size: 2.2rem;
+    border-bottom: 2px solid #c4a77d;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+  }
+
+  h3 {
+    font-size: 1.4rem;
+    color: #3d2317 !important;
+    margin-top: 1.5rem;
+  }
+
+  p, li {
+    color: #2c1810 !important;
+    font-size: 1.05rem;
+  }
+
+  strong {
+    color: #1a0f0a !important;
+  }
+
+  a {
+    color: #8b4513 !important;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s ease;
+  }
+
+  a:hover {
+    border-bottom-color: #8b4513;
+  }
+
+  /* ========== OCULTAR HEADER ========== */
+  header, [class*="header"], nav[class*="header"] {
     display: none !important;
   }
-  
-  /* Eliminar el espacio en blanco que deja la barra al irse */
-  main, .page {
+
+  main, .page, [class*="main"] {
     padding-top: 0 !important;
     margin-top: 0 !important;
   }
-`}</style>
+
+  /* ========== HERO ========== */
+  .hero {
+    text-align: center;
+    padding: 6rem 1rem 4rem !important;
+  }
+
+  .hero h1 {
+    font-size: 3.5rem !important;
+    color: #1a0f0a !important;
+    text-shadow: 0 2px 10px rgba(245, 240, 232, 0.8);
+    margin-bottom: 0.5rem;
+  }
+
+  .hero .tagline {
+    font-size: 1.3rem;
+    color: #5c3d2e !important;
+    font-style: italic;
+    margin-bottom: 2rem;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+  }
+
+  /* ========== SERVICIOS ========== */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+  }
+
+  .services-grid h3 {
+    color: #3d2317 !important;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+    padding-left: 1.2rem;
+  }
+
+  .services-grid h3::before {
+    content: "◆";
+    position: absolute;
+    left: 0;
+    color: #c4a77d;
+    font-size: 0.8rem;
+    top: 0.2rem;
+  }
+
+  .services-grid p {
+    margin: 0;
+    padding-left: 1.2rem;
+    border-left: 2px solid #e8dcc8;
+  }
+
+  /* ========== PORTAFOLIO ========== */
+  .portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 1.5rem 0 3rem;
+  }
+
+  @media (max-width: 768px) {
+    .portfolio-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .portfolio-item {
+    display: block;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(44, 24, 16, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: #fff;
+  }
+
+  .portfolio-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(44, 24, 16, 0.25);
+  }
+
+  .portfolio-item img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+
+  .portfolio-item:hover img {
+    transform: scale(1.05);
+  }
+
+  /* ========== LIGHTBOX ========== */
+  #lightbox {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+  }
+
+  #lightbox.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(26, 15, 10, 0.92);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .lightbox-img {
+    max-width: 90%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .lightbox-caption {
+    color: #e8dcc8;
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    font-style: italic;
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 2rem;
+    color: #e8dcc8;
+    font-size: 2.5rem;
+    cursor: pointer;
+    transition: color 0.3s;
+    line-height: 1;
+  }
+
+  .lightbox-close:hover {
+    color: #fff;
+  }
+
+  /* ========== CONTACTO ========== */
+  .contact-info {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(196, 167, 125, 0.3);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+    max-width: 500px;
+  }
+
+  .contact-info p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+  }
+
+  /* ========== SEPARADORES ========== */
+  hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #c4a77d, transparent);
+    margin: 3rem 0;
+  }
+
+  /* ========== SCROLLBAR CAFÉ ========== */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f5f0e8;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #c4a77d;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #8b4513;
+  }
+</style>
