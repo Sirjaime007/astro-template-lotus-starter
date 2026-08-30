@@ -51,7 +51,6 @@ hero:
 {/* LIGHTBOX PARA PORTAFOLIO */}
 <script is:inline>{`
   document.addEventListener('DOMContentLoaded', () => {
-    // Crear el lightbox dinámicamente
     const lightbox = document.createElement('div');
     lightbox.id = 'lightbox';
     lightbox.innerHTML = \`
@@ -68,7 +67,6 @@ hero:
     const close = lightbox.querySelector('.lightbox-close');
     const caption = lightbox.querySelector('.lightbox-caption');
 
-    // Abrir lightbox al hacer click en imágenes del portafolio
     document.querySelectorAll('.portfolio-grid img').forEach((image) => {
       image.style.cursor = 'zoom-in';
       image.parentElement.addEventListener('click', (e) => {
@@ -80,7 +78,6 @@ hero:
       });
     });
 
-    // Cerrar lightbox
     const closeLightbox = () => {
       lightbox.classList.remove('active');
       document.body.style.overflow = '';
@@ -103,19 +100,25 @@ hero:
 ## Nuestros Servicios
 
 <div class="services-grid">
+  <div class="service-card">
+    <h3>Identidad Visual</h3>
+    <p>Creamos o renovamos tu marca: logo, paleta, tipografía y sistema visual. Ya seas una cafetería, un tostador, una tienda especializada o un evento, tu identidad tiene que sostenerse en cada punto de contacto.</p>
+  </div>
 
-### Identidad Visual
-Creamos o renovamos tu marca: logo, paleta, tipografía y sistema visual. Ya seas una cafetería, un tostador, una tienda especializada o un evento, tu identidad tiene que sostenerse en cada punto de contacto.
+  <div class="service-card">
+    <h3>Piezas para tu Negocio</h3>
+    <p>Menús, packaging, etiquetas, gráfica de local o de stand — diseñamos las piezas que tu rubro específico necesita, adaptadas a cómo trabajás vos.</p>
+  </div>
 
-### Piezas para tu Negocio
-Menús, packaging, etiquetas, gráfica de local o de stand — diseñamos las piezas que tu rubro específico necesita, adaptadas a cómo trabajás vos.
+  <div class="service-card">
+    <h3>Señalética y Espacio</h3>
+    <p>Cartelería y gráfica para locales, ferias y eventos del mundo del café: todo lo que hace falta para que tu marca ocupe el espacio físico de forma consistente.</p>
+  </div>
 
-### Señalética y Espacio
-Cartelería y gráfica para locales, ferias y eventos del mundo del café: todo lo que hace falta para que tu marca ocupe el espacio físico de forma consistente.
-
-### Diseño con Data Real
-Cada decisión está cruzada con Cofiteca, la base de datos de café de especialidad más grande de Argentina: evaluamos y analizamos precios, tendencias y comportamiento del mercado en cafeterías, tostadores y tiendas de todo el país.
-
+  <div class="service-card">
+    <h3>Diseño con Data Real</h3>
+    <p>Cada decisión está cruzada con Cofiteca, la base de datos de café de especialidad más grande de Argentina: evaluamos y analizamos precios, tendencias y comportamiento del mercado en cafeterías, tostadores y tiendas de todo el país.</p>
+  </div>
 </div>
 
 ---
@@ -124,59 +127,62 @@ Cada decisión está cruzada con Cofiteca, la base de datos de café de especial
 
 ## Casos de Éxito
 
-### Café Ina
-**Identidad Visual y Experiencia de Barra**
-
-*El Desafío:* Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local, atrayendo tanto al consumidor experto como al cliente de paso.
-
-<div class="portfolio-grid">
-  <a href="/cafe-ina-1.jpg" class="portfolio-item">
-    <img src="/cafe-ina-1.jpg" alt="Café Ina - Identidad Visual 1" loading="lazy" />
-  </a>
-  <a href="/cafe-ina-2.jpg" class="portfolio-item">
-    <img src="/cafe-ina-2.jpg" alt="Café Ina - Identidad Visual 2" loading="lazy" />
-  </a>
-  <a href="/cafe-ina-3.jpg" class="portfolio-item">
-    <img src="/cafe-ina-3.jpg" alt="Café Ina - Identidad Visual 3" loading="lazy" />
-  </a>
+<div class="portfolio-section">
+  <h3>Café Ina</h3>
+  <p><strong>Identidad Visual y Experiencia de Barra</strong><br/>
+  <em>El Desafío:</em> Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local, atrayendo tanto al consumidor experto como al cliente de paso.</p>
+  
+  <div class="portfolio-grid">
+    <a href="/cafe-ina-1.jpg" class="portfolio-item">
+      <img src="/cafe-ina-1.jpg" alt="Café Ina - Identidad Visual 1" loading="lazy" />
+    </a>
+    <a href="/cafe-ina-2.jpg" class="portfolio-item">
+      <img src="/cafe-ina-2.jpg" alt="Café Ina - Identidad Visual 2" loading="lazy" />
+    </a>
+    <a href="/cafe-ina-3.jpg" class="portfolio-item">
+      <img src="/cafe-ina-3.jpg" alt="Café Ina - Identidad Visual 3" loading="lazy" />
+    </a>
+  </div>
 </div>
 
 ---
 
-### Café de Obra
-**Branding Institucional y Diseño de Flujo**
+<div class="portfolio-section">
+  <h3>Café de Obra</h3>
+  <p><strong>Branding Institucional y Diseño de Flujo</strong><br/>
+  <em>El Desafío:</em> Integrar una cafetería de especialidad dentro del Centro de Constructores, respetando el entorno histórico y dotándolo de vida propia para un público profesional con tiempos acotados.</p>
 
-*El Desafío:* Integrar una cafetería de especialidad dentro del Centro de Constructores, respetando el entorno histórico y dotándolo de vida propia para un público profesional con tiempos acotados.
-
-<div class="portfolio-grid">
-  <a href="/cafe-obra-1.jpg" class="portfolio-item">
-    <img src="/cafe-obra-1.jpg" alt="Café de Obra - Branding 1" loading="lazy" />
-  </a>
-  <a href="/cafe-obra-2.jpg" class="portfolio-item">
-    <img src="/cafe-obra-2.jpg" alt="Café de Obra - Branding 2" loading="lazy" />
-  </a>
-  <a href="/cafe-obra-3.jpg" class="portfolio-item">
-    <img src="/cafe-obra-3.jpg" alt="Café de Obra - Branding 3" loading="lazy" />
-  </a>
+  <div class="portfolio-grid">
+    <a href="/cafe-obra-1.jpg" class="portfolio-item">
+      <img src="/cafe-obra-1.jpg" alt="Café de Obra - Branding 1" loading="lazy" />
+    </a>
+    <a href="/cafe-obra-2.jpg" class="portfolio-item">
+      <img src="/cafe-obra-2.jpg" alt="Café de Obra - Branding 2" loading="lazy" />
+    </a>
+    <a href="/cafe-obra-3.jpg" class="portfolio-item">
+      <img src="/cafe-obra-3.jpg" alt="Café de Obra - Branding 3" loading="lazy" />
+    </a>
+  </div>
 </div>
 
 ---
 
-### Black Bean
-**Producto B2B, Packaging y Posicionamiento**
+<div class="portfolio-section">
+  <h3>Black Bean</h3>
+  <p><strong>Producto B2B, Packaging y Posicionamiento</strong><br/>
+  <em>El Desafío:</em> Introducir brownies a base de porotos negros diseñados específicamente para maridar con perfiles complejos de café de especialidad y etiquetas de vinotecas.</p>
 
-*El Desafío:* Introducir brownies a base de porotos negros diseñados específicamente para maridar con perfiles complejos de café de especialidad y etiquetas de vinotecas.
-
-<div class="portfolio-grid">
-  <a href="/black-bean-1.jpg" class="portfolio-item">
-    <img src="/black-bean-1.jpg" alt="Black Bean - Packaging 1" loading="lazy" />
-  </a>
-  <a href="/black-bean-2.jpg" class="portfolio-item">
-    <img src="/black-bean-2.jpg" alt="Black Bean - Packaging 2" loading="lazy" />
-  </a>
-  <a href="/black-bean-3.jpg" class="portfolio-item">
-    <img src="/black-bean-3.jpg" alt="Black Bean - Packaging 3" loading="lazy" />
-  </a>
+  <div class="portfolio-grid">
+    <a href="/black-bean-1.jpg" class="portfolio-item">
+      <img src="/black-bean-1.jpg" alt="Black Bean - Packaging 1" loading="lazy" />
+    </a>
+    <a href="/black-bean-2.jpg" class="portfolio-item">
+      <img src="/black-bean-2.jpg" alt="Black Bean - Packaging 2" loading="lazy" />
+    </a>
+    <a href="/black-bean-3.jpg" class="portfolio-item">
+      <img src="/black-bean-3.jpg" alt="Black Bean - Packaging 3" loading="lazy" />
+    </a>
+  </div>
 </div>
 
 ---
@@ -203,7 +209,7 @@ Cada decisión está cruzada con Cofiteca, la base de datos de café de especial
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: 0;
+    z-index: -1; /* Modificado para quedar por detrás del tema */
     opacity: 0.25;
     pointer-events: none;
   }
@@ -258,15 +264,21 @@ Cada decisión está cruzada con Cofiteca, la base de datos de café de especial
     color: #1a0f0a !important;
   }
 
-  a {
+  /* Ajuste para que solo afecte enlaces de texto y no botones del Hero */
+  p a, li a, .contact-info a {
     color: #8b4513 !important;
     text-decoration: none;
     border-bottom: 1px solid transparent;
     transition: border-color 0.3s ease;
   }
 
-  a:hover {
+  p a:hover, li a:hover, .contact-info a:hover {
     border-bottom-color: #8b4513;
+  }
+
+  /* Arreglo de botones del Hero para que la letra sea blanca/legible */
+  .hero-actions a {
+    color: #ffffff !important;
   }
 
   /* ========== OCULTAR HEADER ========== */
@@ -315,15 +327,16 @@ Cada decisión está cruzada con Cofiteca, la base de datos de café de especial
     margin: 2rem 0;
   }
 
-  .services-grid h3 {
+  .service-card h3 {
     color: #3d2317 !important;
     font-size: 1.2rem;
     margin-bottom: 0.5rem;
+    margin-top: 0;
     position: relative;
     padding-left: 1.2rem;
   }
 
-  .services-grid h3::before {
+  .service-card h3::before {
     content: "◆";
     position: absolute;
     left: 0;
@@ -332,18 +345,22 @@ Cada decisión está cruzada con Cofiteca, la base de datos de café de especial
     top: 0.2rem;
   }
 
-  .services-grid p {
+  .service-card p {
     margin: 0;
     padding-left: 1.2rem;
     border-left: 2px solid #e8dcc8;
   }
 
   /* ========== PORTAFOLIO ========== */
+  .portfolio-section {
+    margin-bottom: 3rem;
+  }
+
   .portfolio-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
-    margin: 1.5rem 0 3rem;
+    margin: 1.5rem 0;
   }
 
   @media (max-width: 768px) {
@@ -368,14 +385,16 @@ Cada decisión está cruzada con Cofiteca, la base de datos de café de especial
 
   .portfolio-item img {
     width: 100%;
-    height: 220px;
-    object-fit: cover;
+    height: auto; /* Modificado para evitar cortes */
+    aspect-ratio: 4 / 3;
+    object-fit: contain; /* Modificado de cover a contain */
     display: block;
     transition: transform 0.4s ease;
+    background-color: #f9f9f9;
   }
 
   .portfolio-item:hover img {
-    transform: scale(1.05);
+    transform: scale(1.02);
   }
 
   /* ========== LIGHTBOX ========== */
@@ -481,3 +500,4 @@ Cada decisión está cruzada con Cofiteca, la base de datos de café de especial
     background: #8b4513;
   }
 `}</style>
+
