@@ -1,14 +1,13 @@
-starlight({
-      title: 'Tu Título',
-      // AGREGA ESTAS TRES LÍNEAS:
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
+
+export default defineConfig({
+  integrations: [
+    starlight({
+      title: 'Cofiteca x Mad Diseño',
       components: {
         Hero: './src/components/EmptyHero.astro',
       },
-      // ... el resto de tus opciones siguen igual
-
-import { defineConfig } from 'astro/config';
-import lotus from '@prosefly/astro-theme-lotus';
-
-export default defineConfig({
-  integrations: [lotus()],
+    }),
+  ],
 });
