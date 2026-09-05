@@ -284,6 +284,13 @@ sidebar:
 `}</script>
 
 <style>{`
+/* ========== OCULTAR ENCABEZADO AUTOMÁTICO DE LA PLANTILLA ========== */
+  h1#_top,
+  h1#_top + p,
+  .sl-markdown-content > h1:first-of-type,
+  .sl-markdown-content > p:first-of-type {
+    display: none !important;
+  }
   /* ========== ANULAR FONDOS DEL TEMA ========== */
   :root {
     --sl-color-bg: transparent !important;
