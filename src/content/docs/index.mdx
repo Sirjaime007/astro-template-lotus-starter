@@ -469,11 +469,29 @@ hero:
     box-shadow: 0 4px 15px rgba(44, 24, 16, 0.15);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     background: #fff;
+ 
+  .portfolio-item::after {
+    content: attr(data-title);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 2rem 1rem 1rem;
+    background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.95));
+    color: #e8dcc8;
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-align: center;
+    transform: translateY(100%);
+    transition: transform 0.4s ease;
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 10;
   }
 
-  .portfolio-item:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(44, 24, 16, 0.25);
+  .portfolio-item:hover::after {
+    transform: translateY(0);
+  }
   }
 
   .portfolio-item img, .thumbnail-video {
