@@ -154,11 +154,11 @@ sidebar:
   });
 `}</script>
 
-{/* SECCIÓN HERO (INICIO) */}
-<div class="hero fade-on-scroll">
-  <h1>Cofiteca x Mad Diseño</h1>
-  <p class="tagline">Diseño exclusivo para el mundo del café de especialidad.</p>
-  <div class="hero-actions">
+{/* SECCIÓN HERO PERSONALIZADA */}
+<div class="brand-hero fade-on-scroll">
+  <div class="brand-title">Cofiteca x Mad Diseño</div>
+  <p class="brand-tagline">Diseño exclusivo para el mundo del café de especialidad.</p>
+  <div class="brand-actions">
     <a href="#servicios">Ver Servicios</a>
     <a href="#portafolio">Portafolio</a>
     <a href="https://cofiteca.ar" target="_blank">Ir a Cofiteca.ar</a>
@@ -267,7 +267,8 @@ sidebar:
 </div>
 
 <style>{`
-  /* ========== OCULTAR TEXTOS POR DEFECTO DE STARLIGHT ========== */
+  /* ========== OCULTAR TEXTOS POR DEFECTO DE LA PLANTILLA ========== */
+  .hero,
   .sl-markdown-content > h1:first-of-type,
   .sl-markdown-content > p:first-of-type,
   #_top,
@@ -280,7 +281,6 @@ sidebar:
     --sl-color-bg: transparent !important;
     --theme-bg: transparent !important;
   }
-
   html, body, .page, main, .sl-container, .sl-page, article, [class*="lotus"] {
     background: transparent !important;
     background-color: transparent !important;
@@ -353,21 +353,24 @@ sidebar:
     margin-top: 0 !important;
   }
 
-  /* ========== HERO (VIDRIO ESMERILADO) ========== */
-  .hero {
+  /* ========== HERO (VIDRIO ESMERILADO) AISLADO ========== */
+  .brand-hero {
     text-align: center;
     padding: 7rem 1rem 5rem !important;
     position: relative;
+    z-index: 2;
   }
-  .hero h1 {
+  .brand-title {
     font-size: 4.2rem !important;
     font-weight: 800 !important;
     color: #1a0f0a !important;
     letter-spacing: -0.03em;
     text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1);
     margin-bottom: 1.5rem;
+    line-height: 1.1;
+    font-family: 'Georgia', 'Times New Roman', serif;
   }
-  .hero .tagline {
+  .brand-tagline {
     font-size: 1.3rem;
     color: #3d2317 !important;
     font-weight: 500;
@@ -380,15 +383,14 @@ sidebar:
     border: 1px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
   }
-
-  .hero-actions {
+  .brand-actions {
     display: flex;
     gap: 1.2rem;
     justify-content: center;
     flex-wrap: wrap;
     margin-top: 2rem;
   }
-  .hero-actions a {
+  .brand-actions a {
     padding: 0.8rem 2.2rem;
     border-radius: 50px;
     font-size: 1.05rem;
@@ -399,25 +401,25 @@ sidebar:
     align-items: center;
     gap: 0.5rem;
   }
-  .hero-actions a[href="#servicios"], .hero-actions a[href="#contacto"] {
+  .brand-actions a[href="#servicios"], .brand-actions a[href="#contacto"] {
     background-color: #8b4513 !important; 
     color: #ffffff !important;
     border: 2px solid #8b4513 !important;
     box-shadow: 0 4px 15px rgba(139, 69, 19, 0.25);
   }
-  .hero-actions a[href="#servicios"]:hover, .hero-actions a[href="#contacto"]:hover {
+  .brand-actions a[href="#servicios"]:hover, .brand-actions a[href="#contacto"]:hover {
     background-color: #5c3d2e !important;
     border-color: #5c3d2e !important;
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(139, 69, 19, 0.35);
   }
-  .hero-actions a[href="#portafolio"], .hero-actions a[href="https://cofiteca.ar"] {
+  .brand-actions a[href="#portafolio"], .brand-actions a[href="https://cofiteca.ar"] {
     background-color: rgba(255, 255, 255, 0.8) !important;
     color: #3d2317 !important;
     border: 2px solid #c4a77d !important;
     backdrop-filter: blur(5px);
   }
-  .hero-actions a[href="#portafolio"]:hover, .hero-actions a[href="https://cofiteca.ar"]:hover {
+  .brand-actions a[href="#portafolio"]:hover, .brand-actions a[href="https://cofiteca.ar"]:hover {
     background-color: #ffffff !important;
     border-color: #8b4513 !important;
     transform: translateY(-3px);
@@ -488,8 +490,6 @@ sidebar:
     transform: translateY(-4px);
     box-shadow: 0 8px 25px rgba(44, 24, 16, 0.25);
   }
-
-  /* Título al pasar el mouse */
   .portfolio-item::after {
     content: attr(data-title);
     position: absolute;
@@ -507,7 +507,6 @@ sidebar:
   .portfolio-item:hover::after {
     transform: translateY(0);
   }
-
   .portfolio-item img, .thumbnail-video {
     width: 100%;
     height: auto;
@@ -517,7 +516,6 @@ sidebar:
   .portfolio-item:hover img, .video-trigger:hover .thumbnail-video {
     transform: scale(1.05);
   }
-
   .play-indicator {
     position: absolute; 
     top: 50%; left: 50%;
