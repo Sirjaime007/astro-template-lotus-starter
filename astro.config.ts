@@ -1,7 +1,11 @@
 import { defineConfig } from 'astro/config';
 import lotus from '@prosefly/astro-theme-lotus';
-import themeConfig from './src/theme.config.ts';
 
 export default defineConfig({
-  integrations: [lotus(themeConfig)],
+  integrations: [
+    lotus({
+      name: 'Cofiteca x Mad Diseño',
+      description: 'Diseño exclusivo para el mundo del café de especialidad.',
+    }),
+  ],
 });
