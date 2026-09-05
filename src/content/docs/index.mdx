@@ -5,6 +5,9 @@ template: splash
 pagefind: false
 sidebar:
   hidden: true
+hero:
+  title: "Cofiteca"
+  tagline: "Mad"
 ---
 
 {/* VIDEO DE FONDO */}
@@ -267,13 +270,19 @@ sidebar:
 </div>
 
 <style>{`
-  /* ========== DESTRUIR ENCABEZADOS AUTOMÁTICOS ========== */
+  /* ========== ENGANÑO A LA PLANTILLA: MATAR EL HERO ORIGINAL ========== */
   .hero,
-  .page-title,
-  div[data-page-title],
-  h1#_top,
-  h1#_top + p {
+  .hero-actions:not(.brand-actions),
+  .sl-markdown-content > h1:first-of-type,
+  .sl-markdown-content > p:first-of-type,
+  #_top,
+  #_top + p {
     display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* ========== ANULAR FONDOS DEL TEMA ========== */
