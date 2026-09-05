@@ -267,23 +267,6 @@ sidebar:
 </div>
 
 <style is:global>{`
-  /* ========== DESTRUIR ENCABEZADOS AUTOMÁTICOS CON FUERZA GLOBAL ========== */
-  .hero,
-  .page-title,
-  div[data-page-title],
-  h1#_top,
-  h1#_top + p,
-  .sl-markdown-content > h1:first-child,
-  .sl-markdown-content > p:first-of-type {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    position: absolute !important;
-  }
-
   /* ========== ANULAR FONDOS DEL TEMA ========== */
   :root {
     --sl-color-bg: transparent !important;
