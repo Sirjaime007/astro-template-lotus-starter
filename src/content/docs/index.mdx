@@ -48,51 +48,6 @@ hero:
   });
 `}</script>
 
-{/* LIGHTBOX PARA PORTAFOLIO */}
-<script is:inline>{`
-  document.addEventListener('DOMContentLoaded', () => {
-    const lightbox = document.createElement('div');
-    lightbox.id = 'lightbox';
-    lightbox.innerHTML = \`
-      <div class="lightbox-overlay">
-        <span class="lightbox-close">&times;</span>
-        <img class="lightbox-img" src="" alt="Ampliación" />
-        <span class="lightbox-caption"></span>
-      </div>
-    \`;
-    document.body.appendChild(lightbox);
-
-    const overlay = lightbox.querySelector('.lightbox-overlay');
-    const img = lightbox.querySelector('.lightbox-img');
-    const close = lightbox.querySelector('.lightbox-close');
-    const caption = lightbox.querySelector('.lightbox-caption');
-
-    document.querySelectorAll('.portfolio-grid img').forEach((image) => {
-      image.style.cursor = 'zoom-in';
-      image.parentElement.addEventListener('click', (e) => {
-        e.preventDefault();
-        img.src = image.src;
-        caption.textContent = image.alt;
-        lightbox.classList.add('active');
-        document.body.style.overflow = 'hidden';
-      });
-    });
-
-    const closeLightbox = () => {
-      lightbox.classList.remove('active');
-      document.body.style.overflow = '';
-    };
-
-    close.addEventListener('click', closeLightbox);
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) closeLightbox();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeLightbox();
-    });
-  });
-`}</script>
-
 ---
 
 <div id="servicios"></div>
@@ -144,67 +99,46 @@ hero:
 
 ## Casos de Éxito
 
-<div class="portfolio-section fade-on-scroll">
-  <h3>Café Ina</h3>
-  <p><strong>Identidad Visual y Experiencia de Barra</strong><br/>
-  <em>El Desafío:</em> Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local, atrayendo tanto al consumidor experto como al cliente de paso.</p>
+<div class="portfolio-grid unified-grid fade-on-scroll">
   
-  <div class="portfolio-grid">
-    <a href="/cafe-ina-1.jpg" class="portfolio-item">
-      <img src="/cafe-ina-1.jpg" alt="Café Ina - Identidad Visual 1" loading="lazy" />
-    </a>
-    <a href="/cafe-ina-2.jpg" class="portfolio-item">
-      <img src="/cafe-ina-2.jpg" alt="Café Ina - Identidad Visual 2" loading="lazy" />
-    </a>
-    <a href="/cafe-ina-3.jpg" class="portfolio-item">
-      <img src="/cafe-ina-3.jpg" alt="Café Ina - Identidad Visual 3" loading="lazy" />
-    </a>
-  </div>
+  {/* Café Ina */}
+  <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-4.png" data-title="Café Ina" data-desc="<strong>Identidad Visual y Experiencia de Barra</strong><br/><em>El Desafío:</em> Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local.">
+    <img src="/cafe-ina-4.png" alt="Café Ina" loading="lazy" />
+  </a>
+  <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-5.jpg" data-title="Café Ina" data-desc="<strong>Aplicación de Marca</strong><br/>Detalle de la identidad visual en los puntos de contacto del local.">
+    <img src="/cafe-ina-5.jpg" alt="Café Ina Detalle" loading="lazy" />
+  </a>
+
+  {/* Café de Obra */}
+  <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-de-obra.jpg" data-title="Café de Obra" data-desc="<strong>Branding Institucional</strong><br/><em>El Desafío:</em> Integrar una cafetería de especialidad dentro del Centro de Constructores, respetando el entorno histórico.">
+    <img src="/cafe-de-obra.jpg" alt="Café de Obra" loading="lazy" />
+  </a>
+
+  {/* Black Bean */}
+  <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/black-bean.jpg" data-title="Black Bean" data-desc="<strong>Producto B2B y Packaging</strong><br/><em>El Desafío:</em> Introducir brownies a base de porotos negros diseñados para maridar con café de especialidad.">
+    <img src="/black-bean.jpg" alt="Black Bean" loading="lazy" />
+  </a>
+
+  {/* Sara */}
+  <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/SAra.jpg" data-title="Sara Coffee Shop" data-desc="<strong>Identidad y Redes</strong><br/>Concepto visual, paleta tipográfica y piezas de comunicación.">
+    <img src="/SAra.jpg" alt="Sara" loading="lazy" />
+  </a>
+
+  {/* Luccianos (VIDEO) */}
+  <a href="#" class="portfolio-item media-trigger video-trigger" data-type="video" data-src="/luccianos.mp4" data-title="Luccianos" data-desc="<strong>Producción Audiovisual</strong><br/>Registro dinámico de la experiencia y el flujo de trabajo en el local.">
+    <video src="/luccianos.mp4" muted loop playsinline autoplay class="thumbnail-video"></video>
+    <div class="play-indicator">▶</div>
+  </a>
+
+  {/* Proyecto Tio */}
+  <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/tio1.jpg" data-title="Proyecto Tio" data-desc="<strong>Diseño y Aplicación</strong><br/>Exploración visual y desarrollo de estética.">
+    <img src="/tio1.jpg" alt="Tio" loading="lazy" />
+  </a>
+  <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/tio2.jpg" data-title="Proyecto Tio" data-desc="<strong>Diseño y Aplicación</strong><br/>Variación de las piezas visuales.">
+    <img src="/tio2.jpg" alt="Tio 2" loading="lazy" />
+  </a>
+
 </div>
-
----
-
-<div class="portfolio-section fade-on-scroll">
-  <h3>Café de Obra</h3>
-  <p><strong>Branding Institucional y Diseño de Flujo</strong><br/>
-  <em>El Desafío:</em> Integrar una cafetería de especialidad dentro del Centro de Constructores, respetando el entorno histórico y dotándolo de vida propia para un público profesional con tiempos acotados.</p>
-
-  <div class="portfolio-grid">
-    <a href="/cafe-obra-1.jpg" class="portfolio-item">
-      <img src="/cafe-obra-1.jpg" alt="Café de Obra - Branding 1" loading="lazy" />
-    </a>
-    <a href="/cafe-obra-2.jpg" class="portfolio-item">
-      <img src="/cafe-obra-2.jpg" alt="Café de Obra - Branding 2" loading="lazy" />
-    </a>
-    <a href="/cafe-obra-3.jpg" class="portfolio-item">
-      <img src="/cafe-obra-3.jpg" alt="Café de Obra - Branding 3" loading="lazy" />
-    </a>
-  </div>
-</div>
-
----
-
-<div class="portfolio-section fade-on-scroll">
-  <h3>Black Bean</h3>
-  <p><strong>Producto B2B, Packaging y Posicionamiento</strong><br/>
-  <em>El Desafío:</em> Introducir brownies a base de porotos negros diseñados específicamente para maridar con perfiles complejos de café de especialidad y etiquetas de vinotecas.</p>
-
-  <div class="portfolio-grid">
-    <a href="/black-bean-1.jpg" class="portfolio-item">
-      <img src="/black-bean-1.jpg" alt="Black Bean - Packaging 1" loading="lazy" />
-    </a>
-    <a href="/black-bean-2.jpg" class="portfolio-item">
-      <img src="/black-bean-2.jpg" alt="Black Bean - Packaging 2" loading="lazy" />
-    </a>
-    <a href="/black-bean-3.jpg" class="portfolio-item">
-      <img src="/black-bean-3.jpg" alt="Black Bean - Packaging 3" loading="lazy" />
-    </a>
-  </div>
-</div>
-
----
-
-<div id="contacto"></div>
 
 ## Contacto
 
@@ -217,7 +151,7 @@ hero:
 
 ---
 
-{/* ANIMACIONES, CONTADORES Y LECTURA DE GOOGLE SHEETS */}
+{/* ANIMACIONES, CONTADORES, LECTURA DE GOOGLE SHEETS Y NUEVO LIGHTBOX */}
 <script is:inline>{`
   document.addEventListener('DOMContentLoaded', () => {
     // 1. Animaciones Fade-in
@@ -268,38 +202,91 @@ hero:
     fetch(csvUrl)
       .then(response => response.text())
       .then(csvText => {
-        // CORRECCIÓN: Separador por salto de línea universal (Regex)
         const rows = csvText.trim().split(/\\r?\\n/);
         const values = [];
         
-        // Extraer cualquier número válido encontrado en las filas
         rows.forEach(row => {
           const cols = row.split(',');
           cols.forEach(col => {
              const num = parseInt(col.trim(), 10);
-             // Guardamos si es un número válido
              if (!isNaN(num) && col.trim() !== '') {
                  values.push(num);
              }
           });
         });
 
-        // Actualizar el HTML si encontramos al menos 3 números en el CSV
         if (values.length >= 3 && counters.length >= 3) {
-          counters[0].setAttribute('data-target', values[0]); // Cafeterías
-          counters[1].setAttribute('data-target', values[1]); // Provincias
-          counters[2].setAttribute('data-target', values[2]); // Data Real
+          counters[0].setAttribute('data-target', values[0]);
+          counters[1].setAttribute('data-target', values[1]);
+          counters[2].setAttribute('data-target', values[2]);
         }
         
         initCounters();
       })
       .catch(error => {
         console.error('Error obteniendo datos del CSV:', error);
-        initCounters(); // Inicializa con los valores estáticos si falla
+        initCounters(); 
       });
+
+    // 4. Nuevo Lightbox con Títulos y Descripciones
+    const lightbox = document.createElement('div');
+    lightbox.id = 'lightbox';
+    lightbox.innerHTML = \`
+      <div class="lightbox-overlay">
+        <span class="lightbox-close">&times;</span>
+        <div class="lightbox-content-wrapper">
+          <div id="lightbox-media-container"></div>
+          <div class="lightbox-text-panel">
+            <h3 id="lightbox-title"></h3>
+            <p id="lightbox-desc"></p>
+          </div>
+        </div>
+      </div>
+    \`;
+    document.body.appendChild(lightbox);
+
+    const overlay = lightbox.querySelector('.lightbox-overlay');
+    const mediaContainer = document.getElementById('lightbox-media-container');
+    const titleEl = document.getElementById('lightbox-title');
+    const descEl = document.getElementById('lightbox-desc');
+    const close = lightbox.querySelector('.lightbox-close');
+
+    document.querySelectorAll('.media-trigger').forEach((trigger) => {
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        const type = trigger.getAttribute('data-type');
+        const src = trigger.getAttribute('data-src');
+        
+        titleEl.textContent = trigger.getAttribute('data-title');
+        descEl.innerHTML = trigger.getAttribute('data-desc');
+        mediaContainer.innerHTML = ''; 
+
+        if (type === 'video') {
+          mediaContainer.innerHTML = \`<video src="\${src}" autoplay controls playsinline class="lightbox-media"></video>\`;
+        } else {
+          mediaContainer.innerHTML = \`<img src="\${src}" class="lightbox-media" alt="Ampliación" />\`;
+        }
+
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      });
+    });
+
+    const closeLightbox = () => {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = '';
+      mediaContainer.innerHTML = ''; 
+    };
+
+    close.addEventListener('click', closeLightbox);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeLightbox();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+    });
   });
 `}</script>
-
 
 <style>{`
   /* ========== ANULAR FONDOS DEL TEMA ========== */
@@ -460,16 +447,12 @@ hero:
     border-left: 2px solid #e8dcc8;
   }
 
-  /* ========== PORTAFOLIO ========== */
-  .portfolio-section {
-    margin-bottom: 3rem;
-  }
-
+  /* ========== PORTAFOLIO UNIFICADO ========== */
   .portfolio-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
-    margin: 1.5rem 0;
+    margin: 1.5rem 0 3rem;
   }
 
   @media (max-width: 768px) {
@@ -480,6 +463,7 @@ hero:
 
   .portfolio-item {
     display: block;
+    position: relative;
     overflow: hidden;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(44, 24, 16, 0.15);
@@ -492,79 +476,95 @@ hero:
     box-shadow: 0 8px 25px rgba(44, 24, 16, 0.25);
   }
 
-  .portfolio-item img {
+  .portfolio-item img, .thumbnail-video {
     width: 100%;
     height: auto;
     aspect-ratio: 4 / 3;
-    object-fit: contain;
+    object-fit: cover;
     display: block;
     transition: transform 0.4s ease;
     background-color: #f9f9f9;
   }
 
-  .portfolio-item:hover img {
-    transform: scale(1.02);
+  .portfolio-item:hover img, .video-trigger:hover .thumbnail-video {
+    transform: scale(1.05);
   }
 
-  /* ========== LIGHTBOX ========== */
+  .play-indicator {
+    position: absolute; 
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem; 
+    color: rgba(255,255,255,0.9);
+    pointer-events: none; 
+    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+
+  /* ========== NUEVO LIGHTBOX MEDIA + TEXTO ========== */
   #lightbox {
     display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0; width: 100%; height: 100%;
     z-index: 9999;
   }
-
   #lightbox.active {
     display: flex;
     align-items: center;
     justify-content: center;
   }
-
   .lightbox-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(26, 15, 10, 0.92);
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(26, 15, 10, 0.95);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+  }
+  .lightbox-content-wrapper {
+    position: relative;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
+    background: #f5f0e8;
+    border-radius: 12px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 1000px;
+    max-height: 90vh;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
   }
-
-  .lightbox-img {
-    max-width: 90%;
-    max-height: 80vh;
+  @media (min-width: 768px) {
+    .lightbox-content-wrapper { flex-direction: row; }
+  }
+  #lightbox-media-container {
+    flex: 1;
+    background: #1a0f0a;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 300px;
+  }
+  .lightbox-media {
+    max-width: 100%;
+    max-height: 70vh;
     object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   }
-
-  .lightbox-caption {
-    color: #e8dcc8;
-    margin-top: 1rem;
-    font-size: 1.1rem;
-    font-style: italic;
+  .lightbox-text-panel {
+    padding: 2rem;
+    flex-basis: 350px;
+    overflow-y: auto;
   }
-
+  .lightbox-text-panel h3 {
+    margin-top: 0;
+    color: #3d2317 !important;
+    border-bottom: 2px solid #c4a77d;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+  }
+  .lightbox-text-panel p { color: #5c3d2e !important; }
   .lightbox-close {
     position: absolute;
-    top: 1.5rem;
-    right: 2rem;
-    color: #e8dcc8;
-    font-size: 2.5rem;
-    cursor: pointer;
-    transition: color 0.3s;
-    line-height: 1;
+    top: -2.5rem; right: 0;
+    color: #e8dcc8; font-size: 2.5rem; cursor: pointer; line-height: 1;
   }
-
-  .lightbox-close:hover {
-    color: #fff;
+  @media (min-width: 768px) {
+    .lightbox-close { top: 1rem; right: 2rem; }
   }
 
   /* ========== CONTACTO ========== */
