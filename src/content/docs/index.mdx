@@ -54,7 +54,7 @@ hero:
 
 ## Nuestros Servicios
 
-<div class="services-grid">
+<div class="services-grid fade-on-scroll">
   <div class="service-card">
     <h3>Identidad Visual</h3>
     <p>Creamos o renovamos tu marca: logo, paleta, tipografía y sistema visual. Ya seas una cafetería, un tostador, una tienda especializada o un evento, tu identidad tiene que sostenerse en cada punto de contacto.</p>
@@ -99,12 +99,13 @@ hero:
 
 ## Casos de Éxito
 
-<div class="portfolio-grid unified-grid fade-on-scroll">
+<div class="portfolio-grid fade-on-scroll">
   
   {/* Café Ina */}
   <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-4.png" data-title="Café Ina" data-desc="<strong>Identidad Visual y Experiencia de Barra</strong><br/><em>El Desafío:</em> Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local.">
     <img src="/cafe-ina-4.png" alt="Café Ina" loading="lazy" />
   </a>
+  
   <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-5.jpg" data-title="Café Ina" data-desc="<strong>Aplicación de Marca</strong><br/>Detalle de la identidad visual en los puntos de contacto del local.">
     <img src="/cafe-ina-5.jpg" alt="Café Ina Detalle" loading="lazy" />
   </a>
@@ -121,7 +122,7 @@ hero:
 
   {/* Sara */}
   <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/SAra.jpg" data-title="Sara Coffee Shop" data-desc="<strong>Identidad y Redes</strong><br/>Concepto visual, paleta tipográfica y piezas de comunicación.">
-    <img src="/Sara.jpg" alt="Sara" loading="lazy" />
+    <img src="/SAra.jpg" alt="Sara" loading="lazy" />
   </a>
 
   {/* Luccianos (VIDEO) */}
@@ -140,11 +141,13 @@ hero:
 
 </div>
 
+<div id="contacto"></div>
+
 ## Contacto
 
 ¿Listos para elevar la experiencia de su café? Hablemos.
 
-<div class="contact-info">
+<div class="contact-info fade-on-scroll">
   <p><strong>Email:</strong> <a href="mailto:hola@cofiteca.ar">hola@cofiteca.ar</a></p>
   <p><strong>Sede:</strong> Mar del Plata, Argentina</p>
 </div>
@@ -373,10 +376,6 @@ hero:
     border-bottom-color: #8b4513;
   }
 
-  .hero-actions a {
-    color: #ffffff !important;
-  }
-
   /* ========== OCULTAR HEADER ========== */
   header, [class*="header"], nav[class*="header"] {
     display: none !important;
@@ -387,7 +386,7 @@ hero:
     margin-top: 0 !important;
   }
 
-  /* ========== HERO ========== */
+  /* ========== HERO (VIDRIO ESMERILADO) ========== */
   .hero {
     text-align: center;
     padding: 7rem 1rem 5rem !important;
@@ -438,7 +437,6 @@ hero:
     gap: 0.5rem;
   }
 
-  /* Botones Principales (Ver Servicios / Contacto) */
   .hero-actions a[href="#servicios"], .hero-actions a[href="#contacto"] {
     background-color: #8b4513 !important; 
     color: #ffffff !important;
@@ -453,7 +451,6 @@ hero:
     box-shadow: 0 6px 20px rgba(139, 69, 19, 0.35);
   }
 
-  /* Botones Secundarios (Portafolio / Web) */
   .hero-actions a[href="#portafolio"], .hero-actions a[href="https://cofiteca.ar"] {
     background-color: rgba(255, 255, 255, 0.8) !important;
     color: #3d2317 !important;
@@ -467,7 +464,7 @@ hero:
     transform: translateY(-3px);
   }
 
-  /* ========== SERVICIOS ========== */
+  /* ========== SERVICIOS (TARJETAS GLASS) ========== */
   .services-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -516,11 +513,10 @@ hero:
     font-size: 1.05rem;
     line-height: 1.6;
     color: #4a332a !important;
-    border-left: none; /* Removemos la barra vertical vieja */
     padding-left: 0;
   }
 
- /* ========== PORTAFOLIO TIPO MASONRY (PINTEREST) ========== */
+  /* ========== PORTAFOLIO TIPO MASONRY (PINTEREST) ========== */
   .portfolio-grid {
     column-count: 3;
     column-gap: 1rem;
@@ -582,7 +578,7 @@ hero:
 
   .portfolio-item img, .thumbnail-video {
     width: 100%;
-    height: auto; /* Permite que cada imagen use su altura natural */
+    height: auto;
     display: block;
     transition: transform 0.4s ease;
   }
@@ -670,13 +666,14 @@ hero:
 
   /* ========== CONTACTO ========== */
   .contact-info {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(196, 167, 125, 0.3);
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
     border-radius: 16px;
     padding: 2rem;
     margin: 1.5rem 0;
     max-width: 500px;
+    box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05);
   }
 
   .contact-info p {
@@ -700,10 +697,11 @@ hero:
     gap: 2rem;
     margin: 4rem 0;
     padding: 3rem 2rem;
-    background: rgba(255, 255, 255, 0.4);
-    border: 1px solid rgba(196, 167, 125, 0.3);
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05);
   }
 
   .metric-item {
