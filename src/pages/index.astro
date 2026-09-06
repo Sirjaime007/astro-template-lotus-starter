@@ -178,19 +178,44 @@
       }, { threshold: 0.15 });
       fadeElements.forEach(el => fadeObserver.observe(el));
 
-      // 3. Inicializar Mapa (Cambiado a Esri Light Gray Canvas, gratis y limpio)
+      // 3. Inicializar Mapa (Esri Light Gray Canvas)
       const map = L.map('cofiteca-map', { 
         zoomControl: false, 
         scrollWheelZoom: false,
         dragging: !L.Browser.mobile
-      }).setView([-38.4161, -63.6167], 4);
+      }).setView([-36.4161, -63.6167], 4);
       
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri',
         maxZoom: 16
       }).addTo(map);
 
-      // 4. Lógica de CSV (Contadores + Marcadores del mapa)
+      // Puntos de muestra para dar vida visual al mapa (Cafeterías en Argentina)
+      const coffeePoints = [
+        [-38.0055, -57.5426], [-38.0155, -57.5526], // Mar del Plata
+        [-34.6037, -58.3816], [-34.5890, -58.4290], [-34.5720, -58.4340], // CABA/GBA
+        [-31.4201, -64.1888], [-31.4000, -64.2000], // Córdoba
+        [-32.9442, -60.6505], // Rosario
+        [-32.8908, -68.8272], // Mendoza
+        [-41.1456, -71.3082], // Bariloche
+        [-38.9516, -68.0591], // Neuquén
+        [-26.8241, -65.2226], // Tucumán
+        [-24.7821, -65.4232], // Salta
+        [-54.8019, -68.3030]  // Ushuaia
+      ];
+
+      coffeePoints.forEach(coords => {
+        L.circleMarker(coords, {
+          radius: 6,
+          fillColor: "#8b4513",
+          color: "#f5f0e8",
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.8
+        }).addTo(map);
+      });
+
+      // 4. Lógica de CSV (Solamente para los Contadores Numéricos)
       const counters = document.querySelectorAll('.metric-number');
       const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKWHZjUoyHujPoj5kaTJzj-O8K-GBReU2XS_ul1zNhV9nKkDC6ndE2YPgPjElaY-IHXVxcxKWKqs6t/pub?gid=984622585&single=true&output=csv';
       
@@ -202,32 +227,13 @@
           
           rows.forEach(row => {
             const cols = row.split(',');
-            let lat = null, lng = null;
-            
             cols.forEach(col => {
                const val = parseFloat(col.trim());
-               if (!isNaN(val)) {
-                   // Capturar enteros positivos para los contadores (ignora lat/long negativas)
-                   if (val >= 0 && Number.isInteger(val)) {
-                       counterValues.push(val);
-                   }
-                   // Detectar coordenadas aproximadas de Argentina
-                   if (val < -21 && val > -56) lat = val;
-                   if (val < -53 && val > -74) lng = val;
+               // Capturar enteros positivos para los contadores
+               if (!isNaN(val) && val >= 0 && Number.isInteger(val)) {
+                   counterValues.push(val);
                }
             });
-
-            // Dibujar punto en el mapa si encontramos Lat y Lng
-            if (lat && lng) {
-              L.circleMarker([lat, lng], {
-                radius: 4,
-                fillColor: "#8b4513",
-                color: "#f5f0e8",
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.7
-              }).addTo(map);
-            }
           });
 
           // Activar contadores
