@@ -37,28 +37,40 @@
     <h2 class="section-title fade-on-scroll">Nuestros Servicios</h2>
 
     <div class="services-grid fade-on-scroll">
-      <a href="#" class="service-card media-trigger" data-type="text" data-title="Identidad Visual" data-desc="Hacemos branding que respira la cultura de especialidad. No importa si tenés una cafetería, si tostás en tu galpón, si formás profesionales o si vendés equipamiento; te armamos la identidad de cero (o te hacemos un rebranding) para que tu proyecto se despegue del ruido y se vea 100% profesional.">
+      {/* TARJETA 1 */}
+      <a href="#" class="service-card media-trigger" data-type="image" data-src="/tio1.jpg" data-title="Identidad Visual" data-desc="Hacemos branding que respira la cultura de especialidad. No importa si tenés una cafetería, si tostás en tu galpón, si formás profesionales o si vendés equipamiento; te armamos la identidad de cero (o te hacemos un rebranding) para que tu proyecto se despegue del ruido y se vea 100% profesional.">
+        <div class="service-thumb">
+          <img src="/tio1.jpg" alt="Identidad Visual" loading="lazy" />
+        </div>
         <h3>Identidad Visual</h3>
-        <p class="service-desc">Hacemos branding que respira la cultura de especialidad. No importa si tenés una cafetería, si tostás en tu galpón, si formás profesionales o si vendés equipamiento; te armamos la identidad de cero (o te hacemos un rebranding) para que tu proyecto se despegue del ruido y se vea 100% profesional.</p>
-        <span class="service-hover-text">Ampliar ✦</span>
+        <span class="service-hover-text">Leer más ✦</span>
       </a>
       
-      <a href="#" class="service-card media-trigger" data-type="text" data-title="Piezas para tu Negocio" data-desc="Vimos qué funciona y qué falla. Después de analizar casi 2000 menús y más de 160 etiquetas en todo el país, sabemos cómo comunicar. Te diseñamos menús armados a medida, etiquetas que destaquen en la góndola mostrando la trazabilidad, y las tarjetas de presentación del café que acompañan a cada espresso.">
+      {/* TARJETA 2 */}
+      <a href="#" class="service-card media-trigger" data-type="image" data-src="/black-bean.jpg" data-title="Piezas para tu Negocio" data-desc="Vimos qué funciona y qué falla. Después de analizar casi 2000 menús y más de 160 etiquetas en todo el país, sabemos cómo comunicar. Te diseñamos menús armados a medida, etiquetas que destaquen en la góndola mostrando la trazabilidad, y las tarjetas de presentación del café que acompañan a cada espresso.">
+        <div class="service-thumb">
+          <img src="/black-bean.jpg" alt="Piezas para tu Negocio" loading="lazy" />
+        </div>
         <h3>Piezas para tu Negocio</h3>
-        <p class="service-desc">Vimos qué funciona y qué falla. Después de analizar casi 2000 menús y más de 160 etiquetas en todo el país, sabemos cómo comunicar. Te diseñamos menús armados a medida, etiquetas que destaquen en la góndola mostrando la trazabilidad, y las tarjetas de presentación del café que acompañan a cada espresso.</p>
-        <span class="service-hover-text">Ampliar ✦</span>
+        <span class="service-hover-text">Leer más ✦</span>
       </a>
       
-      <a href="#" class="service-card media-trigger" data-type="text" data-title="Señalética y Espacio" data-desc="Hacemos que tu espacio comunique por vos. Cubrimos toda la pata gráfica y de circulación: desde la fachada de tu cafetería hasta la comunicación visual adentro de tu academia o la cartelería para ferias y eventos del rubro.">
+      {/* TARJETA 3 */}
+      <a href="#" class="service-card media-trigger" data-type="image" data-src="/cafe-de-obra.jpg" data-title="Señalética y Espacio" data-desc="Hacemos que tu espacio comunique por vos. Cubrimos toda la pata gráfica y de circulación: desde la fachada de tu cafetería hasta la comunicación visual adentro de tu academia o la cartelería para ferias y eventos del rubro.">
+        <div class="service-thumb">
+          <img src="/cafe-de-obra.jpg" alt="Señalética y Espacio" loading="lazy" />
+        </div>
         <h3>Señalética y Espacio</h3>
-        <p class="service-desc">Hacemos que tu espacio comunique por vos. Cubrimos toda la pata gráfica y de circulación: desde la fachada de tu cafetería hasta la comunicación visual adentro de tu academia o la cartelería para ferias y eventos del rubro.</p>
-        <span class="service-hover-text">Ampliar ✦</span>
+        <span class="service-hover-text">Leer más ✦</span>
       </a>
       
-      <a href="#" class="service-card media-trigger" data-type="text" data-title="Diseño con Data Real" data-desc="Diseñamos con los pies en la tierra. Aprovechamos el mapeo masivo de Cofiteca para entender cómo se mueve el sector a nivel nacional. Cada pieza que diseñamos está respaldada por datos de la calle, pensada para potenciar tus ventas y tu posicionamiento.">
+      {/* TARJETA 4 */}
+      <a href="#" class="service-card media-trigger" data-type="image" data-src="/Sara.jpg" data-title="Diseño con Data Real" data-desc="Diseñamos con los pies en la tierra. Aprovechamos el mapeo masivo de Cofiteca para entender cómo se mueve el sector a nivel nacional. Cada pieza que diseñamos está respaldada por datos de la calle, pensada para potenciar tus ventas y tu posicionamiento.">
+        <div class="service-thumb">
+          <img src="/Sara.jpg" alt="Diseño con Data Real" loading="lazy" />
+        </div>
         <h3>Diseño con Data Real</h3>
-        <p class="service-desc">Diseñamos con los pies en la tierra. Aprovechamos el mapeo masivo de Cofiteca para entender cómo se mueve el sector a nivel nacional. Cada pieza que diseñamos está respaldada por datos de la calle, pensada para potenciar tus ventas y tu posicionamiento.</p>
-        <span class="service-hover-text">Ampliar ✦</span>
+        <span class="service-hover-text">Leer más ✦</span>
       </a>
     </div>
 
@@ -203,7 +215,7 @@
           initCounters();
         });
 
-      // 5. Lightbox
+      // 5. Nuevo Lightbox Adaptable
       const lightbox = document.createElement('div');
       lightbox.id = 'lightbox';
       lightbox.innerHTML = `
@@ -343,28 +355,30 @@
       background-color: #ffffff; border-color: #8b4513; transform: translateY(-3px);
     }
 
-    /* ========== SERVICIOS (TARJETAS INTERACTIVAS 2x2) ========== */
+    /* ========== SERVICIOS (CON IMÁGENES) ========== */
     .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin: 3rem 0; }
     @media (max-width: 768px) { .services-grid { grid-template-columns: 1fr; } }
     
     .service-card {
       display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
       background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8);
-      border-radius: 16px; padding: 2.5rem 2.5rem 3.5rem; min-height: 250px; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05);
+      border-radius: 16px; padding: 1.5rem; min-height: 250px; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05);
       transition: transform 0.3s ease, box-shadow 0.3s ease; text-decoration: none; position: relative; overflow: hidden;
     }
-    .service-card h3 {
-      color: #3d2317; font-size: 1.6rem; margin: 0 0 1rem 0; text-align: center; font-weight: 700;
+    .service-thumb {
+      width: 100%; height: 200px; border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem;
     }
-    .service-desc {
-      margin: 0; font-size: 1.05rem; line-height: 1.6; color: #4a332a; text-align: center;
+    .service-thumb img {
+      width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;
+    }
+    .service-card h3 {
+      color: #3d2317; font-size: 1.6rem; margin: 0 0 1rem 0; text-align: center; font-weight: 700; transition: transform 0.4s ease;
     }
     
-    /* Degradado de Overlay al hacer Hover en Servicios */
     .service-card::after {
       content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
       background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.90));
-      transform: translateY(100%); transition: transform 0.4s ease; z-index: 1;
+      transform: translateY(100%); transition: transform 0.4s ease; z-index: 1; pointer-events: none;
     }
     .service-hover-text {
       position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -373,7 +387,9 @@
     
     .service-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(44, 24, 16, 0.15); }
     .service-card:hover::after { transform: translateY(0); }
+    .service-card:hover h3 { transform: translateY(-15px); color: #f5f0e8; z-index: 2; }
     .service-card:hover .service-hover-text { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .service-card:hover .service-thumb img { transform: scale(1.05); }
 
     /* ========== MÉTRICAS COFITECA ========== */
     .metrics-banner {
@@ -427,7 +443,6 @@
     .lightbox-close { position: absolute; top: -2.5rem; right: 0; color: #e8dcc8; font-size: 2.5rem; cursor: pointer; line-height: 1; z-index: 10; }
     @media (min-width: 768px) { .lightbox-close { top: 1rem; right: 2rem; } }
 
-    /* Estilo Especial: Lightbox solo con Texto */
     .lightbox-content-wrapper.text-only-mode #lightbox-media-container { display: none; }
     .lightbox-content-wrapper.text-only-mode .lightbox-text-panel { flex-basis: 100%; max-width: 700px; padding: 4rem 3rem; text-align: center; }
 
