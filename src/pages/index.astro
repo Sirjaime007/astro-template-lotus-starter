@@ -62,29 +62,29 @@
       </a>
     </div>
 
-    {/* METODOLOGÍA / PROCESO */}
+    {/* METODOLOGÍA / PROCESO ACTUALIZADO */}
     <div id="proceso"></div>
     <h2 class="section-title fade-on-scroll">Nuestro Proceso</h2>
     <div class="process-grid fade-on-scroll">
       <div class="process-step">
         <div class="step-number">1</div>
-        <h4>Auditoría con Data Real</h4>
-        <p>Analizamos cada caso particular y lo cruzamos de inmediato con los números y la base de datos de Cofiteca para entender exactamente dónde está parada tu marca en el mercado actual.</p>
+        <h4>Auditoría y Contexto</h4>
+        <p>Analizamos cada caso particular integrando tus ideas con nuestra experiencia. Cuando el proyecto lo requiere, cruzamos esta información con la base de datos de Cofiteca para sumar contexto real y tomar decisiones fundamentadas.</p>
       </div>
       <div class="process-step">
         <div class="step-number">2</div>
         <h4>Conceptualización</h4>
-        <p>Búsqueda de un diseño con propósito. Escapamos de los recursos literales o íconos obvios para lograr una identidad abstracta, minimalista y que realmente soporte el paso del tiempo.</p>
+        <p>Búsqueda de un diseño con propósito. Desarrollamos la identidad visual basándonos en tu visión, nuestro conocimiento técnico y las necesidades del contexto, creando marcas sólidas que representan genuinamente tu propuesta.</p>
       </div>
       <div class="process-step">
         <div class="step-number">3</div>
         <h4>Despliegue</h4>
-        <p>Aplicación estratégica. Bajamos el concepto al espacio físico, al packaging y a las piezas gráficas, asegurándonos de que la teoría visual se traduzca perfectamente a la vida real.</p>
+        <p>Aplicación estratégica. Bajamos el concepto aprobado a los distintos puntos de contacto: desde el diseño de packaging y etiquetas hasta la cartelería y las piezas gráficas impresas o digitales.</p>
       </div>
       <div class="process-step">
         <div class="step-number">4</div>
-        <h4>Revisión y Ajustes Finales</h4>
-        <p>Siempre hay cosas para corregir. Hacemos un control de las piezas implementadas: evaluamos el flujo de trabajo en la barra y ajustamos los detalles operativos para que todo ruede de forma impecable.</p>
+        <h4>Revisión Gráfica Final</h4>
+        <p>Siempre hay detalles visuales por afinar. Hacemos un control de las piezas que entregamos para asegurarnos de que la calidad y la coherencia gráfica se mantengan impecables al momento de su implementación real.</p>
       </div>
     </div>
 
@@ -190,7 +190,6 @@
         maxZoom: 16
       }).addTo(map);
 
-      // Puntos de muestra para dar vida visual al mapa (Cafeterías en Argentina)
       const coffeePoints = [
         [-38.0055, -57.5426], [-38.0155, -57.5526], // Mar del Plata
         [-34.6037, -58.3816], [-34.5890, -58.4290], [-34.5720, -58.4340], // CABA/GBA
@@ -215,7 +214,7 @@
         }).addTo(map);
       });
 
-      // 4. Lógica de CSV (Solamente para los Contadores Numéricos)
+      // 4. Lógica de CSV (Contadores Numéricos)
       const counters = document.querySelectorAll('.metric-number');
       const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKWHZjUoyHujPoj5kaTJzj-O8K-GBReU2XS_ul1zNhV9nKkDC6ndE2YPgPjElaY-IHXVxcxKWKqs6t/pub?gid=984622585&single=true&output=csv';
       
@@ -229,14 +228,12 @@
             const cols = row.split(',');
             cols.forEach(col => {
                const val = parseFloat(col.trim());
-               // Capturar enteros positivos para los contadores
                if (!isNaN(val) && val >= 0 && Number.isInteger(val)) {
                    counterValues.push(val);
                }
             });
           });
 
-          // Activar contadores
           if (counterValues.length >= 3 && counters.length >= 3) {
             counters[0].setAttribute('data-target', counterValues[0]);
             counters[1].setAttribute('data-target', counterValues[1]);
@@ -385,14 +382,23 @@
     .service-card:hover .service-hover-text { transform: translateX(-50%) translateY(0); opacity: 1; }
     .service-card:hover .service-thumb img { transform: scale(1.05); }
 
-    /* PROCESO */
+    /* PROCESO ACTUALIZADO (Alineación izquierda y números al fondo) */
     .process-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin: 3rem 0; }
     @media (max-width: 992px) { .process-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 576px) { .process-grid { grid-template-columns: 1fr; } }
-    .process-step { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 2rem; position: relative; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); }
-    .step-number { font-size: 4rem; font-weight: 900; color: rgba(196, 167, 125, 0.3); position: absolute; top: 0.5rem; right: 1.5rem; line-height: 1; }
-    .process-step h4 { color: #1a0f0a; font-size: 1.3rem; margin-top: 0; margin-bottom: 1rem; position: relative; z-index: 2; }
-    .process-step p { color: #4a332a; font-size: 1rem; margin: 0; position: relative; z-index: 2; }
+    
+    .process-step { 
+      background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); 
+      border-radius: 16px; padding: 2.5rem 2rem; position: relative; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); 
+      text-align: left; /* Alineación limpia para mayor legibilidad */
+      overflow: hidden;
+    }
+    .step-number { 
+      font-size: 8rem; font-weight: 900; color: rgba(196, 167, 125, 0.15); /* Muy suave y grande de fondo */
+      position: absolute; top: -20px; right: 10px; line-height: 1; z-index: 0; pointer-events: none;
+    }
+    .process-step h4 { color: #1a0f0a; font-size: 1.3rem; margin-top: 0; margin-bottom: 1rem; position: relative; z-index: 2; text-align: left; }
+    .process-step p { color: #4a332a; font-size: 1.05rem; margin: 0; position: relative; z-index: 2; text-align: left; line-height: 1.6; }
 
     /* DATA REAL: MAPA + MÉTRICAS */
     .data-real-container { display: flex; flex-wrap: wrap; gap: 2rem; margin: 4rem 0; background: rgba(255, 255, 255, 0.65); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); overflow: hidden; align-items: stretch; }
@@ -430,7 +436,7 @@
     .lightbox-close { position: absolute; top: -2.5rem; right: 0; color: #e8dcc8; font-size: 2.5rem; cursor: pointer; line-height: 1; z-index: 10; }
     @media (min-width: 768px) { .lightbox-close { top: 1rem; right: 2rem; } }
     .lightbox-content-wrapper.text-only-mode #lightbox-media-container { display: none; }
-    .lightbox-content-wrapper.text-only-mode .lightbox-text-panel { flex-basis: 100%; max-width: 700px; padding: 4rem 3rem; text-align: center; }
+    .lightbox-content-wrapper.text-only-mode .lightbox-text-panel { flex-basis: 100%; max-width: 700px; padding: 4rem 3rem; text-align: left; }
 
     /* CONTACTO */
     .contact-intro { font-size: 1.1rem; color: #2c1810; margin-bottom: 2rem; }
