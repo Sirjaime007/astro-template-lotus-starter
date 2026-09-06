@@ -1,6 +1,5 @@
 ---
 // src/pages/index.astro
-// Página 100% propia.
 ---
 
 <!doctype html>
@@ -9,10 +8,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cofiteca x Mad Diseño</title>
-  <meta
-    name="description"
-    content="Diseño exclusivo para el mundo del café de especialidad. Identidad visual, packaging, señalética y diseño con data real."
-  />
+  <meta name="description" content="Diseño exclusivo para el mundo del café de especialidad. Identidad visual, packaging, señalética y diseño con data real." />
+  
+  {/* LIBRERÍAS DEL MAPA */}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
   {/* VIDEO DE FONDO */}
@@ -20,14 +20,14 @@
     <source src="/video-1.mp4" type="video/mp4" />
   </video>
 
-  {/* SECCIÓN HERO PERSONALIZADA */}
+  {/* SECCIÓN HERO */}
   <div class="brand-hero fade-on-scroll">
     <div class="brand-title">Cofiteca x Mad Diseño</div>
     <p class="brand-tagline">Diseño exclusivo para el mundo del café de especialidad.</p>
     <div class="brand-actions">
       <a href="#servicios">Ver Servicios</a>
+      <a href="#proceso">Proceso</a>
       <a href="#portafolio">Portafolio</a>
-      <a href="https://cofiteca.ar" target="_blank">Ir a Cofiteca.ar</a>
       <a href="#contacto">Contacto</a>
     </div>
   </div>
@@ -37,55 +37,75 @@
     <h2 class="section-title fade-on-scroll">Nuestros Servicios</h2>
 
     <div class="services-grid fade-on-scroll">
-      {/* TARJETA 1 */}
-      <a href="#" class="service-card media-trigger" data-type="image" data-src="/tio1.jpg" data-title="Identidad Visual" data-desc="Hacemos branding que respira la cultura de especialidad. No importa si tenés una cafetería, si tostás en tu galpón, si formás profesionales o si vendés equipamiento; te armamos la identidad de cero (o te hacemos un rebranding) para que tu proyecto se despegue del ruido y se vea 100% profesional.">
-        <div class="service-thumb">
-          <img src="/tio1.jpg" alt="Identidad Visual" loading="lazy" />
-        </div>
+      <a href="#" class="service-card media-trigger" data-type="text" data-title="Identidad Visual" data-desc="Hacemos branding que respira la cultura de especialidad. No importa si tenés una cafetería, si tostás en tu galpón, si formás profesionales o si vendés equipamiento; te armamos la identidad de cero (o te hacemos un rebranding) para que tu proyecto se despegue del ruido y se vea 100% profesional.">
+        <div class="service-thumb"><img src="/tio1.jpg" alt="Identidad Visual" loading="lazy" /></div>
         <h3>Identidad Visual</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
       
-      {/* TARJETA 2 */}
-      <a href="#" class="service-card media-trigger" data-type="image" data-src="/black-bean.jpg" data-title="Piezas para tu Negocio" data-desc="Vimos qué funciona y qué falla. Después de analizar casi 2000 menús y más de 160 etiquetas en todo el país, sabemos cómo comunicar. Te diseñamos menús armados a medida, etiquetas que destaquen en la góndola mostrando la trazabilidad, y las tarjetas de presentación del café que acompañan a cada espresso.">
-        <div class="service-thumb">
-          <img src="/black-bean.jpg" alt="Piezas para tu Negocio" loading="lazy" />
-        </div>
+      <a href="#" class="service-card media-trigger" data-type="text" data-title="Piezas para tu Negocio" data-desc="Vimos qué funciona y qué falla. Después de analizar casi 2000 menús y más de 160 etiquetas en todo el país, sabemos cómo comunicar. Te diseñamos menús armados a medida, etiquetas que destaquen en la góndola mostrando la trazabilidad, y las tarjetas de presentación del café que acompañan a cada espresso.">
+        <div class="service-thumb"><img src="/black-bean.jpg" alt="Piezas para tu Negocio" loading="lazy" /></div>
         <h3>Piezas para tu Negocio</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
       
-      {/* TARJETA 3 */}
-      <a href="#" class="service-card media-trigger" data-type="image" data-src="/cafe-de-obra.jpg" data-title="Señalética y Espacio" data-desc="Hacemos que tu espacio comunique por vos. Cubrimos toda la pata gráfica y de circulación: desde la fachada de tu cafetería hasta la comunicación visual adentro de tu academia o la cartelería para ferias y eventos del rubro.">
-        <div class="service-thumb">
-          <img src="/cafe-de-obra.jpg" alt="Señalética y Espacio" loading="lazy" />
-        </div>
+      <a href="#" class="service-card media-trigger" data-type="text" data-title="Señalética y Espacio" data-desc="Hacemos que tu espacio comunique por vos. Cubrimos toda la pata gráfica y de circulación: desde la fachada de tu cafetería hasta la comunicación visual adentro de tu academia o la cartelería para ferias y eventos del rubro.">
+        <div class="service-thumb"><img src="/cafe-de-obra.jpg" alt="Señalética y Espacio" loading="lazy" /></div>
         <h3>Señalética y Espacio</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
       
-      {/* TARJETA 4 */}
-      <a href="#" class="service-card media-trigger" data-type="image" data-src="/Sara.jpg" data-title="Diseño con Data Real" data-desc="Diseñamos con los pies en la tierra. Aprovechamos el mapeo masivo de Cofiteca para entender cómo se mueve el sector a nivel nacional. Cada pieza que diseñamos está respaldada por datos de la calle, pensada para potenciar tus ventas y tu posicionamiento.">
-        <div class="service-thumb">
-          <img src="/Sara.jpg" alt="Diseño con Data Real" loading="lazy" />
-        </div>
+      <a href="#" class="service-card media-trigger" data-type="text" data-title="Diseño con Data Real" data-desc="Diseñamos con los pies en la tierra. Aprovechamos el mapeo masivo de Cofiteca para entender cómo se mueve el sector a nivel nacional. Cada pieza que diseñamos está respaldada por datos de la calle, pensada para potenciar tus ventas y tu posicionamiento.">
+        <div class="service-thumb"><img src="/Sara.jpg" alt="Diseño con Data Real" loading="lazy" /></div>
         <h3>Diseño con Data Real</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
     </div>
 
-    <div class="metrics-banner fade-on-scroll">
-      <div class="metric-item">
-        <span class="metric-number" data-target="420">0</span>
-        <span class="metric-label">Cafeterías en Base</span>
+    {/* METODOLOGÍA / PROCESO */}
+    <div id="proceso"></div>
+    <h2 class="section-title fade-on-scroll">Nuestro Proceso</h2>
+    <div class="process-grid fade-on-scroll">
+      <div class="process-step">
+        <div class="step-number">1</div>
+        <h4>Auditoría con Data Real</h4>
+        <p>Analizamos cada caso particular y lo cruzamos de inmediato con los números y la base de datos de Cofiteca para entender exactamente dónde está parada tu marca en el mercado actual.</p>
       </div>
-      <div class="metric-item">
-        <span class="metric-number" data-target="18">0</span>
-        <span class="metric-label">Provincias Mapeadas</span>
+      <div class="process-step">
+        <div class="step-number">2</div>
+        <h4>Conceptualización</h4>
+        <p>Búsqueda de un diseño con propósito. Escapamos de los recursos literales o íconos obvios para lograr una identidad abstracta, minimalista y que realmente soporte el paso del tiempo.</p>
       </div>
-      <div class="metric-item">
-        <span class="metric-number" data-target="100">0</span><span class="metric-symbol">%</span>
-        <span class="metric-label">Data Real</span>
+      <div class="process-step">
+        <div class="step-number">3</div>
+        <h4>Despliegue</h4>
+        <p>Aplicación estratégica. Bajamos el concepto al espacio físico, al packaging y a las piezas gráficas, asegurándonos de que la teoría visual se traduzca perfectamente a la vida real.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-number">4</div>
+        <h4>Revisión y Ajustes Finales</h4>
+        <p>Siempre hay cosas para corregir. Hacemos un control de las piezas implementadas: evaluamos el flujo de trabajo en la barra y ajustamos los detalles operativos para que todo ruede de forma impecable.</p>
+      </div>
+    </div>
+
+    {/* MAPA Y MÉTRICAS INTEGRADAS */}
+    <div class="data-real-container fade-on-scroll">
+      <div class="metrics-sidebar">
+        <div class="metric-item">
+          <span class="metric-number" data-target="420">0</span>
+          <span class="metric-label">Cafeterías Auditadas</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-number" data-target="18">0</span>
+          <span class="metric-label">Provincias Mapeadas</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-number" data-target="100">0</span><span class="metric-symbol">%</span>
+          <span class="metric-label">Inteligencia de Mercado</span>
+        </div>
+      </div>
+      <div class="map-wrapper">
+        <div id="cofiteca-map"></div>
       </div>
     </div>
 
@@ -125,7 +145,6 @@
 
     <div style="text-align: center;">
       <p class="contact-intro">¿Listos para elevar la experiencia de su café? Hablemos.</p>
-      
       <div class="contact-info fade-on-scroll">
         <p class="contact-text"><strong>Email:</strong> <a href="mailto:hola@cofiteca.ar">hola@cofiteca.ar</a></p>
         <p class="contact-text"><strong>Sede:</strong> Mar del Plata, Argentina</p>
@@ -133,7 +152,6 @@
     </div>
   </main>
 
-  {/* LÓGICA PRINCIPAL */}
   <script is:inline>
     document.addEventListener('DOMContentLoaded', () => {
       // 1. Rotación de Video
@@ -148,7 +166,7 @@
         });
       }
 
-      // 2. Animaciones Fade-in
+      // 2. Fade-in
       const fadeElements = document.querySelectorAll('.fade-on-scroll');
       const fadeObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -160,62 +178,91 @@
       }, { threshold: 0.15 });
       fadeElements.forEach(el => fadeObserver.observe(el));
 
-      // 3. Contadores
-      const counters = document.querySelectorAll('.metric-number');
-      const initCounters = () => {
-        const counterObserver = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              const target = +entry.target.getAttribute('data-target');
-              const duration = 2000;
-              const step = target / (duration / 16);
-              let current = 0;
-              const updateCounter = () => {
-                current += step;
-                if (current < target) {
-                  entry.target.innerText = Math.ceil(current);
-                  requestAnimationFrame(updateCounter);
-                } else {
-                  entry.target.innerText = target;
-                }
-              };
-              updateCounter();
-              counterObserver.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.5 });
-        counters.forEach(counter => counterObserver.observe(counter));
-      };
+      // 3. Inicializar Mapa (Filtro para que luzca estético)
+      const map = L.map('cofiteca-map', { 
+        zoomControl: false, 
+        scrollWheelZoom: false,
+        dragging: !L.Browser.mobile
+      }).setView([-38.4161, -63.6167], 4);
+      
+      // Capa base limpia y monocromática
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap',
+        subdomains: 'abcd',
+        maxZoom: 10
+      }).addTo(map);
 
-      // 4. Leer CSV Google Sheets
+      // 4. Lógica de CSV (Contadores + Marcadores del mapa)
+      const counters = document.querySelectorAll('.metric-number');
       const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKWHZjUoyHujPoj5kaTJzj-O8K-GBReU2XS_ul1zNhV9nKkDC6ndE2YPgPjElaY-IHXVxcxKWKqs6t/pub?gid=984622585&single=true&output=csv';
+      
       fetch(csvUrl)
         .then(response => response.text())
         .then(csvText => {
           const rows = csvText.trim().split(/\r?\n/);
-          const values = [];
+          const counterValues = [];
+          
           rows.forEach(row => {
             const cols = row.split(',');
+            let lat = null, lng = null;
+            
             cols.forEach(col => {
-               const num = parseInt(col.trim(), 10);
-               if (!isNaN(num) && col.trim() !== '') {
-                   values.push(num);
+               const val = parseFloat(col.trim());
+               if (!isNaN(val)) {
+                   // Capturar enteros positivos para los contadores (ignora lat/long negativas)
+                   if (val >= 0 && Number.isInteger(val)) {
+                       counterValues.push(val);
+                   }
+                   // Detectar coordenadas aproximadas de Argentina
+                   if (val < -21 && val > -56) lat = val;
+                   if (val < -53 && val > -74) lng = val;
                }
             });
-          });
-          if (values.length >= 3 && counters.length >= 3) {
-            counters[0].setAttribute('data-target', values[0]);
-            counters[1].setAttribute('data-target', values[1]);
-            counters[2].setAttribute('data-target', values[2]);
-          }
-          initCounters();
-        })
-        .catch(error => {
-          console.error('Error CSV:', error);
-          initCounters();
-        });
 
-      // 5. Nuevo Lightbox Adaptable
+            // Dibujar punto en el mapa si encontramos Lat y Lng
+            if (lat && lng) {
+              L.circleMarker([lat, lng], {
+                radius: 4,
+                fillColor: "#8b4513",
+                color: "#f5f0e8",
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.7
+              }).addTo(map);
+            }
+          });
+
+          // Activar contadores
+          if (counterValues.length >= 3 && counters.length >= 3) {
+            counters[0].setAttribute('data-target', counterValues[0]);
+            counters[1].setAttribute('data-target', counterValues[1]);
+            counters[2].setAttribute('data-target', counterValues[2]);
+          }
+          
+          const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                const target = +entry.target.getAttribute('data-target');
+                let current = 0;
+                const updateCounter = () => {
+                  current += target / 30;
+                  if (current < target) {
+                    entry.target.innerText = Math.ceil(current);
+                    requestAnimationFrame(updateCounter);
+                  } else {
+                    entry.target.innerText = target;
+                  }
+                };
+                updateCounter();
+                counterObserver.unobserve(entry.target);
+              }
+            });
+          }, { threshold: 0.5 });
+          counters.forEach(c => counterObserver.observe(c));
+        })
+        .catch(error => console.error('Error CSV:', error));
+
+      // 5. Lightbox
       const lightbox = document.createElement('div');
       lightbox.id = 'lightbox';
       lightbox.innerHTML = `
@@ -249,7 +296,6 @@
           descEl.innerHTML = trigger.getAttribute('data-desc');
           mediaContainer.innerHTML = '';
 
-          // Lógica para modo Texto o Media
           if (type === 'text') {
             wrapper.classList.add('text-only-mode');
           } else {
@@ -260,7 +306,6 @@
               mediaContainer.innerHTML = `<img src="${src}" class="lightbox-media" alt="Ampliación" />`;
             }
           }
-
           lightbox.classList.add('active');
           document.body.style.overflow = 'hidden';
         });
@@ -283,11 +328,9 @@
   </script>
 
   <style is:global>
-    /* ========== RESET BÁSICO ========== */
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
 
-    /* ========== FONDO BEIGE BASE ========== */
     body {
       background-color: #f5f0e8;
       color: #2c1810;
@@ -295,166 +338,101 @@
       line-height: 1.7;
     }
 
-    /* ========== VIDEO DE FONDO ========== */
     #video-fondo {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       object-fit: cover; z-index: -998; opacity: 0.25; pointer-events: none;
     }
 
-    /* ========== TIPOGRAFÍA Y COLORES ========== */
     strong { color: #1a0f0a; }
-    a {
-      color: #8b4513; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.3s ease;
-    }
+    a { color: #8b4513; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.3s ease; }
     a:hover { border-bottom-color: #8b4513; }
 
     main { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
 
     .section-title {
-      text-align: center;
-      font-size: 3.5rem;
-      font-weight: 800;
-      color: #1a0f0a;
-      letter-spacing: -0.03em;
-      text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1);
-      margin: 4rem 0 2rem;
-      line-height: 1.1;
-      font-family: 'Georgia', 'Times New Roman', serif;
-    }
-
-    /* ========== HERO ========== */
-    .brand-hero {
-      text-align: center; padding: 7rem 1rem 5rem; position: relative; z-index: 2;
-    }
-    .brand-title {
-      font-size: 4.2rem; font-weight: 800; color: #1a0f0a;
+      text-align: center; font-size: 3.5rem; font-weight: 800; color: #1a0f0a;
       letter-spacing: -0.03em; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1);
-      margin-bottom: 1.5rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif;
-    }
-    .brand-tagline {
-      font-size: 1.3rem; color: #3d2317; font-weight: 500; max-width: 650px;
-      margin: 0 auto 2.5rem; background: rgba(255, 255, 255, 0.6); padding: 0.8rem 1.8rem;
-      border-radius: 50px; backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); display: inline-block;
-    }
-    .brand-actions { display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
-    .brand-actions a {
-      padding: 0.8rem 2.2rem; border-radius: 50px; font-size: 1.05rem; font-weight: 600;
-      text-decoration: none; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem;
-    }
-    .brand-actions a[href="#servicios"], .brand-actions a[href="#contacto"] {
-      background-color: #8b4513; color: #ffffff; border: 2px solid #8b4513; box-shadow: 0 4px 15px rgba(139, 69, 19, 0.25);
-    }
-    .brand-actions a[href="#servicios"]:hover, .brand-actions a[href="#contacto"]:hover {
-      background-color: #5c3d2e; border-color: #5c3d2e; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(139, 69, 19, 0.35);
-    }
-    .brand-actions a[href="#portafolio"], .brand-actions a[href="https://cofiteca.ar"] {
-      background-color: rgba(255, 255, 255, 0.8); color: #3d2317; border: 2px solid #c4a77d; backdrop-filter: blur(5px);
-    }
-    .brand-actions a[href="#portafolio"]:hover, .brand-actions a[href="https://cofiteca.ar"]:hover {
-      background-color: #ffffff; border-color: #8b4513; transform: translateY(-3px);
+      margin: 4rem 0 2rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif;
     }
 
-    /* ========== SERVICIOS (CON IMÁGENES) ========== */
+    /* HERO */
+    .brand-hero { text-align: center; padding: 7rem 1rem 5rem; position: relative; z-index: 2; }
+    .brand-title { font-size: 4.2rem; font-weight: 800; color: #1a0f0a; letter-spacing: -0.03em; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1); margin-bottom: 1.5rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif; }
+    .brand-tagline { font-size: 1.3rem; color: #3d2317; font-weight: 500; max-width: 650px; margin: 0 auto 2.5rem; background: rgba(255, 255, 255, 0.6); padding: 0.8rem 1.8rem; border-radius: 50px; backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); display: inline-block; }
+    .brand-actions { display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
+    .brand-actions a { padding: 0.8rem 2.2rem; border-radius: 50px; font-size: 1.05rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .brand-actions a[href="#servicios"], .brand-actions a[href="#contacto"] { background-color: #8b4513; color: #ffffff; border: 2px solid #8b4513; box-shadow: 0 4px 15px rgba(139, 69, 19, 0.25); }
+    .brand-actions a[href="#servicios"]:hover, .brand-actions a[href="#contacto"]:hover { background-color: #5c3d2e; border-color: #5c3d2e; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(139, 69, 19, 0.35); }
+    .brand-actions a[href="#portafolio"], .brand-actions a[href="#proceso"], .brand-actions a[href="https://cofiteca.ar"] { background-color: rgba(255, 255, 255, 0.8); color: #3d2317; border: 2px solid #c4a77d; backdrop-filter: blur(5px); }
+    .brand-actions a:hover { transform: translateY(-3px); background-color: #ffffff; }
+
+    /* SERVICIOS */
     .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin: 3rem 0; }
     @media (max-width: 768px) { .services-grid { grid-template-columns: 1fr; } }
-    
-    .service-card {
-      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-      background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8);
-      border-radius: 16px; padding: 1.5rem; min-height: 250px; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05);
-      transition: transform 0.3s ease, box-shadow 0.3s ease; text-decoration: none; position: relative; overflow: hidden;
-    }
-    .service-thumb {
-      width: 100%; height: 200px; border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem;
-    }
-    .service-thumb img {
-      width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;
-    }
-    .service-card h3 {
-      color: #3d2317; font-size: 1.6rem; margin: 0 0 1rem 0; text-align: center; font-weight: 700; transition: transform 0.4s ease;
-    }
-    
-    .service-card::after {
-      content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.90));
-      transform: translateY(100%); transition: transform 0.4s ease; z-index: 1; pointer-events: none;
-    }
-    .service-hover-text {
-      position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px);
-      opacity: 0; transition: all 0.4s ease; color: #e8dcc8; font-size: 1.1rem; font-weight: bold; z-index: 2;
-    }
-    
+    .service-card { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 1.5rem; min-height: 250px; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; text-decoration: none; position: relative; overflow: hidden; }
+    .service-thumb { width: 100%; height: 200px; border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem; }
+    .service-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+    .service-card h3 { color: #3d2317; font-size: 1.6rem; margin: 0 0 1rem 0; text-align: center; font-weight: 700; transition: transform 0.4s ease; }
+    .service-card::after { content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.90)); transform: translateY(100%); transition: transform 0.4s ease; z-index: 1; pointer-events: none; }
+    .service-hover-text { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0; transition: all 0.4s ease; color: #e8dcc8; font-size: 1.1rem; font-weight: bold; z-index: 2; }
     .service-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(44, 24, 16, 0.15); }
     .service-card:hover::after { transform: translateY(0); }
     .service-card:hover h3 { transform: translateY(-15px); color: #f5f0e8; z-index: 2; }
     .service-card:hover .service-hover-text { transform: translateX(-50%) translateY(0); opacity: 1; }
     .service-card:hover .service-thumb img { transform: scale(1.05); }
 
-    /* ========== MÉTRICAS COFITECA ========== */
-    .metrics-banner {
-      display: flex; justify-content: space-around; flex-wrap: wrap; gap: 2rem; margin: 4rem 0; padding: 3rem 2rem;
-      background: rgba(255, 255, 255, 0.65); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px;
-      backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05);
-    }
+    /* PROCESO */
+    .process-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin: 3rem 0; }
+    @media (max-width: 992px) { .process-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 576px) { .process-grid { grid-template-columns: 1fr; } }
+    .process-step { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 2rem; position: relative; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); }
+    .step-number { font-size: 4rem; font-weight: 900; color: rgba(196, 167, 125, 0.3); position: absolute; top: 0.5rem; right: 1.5rem; line-height: 1; }
+    .process-step h4 { color: #1a0f0a; font-size: 1.3rem; margin-top: 0; margin-bottom: 1rem; position: relative; z-index: 2; }
+    .process-step p { color: #4a332a; font-size: 1rem; margin: 0; position: relative; z-index: 2; }
+
+    /* DATA REAL: MAPA + MÉTRICAS */
+    .data-real-container { display: flex; flex-wrap: wrap; gap: 2rem; margin: 4rem 0; background: rgba(255, 255, 255, 0.65); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); overflow: hidden; align-items: stretch; }
+    .metrics-sidebar { flex: 1; min-width: 250px; padding: 3rem 2rem; display: flex; flex-direction: column; justify-content: center; gap: 3rem; background: rgba(255,255,255, 0.4); border-right: 1px solid rgba(196, 167, 125, 0.3); }
     .metric-item { text-align: center; }
     .metric-number { font-size: 3.5rem; font-weight: 700; color: #1a0f0a; line-height: 1; display: inline-block; }
     .metric-symbol { font-size: 2rem; font-weight: 700; color: #c4a77d; }
     .metric-label { display: block; font-size: 0.95rem; color: #5c3d2e; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; }
+    .map-wrapper { flex: 2; min-width: 300px; min-height: 400px; position: relative; filter: sepia(0.6) hue-rotate(-15deg) contrast(0.9) opacity(0.85); }
+    #cofiteca-map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; }
 
-    /* ========== PORTAFOLIO ========== */
+    /* PORTAFOLIO */
     .portfolio-grid { column-count: 3; column-gap: 1rem; margin: 1.5rem 0 3rem; }
     @media (max-width: 992px) { .portfolio-grid { column-count: 2; } }
     @media (max-width: 768px) { .portfolio-grid { column-count: 1; } }
-
-    .portfolio-item {
-      display: block; position: relative; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 15px rgba(44, 24, 16, 0.15);
-      background: transparent; margin-bottom: 1rem; break-inside: avoid; page-break-inside: avoid; transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
+    .portfolio-item { display: block; position: relative; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 15px rgba(44, 24, 16, 0.15); background: transparent; margin-bottom: 1rem; break-inside: avoid; page-break-inside: avoid; transition: transform 0.3s ease, box-shadow 0.3s ease; }
     .portfolio-item:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(44, 24, 16, 0.25); }
-    .portfolio-item::after {
-      content: attr(data-title); position: absolute; bottom: 0; left: 0; width: 100%; padding: 3rem 1rem 1rem;
-      background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.95)); color: #e8dcc8; font-size: 1.3rem; font-weight: bold; text-align: center;
-      transform: translateY(100%); transition: transform 0.4s ease; box-sizing: border-box; pointer-events: none; z-index: 10;
-    }
+    .portfolio-item::after { content: attr(data-title); position: absolute; bottom: 0; left: 0; width: 100%; padding: 3rem 1rem 1rem; background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.95)); color: #e8dcc8; font-size: 1.3rem; font-weight: bold; text-align: center; transform: translateY(100%); transition: transform 0.4s ease; box-sizing: border-box; pointer-events: none; z-index: 10; }
     .portfolio-item:hover::after { transform: translateY(0); }
     .portfolio-item img, .thumbnail-video { width: 100%; height: auto; display: block; transition: transform 0.4s ease; }
     .portfolio-item:hover img, .video-trigger:hover .thumbnail-video { transform: scale(1.05); }
     .play-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: rgba(255,255,255,0.9); pointer-events: none; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
 
-    /* ========== LIGHTBOX MULTIUSO ========== */
+    /* LIGHTBOX */
     #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; }
     #lightbox.active { display: flex; align-items: center; justify-content: center; }
     .lightbox-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26, 15, 10, 0.95); display: flex; align-items: center; justify-content: center; padding: 1rem; }
-    
-    .lightbox-content-wrapper {
-      position: relative; display: flex; flex-direction: column; background: #f5f0e8; border-radius: 12px;
-      overflow: hidden; width: 100%; max-width: 1000px; max-height: 90vh; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-    }
+    .lightbox-content-wrapper { position: relative; display: flex; flex-direction: column; background: #f5f0e8; border-radius: 12px; overflow: hidden; width: 100%; max-width: 1000px; max-height: 90vh; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
     @media (min-width: 768px) { .lightbox-content-wrapper { flex-direction: row; } }
-    
     #lightbox-media-container { flex: 1; background: #1a0f0a; display: flex; align-items: center; justify-content: center; min-height: 300px; }
     .lightbox-media { max-width: 100%; max-height: 70vh; object-fit: contain; }
-    
     .lightbox-text-panel { padding: 2.5rem 2rem; flex-basis: 400px; overflow-y: auto; }
     .lightbox-text-panel h3 { margin-top: 0; color: #3d2317; font-size: 1.8rem; border-bottom: 2px solid #c4a77d; padding-bottom: 0.5rem; display: inline-block; font-weight: 700; }
     .lightbox-text-panel p { color: #5c3d2e; font-size: 1.1rem;}
-    
     .lightbox-close { position: absolute; top: -2.5rem; right: 0; color: #e8dcc8; font-size: 2.5rem; cursor: pointer; line-height: 1; z-index: 10; }
     @media (min-width: 768px) { .lightbox-close { top: 1rem; right: 2rem; } }
-
     .lightbox-content-wrapper.text-only-mode #lightbox-media-container { display: none; }
     .lightbox-content-wrapper.text-only-mode .lightbox-text-panel { flex-basis: 100%; max-width: 700px; padding: 4rem 3rem; text-align: center; }
 
-    /* ========== CONTACTO ========== */
+    /* CONTACTO */
     .contact-intro { font-size: 1.1rem; color: #2c1810; margin-bottom: 2rem; }
-    .contact-info {
-      background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); display: inline-block;
-      border-radius: 16px; padding: 2.5rem 4rem; margin: 0 auto 4rem; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); text-align: center;
-    }
+    .contact-info { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); display: inline-block; border-radius: 16px; padding: 2.5rem 4rem; margin: 0 auto 4rem; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); text-align: center; }
     .contact-text { margin: 0.5rem 0; font-size: 1.2rem; color: #2c1810; }
 
-    /* ========== ANIMACIONES (FADE IN) ========== */
     .fade-on-scroll { opacity: 0; transform: translateY(25px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
     .fade-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
   </style>
