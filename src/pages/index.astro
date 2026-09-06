@@ -338,8 +338,9 @@
       background-color: #ffffff; border-color: #8b4513; transform: translateY(-3px);
     }
 
-    /* ========== SERVICIOS (TARJETAS INTERACTIVAS) ========== */
-    .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 3rem 0; }
+    /* ========== SERVICIOS (TARJETAS INTERACTIVAS 2x2) ========== */
+    .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin: 3rem 0; }
+    @media (max-width: 768px) { .services-grid { grid-template-columns: 1fr; } }
     
     .service-card {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
