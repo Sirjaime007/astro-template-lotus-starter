@@ -122,7 +122,7 @@
   </main>
 
   {/* LÓGICA PRINCIPAL (VIDEOS, CONTADORES Y LIGHTBOX) */}
-  <script is:inline>{`
+  <script is:inline>
     document.addEventListener('DOMContentLoaded', () => {
       // 1. Rotación de Video de Fondo
       const video = document.getElementById('video-fondo');
@@ -180,7 +180,7 @@
       fetch(csvUrl)
         .then(response => response.text())
         .then(csvText => {
-          const rows = csvText.trim().split(/\\r?\\n/);
+          const rows = csvText.trim().split(/\r?\n/);
           const values = [];
           rows.forEach(row => {
             const cols = row.split(',');
@@ -206,7 +206,7 @@
       // 5. Lightbox
       const lightbox = document.createElement('div');
       lightbox.id = 'lightbox';
-      lightbox.innerHTML = \`
+      lightbox.innerHTML = `
         <div class="lightbox-overlay">
           <span class="lightbox-close">&times;</span>
           <div class="lightbox-content-wrapper">
@@ -217,7 +217,7 @@
             </div>
           </div>
         </div>
-      \`;
+      `;
       document.body.appendChild(lightbox);
 
       const overlay = lightbox.querySelector('.lightbox-overlay');
@@ -237,9 +237,9 @@
           mediaContainer.innerHTML = '';
 
           if (type === 'video') {
-            mediaContainer.innerHTML = \`<video src="\${src}" autoplay controls playsinline class="lightbox-media"></video>\`;
+            mediaContainer.innerHTML = `<video src="${src}" autoplay controls playsinline class="lightbox-media"></video>`;
           } else {
-            mediaContainer.innerHTML = \`<img src="\${src}" class="lightbox-media" alt="Ampliación" />\`;
+            mediaContainer.innerHTML = `<img src="${src}" class="lightbox-media" alt="Ampliación" />`;
           }
 
           lightbox.classList.add('active');
@@ -261,9 +261,9 @@
         if (e.key === 'Escape') closeLightbox();
       });
     });
-  `}</script>
+  </script>
 
-  <style is:global>{`
+  <style is:global>
     /* ========== RESET BÁSICO (ya no hay tema de Lotus que anular) ========== */
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
@@ -600,6 +600,6 @@
     .fade-on-scroll.is-visible {
       opacity: 1; transform: translateY(0);
     }
-  `}</style>
+  </style>
 </body>
 </html>
