@@ -1,7 +1,6 @@
 ---
 // src/pages/index.astro
-// Página 100% propia. No usa DocsLayout ni SplashLayout de Lotus,
-// así que no hay ningún h1/p automático que ocultar por CSS.
+// Página 100% propia.
 ---
 
 <!doctype html>
@@ -10,10 +9,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cofiteca x Mad Diseño</title>
-  <meta
-    name="description"
-    content="Diseño exclusivo para el mundo del café de especialidad. Identidad visual, packaging, señalética y diseño con data real."
-  />
+  <meta name="description" content="Diseño exclusivo para el mundo del café de especialidad. Identidad visual, packaging, señalética y diseño con data real." />
 </head>
 <body>
   {/* VIDEO DE FONDO */}
@@ -38,19 +34,26 @@
     <h2 class="section-title fade-on-scroll">Nuestros Servicios</h2>
 
     <div class="services-grid fade-on-scroll">
-      <a href="#" class="service-card media-trigger" data-type="text" data-title="Identidad Visual" data-desc="Creamos o renovamos tu marca: logo, paleta, tipografía y sistema visual. Ya seas una cafetería, un tostador, una tienda especializada o un evento, tu identidad tiene que sostenerse en cada punto de contacto.">
+      {/* TARJETA 1 */}
+      <a href="#" class="service-card media-trigger" data-type="image" data-src="/tio1.jpg" data-title="Identidad Visual" data-desc="Creamos o renovamos tu marca: logo, paleta, tipografía y sistema visual. Ya seas una cafetería, un tostador, una tienda especializada o un evento, tu identidad tiene que sostenerse en cada punto de contacto.">
         <h3>Identidad Visual</h3>
         <span class="service-hover-text">Saber más ✦</span>
       </a>
-      <a href="#" class="service-card media-trigger" data-type="text" data-title="Piezas para tu Negocio" data-desc="Menús, packaging, etiquetas, gráfica de local o de stand — diseñamos las piezas que tu rubro específico necesita, adaptadas a cómo trabajás vos.">
+      
+      {/* TARJETA 2 */}
+      <a href="#" class="service-card media-trigger" data-type="image" data-src="/black-bean.jpg" data-title="Piezas para tu Negocio" data-desc="Menús, packaging, etiquetas, gráfica de local o de stand — diseñamos las piezas que tu rubro específico necesita, adaptadas a cómo trabajás vos.">
         <h3>Piezas para tu Negocio</h3>
         <span class="service-hover-text">Saber más ✦</span>
       </a>
-      <a href="#" class="service-card media-trigger" data-type="text" data-title="Señalética y Espacio" data-desc="Cartelería y gráfica para locales, ferias y eventos del mundo del café: todo lo que hace falta para que tu marca ocupe el espacio físico de forma consistente.">
+      
+      {/* TARJETA 3 */}
+      <a href="#" class="service-card media-trigger" data-type="image" data-src="/cafe-de-obra.jpg" data-title="Señalética y Espacio" data-desc="Cartelería y gráfica para locales, ferias y eventos del mundo del café: todo lo que hace falta para que tu marca ocupe el espacio físico de forma consistente.">
         <h3>Señalética y Espacio</h3>
         <span class="service-hover-text">Saber más ✦</span>
       </a>
-      <a href="#" class="service-card media-trigger" data-type="text" data-title="Diseño con Data Real" data-desc="Cada decisión está cruzada con Cofiteca, la base de datos de café de especialidad más grande de Argentina: evaluamos y analizamos precios, tendencias y comportamiento del mercado en cafeterías, tostadores y tiendas de todo el país.">
+      
+      {/* TARJETA 4 */}
+      <a href="#" class="service-card media-trigger" data-type="image" data-src="/Sara.jpg" data-title="Diseño con Data Real" data-desc="Cada decisión está cruzada con Cofiteca, la base de datos de café de especialidad más grande de Argentina: evaluamos y analizamos precios, tendencias y comportamiento del mercado en cafeterías, tostadores y tiendas de todo el país.">
         <h3>Diseño con Data Real</h3>
         <span class="service-hover-text">Saber más ✦</span>
       </a>
@@ -231,7 +234,7 @@
           descEl.innerHTML = trigger.getAttribute('data-desc');
           mediaContainer.innerHTML = '';
 
-          // Lógica para modo Texto (Servicios) o Media (Portafolio)
+          // Lógica para modo Texto o Media
           if (type === 'text') {
             wrapper.classList.add('text-only-mode');
           } else {
@@ -413,14 +416,15 @@
     #lightbox-media-container { flex: 1; background: #1a0f0a; display: flex; align-items: center; justify-content: center; min-height: 300px; }
     .lightbox-media { max-width: 100%; max-height: 70vh; object-fit: contain; }
     
-    .lightbox-text-panel { padding: 2.5rem 2rem; flex-basis: 350px; overflow-y: auto; }
+    /* Panel de texto ampliado a 400px para que lea mejor junto a la imagen */
+    .lightbox-text-panel { padding: 2.5rem 2rem; flex-basis: 400px; overflow-y: auto; }
     .lightbox-text-panel h3 { margin-top: 0; color: #3d2317; font-size: 1.8rem; border-bottom: 2px solid #c4a77d; padding-bottom: 0.5rem; display: inline-block; font-weight: 700; }
     .lightbox-text-panel p { color: #5c3d2e; font-size: 1.1rem;}
     
     .lightbox-close { position: absolute; top: -2.5rem; right: 0; color: #e8dcc8; font-size: 2.5rem; cursor: pointer; line-height: 1; z-index: 10; }
     @media (min-width: 768px) { .lightbox-close { top: 1rem; right: 2rem; } }
 
-    /* Estilo Especial: Lightbox solo con Texto (Para Servicios) */
+    /* Estilo Especial: Lightbox solo con Texto (Desactivado si usamos imágenes) */
     .lightbox-content-wrapper.text-only-mode #lightbox-media-container { display: none; }
     .lightbox-content-wrapper.text-only-mode .lightbox-text-panel { flex-basis: 100%; max-width: 700px; padding: 4rem 3rem; text-align: center; }
 
