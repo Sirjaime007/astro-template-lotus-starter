@@ -178,18 +178,16 @@
       }, { threshold: 0.15 });
       fadeElements.forEach(el => fadeObserver.observe(el));
 
-      // 3. Inicializar Mapa (Filtro para que luzca estético)
+      // 3. Inicializar Mapa (Cambiado a Esri Light Gray Canvas, gratis y limpio)
       const map = L.map('cofiteca-map', { 
         zoomControl: false, 
         scrollWheelZoom: false,
         dragging: !L.Browser.mobile
       }).setView([-38.4161, -63.6167], 4);
       
-      // Capa base limpia y monocromática
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap',
-        subdomains: 'abcd',
-        maxZoom: 10
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 16
       }).addTo(map);
 
       // 4. Lógica de CSV (Contadores + Marcadores del mapa)
