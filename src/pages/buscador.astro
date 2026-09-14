@@ -94,11 +94,11 @@
         <span class="metric-label">Cafeterías Auditadas</span>
       </div>
       <div class="metric-item">
-        <span class="metric-number" data-target="0" id="stat-provincias">0</span>
+        <span class="metric-number" data-target="24" id="stat-provincias">0</span>
         <span class="metric-label">Provincias Mapeadas</span>
       </div>
       <div class="metric-item">
-        <span class="metric-number" data-target="0" id="stat-ciudades">0</span>
+        <span class="metric-number" data-target="102" id="stat-ciudades">0</span>
         <span class="metric-label">Ciudades Relevadas</span>
       </div>
       <div class="metric-item">
@@ -135,7 +135,8 @@
   </div>
 
   <script is:inline>
-    (function iniciarBuscadorSeguro() {
+    // Declaramos la función de manera global para que Astro pueda re-ejecutarla
+    function iniciarBuscadorSeguro() {
         if (typeof Papa === 'undefined' || typeof L === 'undefined' || typeof L.markerClusterGroup === 'undefined') {
             setTimeout(iniciarBuscadorSeguro, 50);
             return;
@@ -169,7 +170,7 @@
         let markerCluster = null;
         let markerOrigen = null; 
 
-        // FUNCIÓN RESTAURADA: Formatea correctamente los links
+        // ESTA ES LA FUNCIÓN QUE FALTABA
         function asegurarProtocolo(url) {
             if (!url || typeof url !== 'string') return "#";
             const u = url.trim();
@@ -424,7 +425,39 @@
             counters.forEach(c => counterObserver.observe(c));
         }
 
+        function encenderInterfaz(datos) {
+            const totalCafes = datos.length;
+            document.getElementById('cofi-status').innerText = `${totalCafes} cafeterías mapeadas.`;
+            
+            animarContadores(totalCafes);
+
+            const ciudades = [...new Set(datos.map(c => c.ciudad))].sort();
+            document.getElementById('select-ciudad').innerHTML = `<option value="Todas">Región / Ciudad</option>` + 
+                ciudades.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+            
+            window.cofiActualizarZonas();
+            initMapa();
+            cofiFiltrar();
+        }
+
         async function cargarBaseDatos() {
+            const CACHE_KEY = 'cofi_data_cache';
+            const CACHE_TTL = 15 * 60 * 1000; 
+            
+            try {
+                const cacheStr = localStorage.getItem(CACHE_KEY);
+                if (cacheStr) {
+                    const cacheData = JSON.parse(cacheStr);
+                    if (Date.now() - cacheData.time < CACHE_TTL && cacheData.data.length > 0) {
+                        baseDatos = cacheData.data;
+                        encenderInterfaz(baseDatos);
+                        return; 
+                    }
+                }
+            } catch (e) {
+                console.warn("No se pudo leer la caché, descargando de nuevo...");
+            }
+
             try {
                 const resultados = await Promise.allSettled(
                     Object.entries(GIDS).map(([ciu, gid]) =>
@@ -461,18 +494,11 @@
                     tempData.sort((a, b) => a.nombre.localeCompare(b.nombre));
                     baseDatos = tempData;
                     
-                    const totalCafes = baseDatos.length;
-                    document.getElementById('cofi-status').innerText = `${totalCafes} cafeterías mapeadas.`;
-                    
-                    animarContadores(totalCafes);
+                    try {
+                        localStorage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), data: baseDatos }));
+                    } catch(e) { console.warn("No se pudo guardar la caché"); }
 
-                    const ciudades = [...new Set(baseDatos.map(c => c.ciudad))].sort();
-                    document.getElementById('select-ciudad').innerHTML = `<option value="Todas">Región / Ciudad</option>` + 
-                        ciudades.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-                    
-                    window.cofiActualizarZonas();
-                    initMapa();
-                    cofiFiltrar();
+                    encenderInterfaz(baseDatos);
                 } else {
                     document.getElementById('cofi-status').innerText = 'Hubo un error al procesar las cafeterías.';
                 }
@@ -483,8 +509,20 @@
         }
 
         cargarBaseDatos();
-    })();
+    }
+
+    // Inicializamos el script al cargar la página directamente
+    if (document.readyState === 'interactive' || document.readyState === 'complete') {
+        if (!window.cofitecaInicializada) iniciarBuscadorSeguro();
+    } else {
+        document.addEventListener('DOMContentLoaded', iniciarBuscadorSeguro);
+    }
+
+    // Le decimos a Astro que vuelva a arrancar la lógica cada vez que cambie a esta pestaña
+    document.addEventListener('astro:page-load', () => {
+        window.cofitecaInicializada = false;
+        iniciarBuscadorSeguro();
+    });
   </script>
 </body>
 </html>
-
