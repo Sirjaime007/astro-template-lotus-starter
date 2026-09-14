@@ -12,14 +12,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
-  <!-- LIBRERÍAS CARGADAS DE FORMA SÍNCRONA PARA EVITAR ERRORES DE ASTRO -->
-  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <!-- LIBRERÍAS CARGADAS EXACTAMENTE COMO FUNCIONABAN EN EL ORIGINAL -->
+  <script is:inline defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script is:inline defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-  <script is:inline src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script is:inline src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script is:inline defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script is:inline defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
   <style is:global>
     * { box-sizing: border-box; }
@@ -94,11 +94,11 @@
         <span class="metric-label">Cafeterías Auditadas</span>
       </div>
       <div class="metric-item">
-        <span class="metric-number" data-target="0" id="stat-provincias">0</span>
+        <span class="metric-number" data-target="24" id="stat-provincias">0</span>
         <span class="metric-label">Provincias Mapeadas</span>
       </div>
       <div class="metric-item">
-        <span class="metric-number" data-target="0" id="stat-ciudades">0</span>
+        <span class="metric-number" data-target="102" id="stat-ciudades">0</span>
         <span class="metric-label">Ciudades Relevadas</span>
       </div>
       <div class="metric-item">
@@ -110,7 +110,7 @@
     <div class="buscador-main-panel">
       <div class="data-header">
         <p style="font-size: 1.15rem; font-weight: 600; margin: 0; color: #1a0f0a;">Base de Datos Cofiteca x Mad</p>
-        <p id="cofi-status" style="font-size: 0.9rem; color: #8b4513; margin: 5px 0 0 0; font-weight: bold;">Sincronizando con el servidor...</p>
+        <p id="cofi-status" style="font-size: 0.9rem; color: #8b4513; margin: 5px 0 0 0; font-weight: bold;">Cargando base de datos...</p>
       </div>
       
       <div class="buscador-ui">
@@ -135,20 +135,33 @@
   </div>
 
   <script is:inline>
-    // Se ejecuta esta función para garantizar que el código se dispare siempre, 
-    // independientemente de cómo Astro cambie de página.
-    function inicializarBuscadorCofiteca() {
-        
-        // Evitamos doble inicialización si el mapa ya existe en el DOM
-        const mapContainer = document.getElementById('cofiteca-map');
-        if (!mapContainer || mapContainer._leaflet_id) return;
-
-        // Si PapaParse o Leaflet no cargaron aún, reintentamos en medio segundo
-        if (typeof Papa === 'undefined' || typeof L === 'undefined') {
-            setTimeout(inicializarBuscadorCofiteca, 500);
+    // =========================================================
+    // MOTOR ROBUSTO: ESPERA A QUE BAJEN LAS LIBRERÍAS SÍ O SÍ
+    // =========================================================
+    (function iniciarBuscadorSeguro() {
+        // 1. Chequeamos si las dependencias existen. Si no, reintentamos en 50ms.
+        if (typeof Papa === 'undefined' || typeof L === 'undefined' || typeof L.markerClusterGroup === 'undefined') {
+            setTimeout(iniciarBuscadorSeguro, 50);
             return;
         }
 
+        // 2. Nos aseguramos de que el DOM exista
+        const mapContenedor = document.getElementById('cofiteca-map');
+        if (!mapContenedor) {
+            setTimeout(iniciarBuscadorSeguro, 50);
+            return;
+        }
+
+        // 3. Evitar ejecución duplicada si Astro ya lo había cargado
+        if (window.cofitecaInicializada) return;
+        window.cofitecaInicializada = true;
+
+        // Limpiar mapa por si Astro lo dejó cacheado de una visita anterior
+        if (mapContenedor._leaflet_id) {
+            mapContenedor.outerHTML = '<div id="cofiteca-map" style="width: 100%; height: 100%; background: #e6e2db;"></div>';
+        }
+
+        // AQUÍ EMPIEZA LA LÓGICA DE COFITECA
         const SHEET_ID = "10vUOhRr7IAXlRrkBphxEP4ApXYBgrnuxJq6G83GnfHI";
         const urlSheet = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
 
@@ -382,12 +395,7 @@
 
         function animarContadores(cafesTotal) {
             const cCafes = document.getElementById('stat-cafes');
-            const cProvincias = document.getElementById('stat-provincias');
-            const cCiudades = document.getElementById('stat-ciudades');
-            
             if(cCafes) cCafes.setAttribute('data-target', cafesTotal);
-            if(cProvincias) cProvincias.setAttribute('data-target', 24);
-            if(cCiudades) cCiudades.setAttribute('data-target', 102);
 
             const counters = document.querySelectorAll('.metric-number');
             const counterObserver = new IntersectionObserver((entries) => {
@@ -466,15 +474,7 @@
         }
 
         cargarBaseDatos();
-    }
-
-    // Asegurar compatibilidad absoluta con la navegación de Astro (View Transitions) y carga inicial
-    document.addEventListener('astro:page-load', inicializarBuscadorCofiteca);
-    if (document.readyState === 'interactive' || document.readyState === 'complete') {
-        inicializarBuscadorCofiteca();
-    } else {
-        document.addEventListener('DOMContentLoaded', inicializarBuscadorCofiteca);
-    }
+    })(); // Se invoca automáticamente al leer el script
   </script>
 </body>
 </html>
