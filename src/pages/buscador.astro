@@ -12,13 +12,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <!-- LIBRERÍAS CARGADAS DE FORMA SÍNCRONA PARA EVITAR ERRORES DE ASTRO -->
+  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-  <script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script is:inline src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
   <style is:global>
     * { box-sizing: border-box; }
@@ -93,11 +94,11 @@
         <span class="metric-label">Cafeterías Auditadas</span>
       </div>
       <div class="metric-item">
-        <span class="metric-number" data-target="24" id="stat-provincias">0</span>
+        <span class="metric-number" data-target="0" id="stat-provincias">0</span>
         <span class="metric-label">Provincias Mapeadas</span>
       </div>
       <div class="metric-item">
-        <span class="metric-number" data-target="102" id="stat-ciudades">0</span>
+        <span class="metric-number" data-target="0" id="stat-ciudades">0</span>
         <span class="metric-label">Ciudades Relevadas</span>
       </div>
       <div class="metric-item">
@@ -134,326 +135,346 @@
   </div>
 
   <script is:inline>
-    document.addEventListener('DOMContentLoaded', () => {
-      const SHEET_ID = "10vUOhRr7IAXlRrkBphxEP4ApXYBgrnuxJq6G83GnfHI";
-      const urlSheet = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+    // Se ejecuta esta función para garantizar que el código se dispare siempre, 
+    // independientemente de cómo Astro cambie de página.
+    function inicializarBuscadorCofiteca() {
+        
+        // Evitamos doble inicialización si el mapa ya existe en el DOM
+        const mapContainer = document.getElementById('cofiteca-map');
+        if (!mapContainer || mapContainer._leaflet_id) return;
 
-      const GIDS = {
-          "Mar del Plata": "0", "CABA y Gran Buenos Aires": "1296176686", "La Plata": "208452991", "Córdoba": "1250014567",
-          "Santa Fe": "1691979590", "Mendoza": "2031963266", "Interior de BS AS": "1634818534", "Neuquén y Río Negro": "155647820",
-          "Salta y Jujuy": "1993653328", "Chubut, Santa Cruz y Tierra del Fuego": "1650814085", "San Juan, San Luis, La Rioja y La Pampa": "1228328818",
-          "Corrientes, Misiones, Entre Rios, Formosa y Chaco": "1097354687", "Catamarca, Tucuman y  Santiago del Estero": "1483010757"
-      };
+        // Si PapaParse o Leaflet no cargaron aún, reintentamos en medio segundo
+        if (typeof Papa === 'undefined' || typeof L === 'undefined') {
+            setTimeout(inicializarBuscadorCofiteca, 500);
+            return;
+        }
 
-      let baseDatos = [];
-      let mapaCofiteca = null;
-      let markerCluster = null;
-      let markerOrigen = null; 
+        const SHEET_ID = "10vUOhRr7IAXlRrkBphxEP4ApXYBgrnuxJq6G83GnfHI";
+        const urlSheet = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
 
-      const norm = s => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+        const GIDS = {
+            "Mar del Plata": "0", "CABA y Gran Buenos Aires": "1296176686", "La Plata": "208452991", "Córdoba": "1250014567",
+            "Santa Fe": "1691979590", "Mendoza": "2031963266", "Interior de BS AS": "1634818534", "Neuquén y Río Negro": "155647820",
+            "Salta y Jujuy": "1993653328", "Chubut, Santa Cruz y Tierra del Fuego": "1650814085", "San Juan, San Luis, La Rioja y La Pampa": "1228328818",
+            "Corrientes, Misiones, Entre Rios, Formosa y Chaco": "1097354687", "Catamarca, Tucuman y  Santiago del Estero": "1483010757"
+        };
 
-      function calcularD(lat1, lon1, lat2, lon2) {
-          const dLat = (lat2 - lat1) * Math.PI / 180;
-          const dLon = (lon2 - lon1) * Math.PI / 180;
-          const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-          return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      }
+        let baseDatos = [];
+        let mapaCofiteca = null;
+        let markerCluster = null;
+        let markerOrigen = null; 
 
-      function initMapa() {
-          if (typeof L === 'undefined') return;
-          mapaCofiteca = L.map('cofiteca-map', { maxBoundsViscosity: 1.0, minZoom: 4 }).setView([-38.41, -63.61], 4);
-          
-          mapaCofiteca.on('zoomend', () => {
-              const mapEl = document.getElementById('cofiteca-map');
-              if(mapEl) mapEl.classList.toggle('show-labels', mapaCofiteca.getZoom() >= 15);
-          });
+        const norm = s => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 
-          L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri',
-            maxZoom: 16
-          }).addTo(mapaCofiteca);
+        function calcularD(lat1, lon1, lat2, lon2) {
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+            return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
 
-          markerCluster = L.markerClusterGroup({
-              maxClusterRadius: 40, disableClusteringAtZoom: 14, spiderfyOnMaxZoom: true, showCoverageOnHover: false, chunkedLoading: true
-          }).addTo(mapaCofiteca);
-      }
-
-      function dibujarMapa() {
-          if (!markerCluster) return;
-          const ciudadFiltro = document.getElementById('select-ciudad').value;
-          const zonaFiltro = document.getElementById('select-zona').value;
-          const texto = norm(document.getElementById('input-busqueda').value).trim();
-          
-          const filtrados = baseDatos.filter(c => 
-              (ciudadFiltro === "Todas" || c.ciudad === ciudadFiltro) &&
-              (zonaFiltro === "Todas" || c.zona === zonaFiltro) &&
-              (!texto || norm(c.nombre).includes(texto) || norm(c.ubicacion).includes(texto))
-          );
-
-          const markers = filtrados.map(c => {
-              return L.circleMarker([c.lat, c.lon], { radius: 6, color: '#f5f0e8', fillColor: '#8b4513', fillOpacity: 0.9, weight: 1.5 })
-              .bindPopup(`<div style="text-align:center; font-family:'Inter', sans-serif;"><b>${esc(c.nombre)}</b><br><small>${esc(c.ubicacion)}</small><br><a href="${esc(c.instagram)}" target="_blank" style="display:inline-block; margin-top:5px; background:#8b4513; color:white; padding:5px 10px; border-radius:5px; font-size:0.8rem; text-decoration:none;">Instagram</a></div>`)
-              .bindTooltip(esc(c.nombre), { permanent: true, direction: 'top', className: 'cafe-label', offset: [0, -10] });
-          });
-
-          markerCluster.clearLayers();
-          markerCluster.addLayers(markers);
-
-          if (!markerOrigen) {
-            if (ciudadFiltro === "Todas" && texto === "") {
-                mapaCofiteca.setView([-38.41, -63.61], 4);
-            } else if (filtrados.length > 0) {
-                let lat = 0, lon = 0;
-                filtrados.forEach(c => { lat += c.lat; lon += c.lon; });
-                mapaCofiteca.setView([lat / filtrados.length, lon / filtrados.length], zonaFiltro === "Todas" ? 12 : 14);
-            }
-          }
-      }
-
-      function renderizarResultados(datos, origen = null) {
-          const contenedor = document.getElementById('cofi-resultados');
-          const frag = document.createDocumentFragment();
-          let lista = datos;
-          
-          if (origen) {
-              lista = datos.map(c => ({ ...c, dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) }))
-                           .sort((a, b) => a.dist - b.dist)
-                           .slice(0, 30); 
-          } else {
-              lista = datos.slice(0, 60); 
-          }
-
-          lista.forEach(c => {
-              let txtDist = "";
-              if (origen && c.dist !== undefined) {
-                  const cuadras = Math.round(c.dist * 10);
-                  txtDist = cuadras === 0 
-                    ? `<br><b style="color:#8b4513;">📍 ¡A menos de 1 cuadra!</b>` 
-                    : `<br><b style="color:#8b4513;">📍 A ${cuadras} cuadra${cuadras !== 1 ? 's' : ''}</b>`;
-              }
-              const div = document.createElement('div');
-              div.className = 'cafe-card';
-              div.innerHTML = `
-                  <div>
-                      <h3>${esc(c.nombre)}</h3>
-                      <p>${esc(c.ubicacion)} • <b>${esc(c.ciudad)}</b>${txtDist}</p>
-                  </div>
-                  <a href="${esc(c.instagram)}" target="_blank" rel="noopener noreferrer">Ver Instagram</a>
-              `;
-              frag.appendChild(div);
-          });
-          contenedor.replaceChildren(frag);
-          
-          if(!origen && datos.length > 60) {
-              const aviso = document.createElement('p');
-              aviso.style.cssText = "grid-column: 1/-1; text-align:center; font-size:0.9rem; opacity:0.7;";
-              aviso.innerText = `Mostrando 60 de ${datos.length} resultados. Refiná tu búsqueda.`;
-              contenedor.appendChild(aviso);
-          }
-      }
-
-      function cofiProcesarOrigen(lat, lon, label) {
-          if (markerOrigen) mapaCofiteca.removeLayer(markerOrigen);
-          markerOrigen = L.circleMarker([lat, lon], { radius: 8, color: "#059669", fillColor: "#fff", weight: 3, fillOpacity: 1 })
-            .addTo(mapaCofiteca).bindPopup(label).openPopup();
-          
-          mapaCofiteca.setView([lat, lon], 14);
-          renderizarResultados(baseDatos, { lat, lon });
-      }
-
-      window.cofiUsarMiGPS = function() {
-          if (!navigator.geolocation) return Swal.fire("Error", "Tu navegador no soporta GPS.", "error");
-          document.getElementById('cofi-status').innerText = "Conectando con GPS...";
-          navigator.geolocation.getCurrentPosition(
-              p => { 
-                  document.getElementById('cofi-status').innerText = "Mostrando cafés cerca de tu ubicación actual."; 
-                  cofiProcesarOrigen(p.coords.latitude, p.coords.longitude, "📍 Estás acá"); 
-              },
-              () => { 
-                  document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas.`;
-                  Swal.fire("Aviso", "No pudimos obtener tu ubicación. Revisá los permisos.", "warning"); 
-              },
-              { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-          );
-      };
-
-      window.cofiMedirDesdeDireccion = function() {
-          Swal.fire({
-              title: '¿Dónde estás?',
-              html: `<p style="font-size:0.9rem; color:#5c3d2e; margin-bottom:15px;">Escribí tu calle y ciudad (Ej: Guemes, Mar del Plata)</p>
-                     <input id="swal-autocomplete-input" class="input-moderno" placeholder="Escribir..." autocomplete="off" style="width:100%; box-sizing:border-box;">
-                     <div id="autocomplete-results" style="text-align:left; margin-top:10px; max-height:200px; overflow-y:auto;"></div>`,
-              showConfirmButton: false, showCancelButton: true, cancelButtonText: 'Cerrar',
-              didOpen: () => {
-                  const input = document.getElementById('swal-autocomplete-input'); 
-                  const resultsContainer = document.getElementById('autocomplete-results'); 
-                  let timeout = null; let solicitudId = 0;
-                  input.focus();
-                  input.addEventListener('input', () => {
-                      clearTimeout(timeout); const val = input.value.trim();
-                      if (val.length < 4) { resultsContainer.innerHTML = ''; return; }
-                      resultsContainer.innerHTML = '<div style="padding:10px; color:#8b4513; font-weight:bold; text-align:center;">Buscando...</div>';
-                      timeout = setTimeout(async () => {
-                          const miId = ++solicitudId;
-                          try {
-                              const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&countrycodes=ar&addressdetails=1&limit=6`);
-                              const data = await res.json();
-                              if (miId !== solicitudId) return;
-                              resultsContainer.innerHTML = '';
-                              if (!data.length) { resultsContainer.innerHTML = '<div style="padding:10px; opacity:0.7; text-align:center;">No encontramos la dirección.</div>'; return; }
-                              data.forEach(item => {
-                                  const partes = [];
-                                  if (item.address.road) partes.push(item.address.road + (item.address.house_number ? " " + item.address.house_number : ""));
-                                  const localidad = item.address.city || item.address.town || item.address.village;
-                                  if (localidad) partes.push(localidad);
-                                  
-                                  const nombreStr = partes.length > 0 ? partes.join(", ") : item.display_name.split(',').slice(0, 3).join(', ');
-                                  const btn = document.createElement('button');
-                                  btn.style.cssText = 'width: 100%; text-align: left; background: rgba(255,255,255,0.7); color: #2c1810; border: 1px solid #c4a77d; padding: 12px; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-family: "Inter", sans-serif; font-size:0.9rem; transition: 0.2s;';
-                                  btn.innerHTML = `📍 <b>${esc(nombreStr)}</b>`;
-                                  btn.onmouseover = () => btn.style.borderColor = '#8b4513';
-                                  btn.onmouseout = () => btn.style.borderColor = '#c4a77d';
-                                  btn.onclick = () => { 
-                                      Swal.close(); 
-                                      document.getElementById('cofi-status').innerText = `Lugares cerca de ${nombreStr}`; 
-                                      cofiProcesarOrigen(parseFloat(item.lat), parseFloat(item.lon), nombreStr); 
-                                  };
-                                  resultsContainer.appendChild(btn);
-                              });
-                          } catch (e) { if (miId !== solicitudId) return; resultsContainer.innerHTML = '<div style="padding:10px; color:red; text-align:center;">Error con el mapa.</div>'; }
-                      }, 800);
-                  });
-              }
-          });
-      };
-
-      window.cofiActualizarZonas = function() {
-          const ciudadFiltro = document.getElementById('select-ciudad').value;
-          let zonas = [];
-          if (ciudadFiltro === "Todas") {
-              zonas = [...new Set(baseDatos.map(c => c.zona))];
-          } else {
-              zonas = [...new Set(baseDatos.filter(c => c.ciudad === ciudadFiltro).map(c => c.zona))];
-          }
-          zonas = zonas.filter(z => z && z !== "-" && z !== "Sin Zona").sort();
-          
-          document.getElementById('select-zona').innerHTML = `<option value="Todas">Zonas / Barrios</option>` + 
-              zonas.map(z => `<option value="${esc(z)}">${esc(z)}</option>`).join('');
-      };
-
-      let debounceFiltro = null;
-      window.cofiFiltrar = function() {
-          clearTimeout(debounceFiltro);
-          debounceFiltro = setTimeout(() => {
-              if (markerOrigen) {
-                  mapaCofiteca.removeLayer(markerOrigen);
-                  markerOrigen = null;
-                  document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas.`;
-              }
-              
-              const ciu = document.getElementById('select-ciudad').value;
-              const zon = document.getElementById('select-zona').value;
-              const txt = norm(document.getElementById('input-busqueda').value).trim();
-              
-              const filtrados = baseDatos.filter(c => 
-                  (ciu === "Todas" || c.ciudad === ciu) &&
-                  (zon === "Todas" || c.zona === zon) &&
-                  (!txt || norm(c.nombre).includes(txt) || norm(c.ubicacion).includes(txt))
-              );
-              
-              renderizarResultados(filtrados);
-              dibujarMapa();
-          }, 150);
-      };
-
-      function animarContadores(cafesTotal) {
-          const cCafes = document.getElementById('stat-cafes');
-          if(cCafes) cCafes.setAttribute('data-target', cafesTotal);
-
-          const counters = document.querySelectorAll('.metric-number');
-          const counterObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-              if (entry.isIntersecting) {
-                const target = +entry.target.getAttribute('data-target');
-                let current = 0;
-                const updateCounter = () => {
-                  current += target / 30;
-                  if (current < target) {
-                    entry.target.innerText = Math.ceil(current);
-                    requestAnimationFrame(updateCounter);
-                  } else {
-                    entry.target.innerText = target;
-                  }
-                };
-                updateCounter();
-                counterObserver.unobserve(entry.target);
-              }
+        function initMapa() {
+            mapaCofiteca = L.map('cofiteca-map', { maxBoundsViscosity: 1.0, minZoom: 4 }).setView([-38.41, -63.61], 4);
+            
+            mapaCofiteca.on('zoomend', () => {
+                const mapEl = document.getElementById('cofiteca-map');
+                if(mapEl) mapEl.classList.toggle('show-labels', mapaCofiteca.getZoom() >= 15);
             });
-          }, { threshold: 0.3 });
-          counters.forEach(c => counterObserver.observe(c));
-      }
 
-      async function cargarBaseDatos() {
-          if (typeof Papa === 'undefined') {
-              document.getElementById('cofi-status').innerText = 'Error al cargar motor de datos.';
-              return;
-          }
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+              attribution: 'Tiles &copy; Esri',
+              maxZoom: 16
+            }).addTo(mapaCofiteca);
 
-          const resultados = await Promise.allSettled(
-              Object.entries(GIDS).map(([ciu, gid]) =>
-                  new Promise((resolve, reject) => {
-                      Papa.parse(urlSheet(gid), {
-                          download: true, header: true, skipEmptyLines: true,
-                          transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
-                          complete: res => resolve({ ciu, filas: res.data }),
-                          error: reject
-                      });
-                  })
-              )
-          );
+            markerCluster = L.markerClusterGroup({
+                maxClusterRadius: 40, disableClusteringAtZoom: 14, spiderfyOnMaxZoom: true, showCoverageOnHover: false, chunkedLoading: true
+            }).addTo(mapaCofiteca);
+        }
 
-          let tempData = [];
-          resultados.forEach(r => {
-              if (r.status === 'fulfilled') {
-                  r.value.filas.forEach(f => {
-                      if (!f.CAFE) return;
-                      const latClean = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
-                      const lonClean = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
-                      if (isNaN(latClean) || isNaN(lonClean)) return;
-                      tempData.push({
-                          nombre: f.CAFE.trim(), ciudad: r.value.ciu,
-                          zona: f.ZONA || f.BARRIO || "Sin Zona",
-                          ubicacion: f.UBICACION || "-", instagram: asegurarProtocolo(f.INSTAGRAM || "#"),
-                          lat: latClean, lon: lonClean
-                      });
-                  });
+        function dibujarMapa() {
+            if (!markerCluster) return;
+            const ciudadFiltro = document.getElementById('select-ciudad').value;
+            const zonaFiltro = document.getElementById('select-zona').value;
+            const texto = norm(document.getElementById('input-busqueda').value).trim();
+            
+            const filtrados = baseDatos.filter(c => 
+                (ciudadFiltro === "Todas" || c.ciudad === ciudadFiltro) &&
+                (zonaFiltro === "Todas" || c.zona === zonaFiltro) &&
+                (!texto || norm(c.nombre).includes(texto) || norm(c.ubicacion).includes(texto))
+            );
+
+            const markers = filtrados.map(c => {
+                return L.circleMarker([c.lat, c.lon], { radius: 6, color: '#f5f0e8', fillColor: '#8b4513', fillOpacity: 0.9, weight: 1.5 })
+                .bindPopup(`<div style="text-align:center; font-family:'Inter', sans-serif;"><b>${esc(c.nombre)}</b><br><small>${esc(c.ubicacion)}</small><br><a href="${esc(c.instagram)}" target="_blank" style="display:inline-block; margin-top:5px; background:#8b4513; color:white; padding:5px 10px; border-radius:5px; font-size:0.8rem; text-decoration:none;">Instagram</a></div>`)
+                .bindTooltip(esc(c.nombre), { permanent: true, direction: 'top', className: 'cafe-label', offset: [0, -10] });
+            });
+
+            markerCluster.clearLayers();
+            markerCluster.addLayers(markers);
+
+            if (!markerOrigen) {
+              if (ciudadFiltro === "Todas" && texto === "") {
+                  mapaCofiteca.setView([-38.41, -63.61], 4);
+              } else if (filtrados.length > 0) {
+                  let lat = 0, lon = 0;
+                  filtrados.forEach(c => { lat += c.lat; lon += c.lon; });
+                  mapaCofiteca.setView([lat / filtrados.length, lon / filtrados.length], zonaFiltro === "Todas" ? 12 : 14);
               }
-          });
+            }
+        }
 
-          if (tempData.length > 0) {
-              tempData.sort((a, b) => a.nombre.localeCompare(b.nombre));
-              baseDatos = tempData;
-              
-              const totalCafes = baseDatos.length;
-              document.getElementById('cofi-status').innerText = `${totalCafes} cafeterías mapeadas.`;
-              
-              animarContadores(totalCafes);
+        function renderizarResultados(datos, origen = null) {
+            const contenedor = document.getElementById('cofi-resultados');
+            const frag = document.createDocumentFragment();
+            let lista = datos;
+            
+            if (origen) {
+                lista = datos.map(c => ({ ...c, dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) }))
+                             .sort((a, b) => a.dist - b.dist)
+                             .slice(0, 30); 
+            } else {
+                lista = datos.slice(0, 60); 
+            }
 
-              const ciudades = [...new Set(baseDatos.map(c => c.ciudad))].sort();
-              document.getElementById('select-ciudad').innerHTML = `<option value="Todas">Toda Argentina</option>` + 
-                  ciudades.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-              
-              window.cofiActualizarZonas();
-              initMapa();
-              cofiFiltrar();
-          } else {
-              document.getElementById('cofi-status').innerText = 'Hubo un error de conexión con la base central.';
-          }
-      }
+            lista.forEach(c => {
+                let txtDist = "";
+                if (origen && c.dist !== undefined) {
+                    const cuadras = Math.round(c.dist * 10);
+                    txtDist = cuadras === 0 
+                      ? `<br><b style="color:#8b4513;">📍 ¡A menos de 1 cuadra!</b>` 
+                      : `<br><b style="color:#8b4513;">📍 A ${cuadras} cuadra${cuadras !== 1 ? 's' : ''}</b>`;
+                }
+                const div = document.createElement('div');
+                div.className = 'cafe-card';
+                div.innerHTML = `
+                    <div>
+                        <h3>${esc(c.nombre)}</h3>
+                        <p>${esc(c.ubicacion)} • <b>${esc(c.ciudad)}</b>${txtDist}</p>
+                    </div>
+                    <a href="${esc(c.instagram)}" target="_blank" rel="noopener noreferrer">Ver Instagram</a>
+                `;
+                frag.appendChild(div);
+            });
+            contenedor.replaceChildren(frag);
+            
+            if(!origen && datos.length > 60) {
+                const aviso = document.createElement('p');
+                aviso.style.cssText = "grid-column: 1/-1; text-align:center; font-size:0.9rem; opacity:0.7;";
+                aviso.innerText = `Mostrando 60 de ${datos.length} resultados. Refiná tu búsqueda.`;
+                contenedor.appendChild(aviso);
+            }
+        }
 
-      cargarBaseDatos();
-    });
+        function cofiProcesarOrigen(lat, lon, label) {
+            if (markerOrigen) mapaCofiteca.removeLayer(markerOrigen);
+            markerOrigen = L.circleMarker([lat, lon], { radius: 8, color: "#059669", fillColor: "#fff", weight: 3, fillOpacity: 1 })
+              .addTo(mapaCofiteca).bindPopup(label).openPopup();
+            
+            mapaCofiteca.setView([lat, lon], 14);
+            renderizarResultados(baseDatos, { lat, lon });
+        }
+
+        window.cofiUsarMiGPS = function() {
+            if (!navigator.geolocation) return Swal.fire("Error", "Tu navegador no soporta GPS.", "error");
+            document.getElementById('cofi-status').innerText = "Conectando con GPS...";
+            navigator.geolocation.getCurrentPosition(
+                p => { 
+                    document.getElementById('cofi-status').innerText = "Mostrando cafés cerca de tu ubicación actual."; 
+                    cofiProcesarOrigen(p.coords.latitude, p.coords.longitude, "📍 Estás acá"); 
+                },
+                () => { 
+                    document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas.`;
+                    Swal.fire("Aviso", "No pudimos obtener tu ubicación. Revisá los permisos.", "warning"); 
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+            );
+        };
+
+        window.cofiMedirDesdeDireccion = function() {
+            Swal.fire({
+                title: '¿Dónde estás?',
+                html: `<p style="font-size:0.9rem; color:#5c3d2e; margin-bottom:15px;">Escribí tu calle y ciudad (Ej: Guemes, Mar del Plata)</p>
+                       <input id="swal-autocomplete-input" class="input-moderno" placeholder="Escribir..." autocomplete="off" style="width:100%; box-sizing:border-box;">
+                       <div id="autocomplete-results" style="text-align:left; margin-top:10px; max-height:200px; overflow-y:auto;"></div>`,
+                showConfirmButton: false, showCancelButton: true, cancelButtonText: 'Cerrar',
+                didOpen: () => {
+                    const input = document.getElementById('swal-autocomplete-input'); 
+                    const resultsContainer = document.getElementById('autocomplete-results'); 
+                    let timeout = null; let solicitudId = 0;
+                    input.focus();
+                    input.addEventListener('input', () => {
+                        clearTimeout(timeout); const val = input.value.trim();
+                        if (val.length < 4) { resultsContainer.innerHTML = ''; return; }
+                        resultsContainer.innerHTML = '<div style="padding:10px; color:#8b4513; font-weight:bold; text-align:center;">Buscando...</div>';
+                        timeout = setTimeout(async () => {
+                            const miId = ++solicitudId;
+                            try {
+                                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&countrycodes=ar&addressdetails=1&limit=6`);
+                                const data = await res.json();
+                                if (miId !== solicitudId) return;
+                                resultsContainer.innerHTML = '';
+                                if (!data.length) { resultsContainer.innerHTML = '<div style="padding:10px; opacity:0.7; text-align:center;">No encontramos la dirección.</div>'; return; }
+                                data.forEach(item => {
+                                    const partes = [];
+                                    if (item.address.road) partes.push(item.address.road + (item.address.house_number ? " " + item.address.house_number : ""));
+                                    const localidad = item.address.city || item.address.town || item.address.village;
+                                    if (localidad) partes.push(localidad);
+                                    
+                                    const nombreStr = partes.length > 0 ? partes.join(", ") : item.display_name.split(',').slice(0, 3).join(', ');
+                                    const btn = document.createElement('button');
+                                    btn.style.cssText = 'width: 100%; text-align: left; background: rgba(255,255,255,0.7); color: #2c1810; border: 1px solid #c4a77d; padding: 12px; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-family: "Inter", sans-serif; font-size:0.9rem; transition: 0.2s;';
+                                    btn.innerHTML = `📍 <b>${esc(nombreStr)}</b>`;
+                                    btn.onmouseover = () => btn.style.borderColor = '#8b4513';
+                                    btn.onmouseout = () => btn.style.borderColor = '#c4a77d';
+                                    btn.onclick = () => { 
+                                        Swal.close(); 
+                                        document.getElementById('cofi-status').innerText = `Lugares cerca de ${nombreStr}`; 
+                                        cofiProcesarOrigen(parseFloat(item.lat), parseFloat(item.lon), nombreStr); 
+                                    };
+                                    resultsContainer.appendChild(btn);
+                                });
+                            } catch (e) { if (miId !== solicitudId) return; resultsContainer.innerHTML = '<div style="padding:10px; color:red; text-align:center;">Error con el mapa.</div>'; }
+                        }, 800);
+                    });
+                }
+            });
+        };
+
+        window.cofiActualizarZonas = function() {
+            const ciudadFiltro = document.getElementById('select-ciudad').value;
+            let zonas = [];
+            if (ciudadFiltro === "Todas") {
+                zonas = [...new Set(baseDatos.map(c => c.zona))];
+            } else {
+                zonas = [...new Set(baseDatos.filter(c => c.ciudad === ciudadFiltro).map(c => c.zona))];
+            }
+            zonas = zonas.filter(z => z && z !== "-" && z !== "Sin Zona").sort();
+            
+            document.getElementById('select-zona').innerHTML = `<option value="Todas">Zonas / Barrios</option>` + 
+                zonas.map(z => `<option value="${esc(z)}">${esc(z)}</option>`).join('');
+        };
+
+        let debounceFiltro = null;
+        window.cofiFiltrar = function() {
+            clearTimeout(debounceFiltro);
+            debounceFiltro = setTimeout(() => {
+                if (markerOrigen) {
+                    mapaCofiteca.removeLayer(markerOrigen);
+                    markerOrigen = null;
+                    document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas.`;
+                }
+                
+                const ciu = document.getElementById('select-ciudad').value;
+                const zon = document.getElementById('select-zona').value;
+                const txt = norm(document.getElementById('input-busqueda').value).trim();
+                
+                const filtrados = baseDatos.filter(c => 
+                    (ciu === "Todas" || c.ciudad === ciu) &&
+                    (zon === "Todas" || c.zona === zon) &&
+                    (!txt || norm(c.nombre).includes(txt) || norm(c.ubicacion).includes(txt))
+                );
+                
+                renderizarResultados(filtrados);
+                dibujarMapa();
+            }, 150);
+        };
+
+        function animarContadores(cafesTotal) {
+            const cCafes = document.getElementById('stat-cafes');
+            const cProvincias = document.getElementById('stat-provincias');
+            const cCiudades = document.getElementById('stat-ciudades');
+            
+            if(cCafes) cCafes.setAttribute('data-target', cafesTotal);
+            if(cProvincias) cProvincias.setAttribute('data-target', 24);
+            if(cCiudades) cCiudades.setAttribute('data-target', 102);
+
+            const counters = document.querySelectorAll('.metric-number');
+            const counterObserver = new IntersectionObserver((entries) => {
+              entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                  const target = +entry.target.getAttribute('data-target');
+                  let current = 0;
+                  const updateCounter = () => {
+                    current += target / 30;
+                    if (current < target) {
+                      entry.target.innerText = Math.ceil(current);
+                      requestAnimationFrame(updateCounter);
+                    } else {
+                      entry.target.innerText = target;
+                    }
+                  };
+                  updateCounter();
+                  counterObserver.unobserve(entry.target);
+                }
+              });
+            }, { threshold: 0.3 });
+            counters.forEach(c => counterObserver.observe(c));
+        }
+
+        async function cargarBaseDatos() {
+            const resultados = await Promise.allSettled(
+                Object.entries(GIDS).map(([ciu, gid]) =>
+                    new Promise((resolve, reject) => {
+                        Papa.parse(urlSheet(gid), {
+                            download: true, header: true, skipEmptyLines: true,
+                            transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+                            complete: res => resolve({ ciu, filas: res.data }),
+                            error: reject
+                        });
+                    })
+                )
+            );
+
+            let tempData = [];
+            resultados.forEach(r => {
+                if (r.status === 'fulfilled') {
+                    r.value.filas.forEach(f => {
+                        if (!f.CAFE) return;
+                        const latClean = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
+                        const lonClean = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
+                        if (isNaN(latClean) || isNaN(lonClean)) return;
+                        tempData.push({
+                            nombre: f.CAFE.trim(), ciudad: r.value.ciu,
+                            zona: f.ZONA || f.BARRIO || "Sin Zona",
+                            ubicacion: f.UBICACION || "-", instagram: asegurarProtocolo(f.INSTAGRAM || "#"),
+                            lat: latClean, lon: lonClean
+                        });
+                    });
+                }
+            });
+
+            if (tempData.length > 0) {
+                tempData.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                baseDatos = tempData;
+                
+                const totalCafes = baseDatos.length;
+                document.getElementById('cofi-status').innerText = `${totalCafes} cafeterías mapeadas.`;
+                
+                animarContadores(totalCafes);
+
+                const ciudades = [...new Set(baseDatos.map(c => c.ciudad))].sort();
+                document.getElementById('select-ciudad').innerHTML = `<option value="Todas">Región / Ciudad</option>` + 
+                    ciudades.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+                
+                window.cofiActualizarZonas();
+                initMapa();
+                cofiFiltrar();
+            } else {
+                document.getElementById('cofi-status').innerText = 'Hubo un error de conexión con la base central.';
+            }
+        }
+
+        cargarBaseDatos();
+    }
+
+    // Asegurar compatibilidad absoluta con la navegación de Astro (View Transitions) y carga inicial
+    document.addEventListener('astro:page-load', inicializarBuscadorCofiteca);
+    if (document.readyState === 'interactive' || document.readyState === 'complete') {
+        inicializarBuscadorCofiteca();
+    } else {
+        document.addEventListener('DOMContentLoaded', inicializarBuscadorCofiteca);
+    }
   </script>
 </body>
 </html>
