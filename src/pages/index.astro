@@ -1,7 +1,6 @@
+/ src/pages/index.astro
 ---
-// src/pages/index.astro
 ---
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -9,10 +8,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cofiteca x Mad Diseño</title>
   <meta name="description" content="Diseño exclusivo para el mundo del café de especialidad. Identidad visual, packaging, señalética y diseño con data real." />
-  
-  {/* LIBRERÍAS DEL MAPA */}
+
+  {/* LIBRERÍAS DEL MAPA + BUSCADOR (Cofiteca) */}
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <script is:inline src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
   {/* VIDEO DE FONDO */}
@@ -35,26 +39,22 @@
   <main>
     <div id="servicios"></div>
     <h2 class="section-title fade-on-scroll">Nuestros Servicios</h2>
-
     <div class="services-grid fade-on-scroll">
       <a href="#" class="service-card media-trigger" data-type="text" data-title="Identidad Visual" data-desc="Hacemos branding que respira la cultura de especialidad. No importa si tenés una cafetería, si tostás en tu galpón, si formás profesionales o si vendés equipamiento; te armamos la identidad de cero (o te hacemos un rebranding) para que tu proyecto se despegue del ruido y se vea 100% profesional.">
         <div class="service-thumb"><img src="/tio1.jpg" alt="Identidad Visual" loading="lazy" /></div>
         <h3>Identidad Visual</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
-      
       <a href="#" class="service-card media-trigger" data-type="text" data-title="Piezas para tu Negocio" data-desc="Vimos qué funciona y qué falla. Después de analizar casi 2000 menús y más de 160 etiquetas en todo el país, sabemos cómo comunicar. Te diseñamos menús armados a medida, etiquetas que destaquen en la góndola mostrando la trazabilidad, y las tarjetas de presentación del café que acompañan a cada espresso.">
         <div class="service-thumb"><img src="/black-bean.jpg" alt="Piezas para tu Negocio" loading="lazy" /></div>
         <h3>Piezas para tu Negocio</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
-      
       <a href="#" class="service-card media-trigger" data-type="text" data-title="Señalética y Espacio" data-desc="Hacemos que tu espacio comunique por vos. Cubrimos toda la pata gráfica y de circulación: desde la fachada de tu cafetería hasta la comunicación visual adentro de tu academia o la cartelería para ferias y eventos del rubro.">
         <div class="service-thumb"><img src="/cafe-de-obra.jpg" alt="Señalética y Espacio" loading="lazy" /></div>
         <h3>Señalética y Espacio</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
-      
       <a href="#" class="service-card media-trigger" data-type="text" data-title="Diseño con Data Real" data-desc="Diseñamos con los pies en la tierra. Aprovechamos el mapeo masivo de Cofiteca para entender cómo se mueve el sector a nivel nacional. Cada pieza que diseñamos está respaldada por datos de la calle, pensada para potenciar tus ventas y tu posicionamiento.">
         <div class="service-thumb"><img src="/Sara.jpg" alt="Diseño con Data Real" loading="lazy" /></div>
         <h3>Diseño con Data Real</h3>
@@ -62,7 +62,7 @@
       </a>
     </div>
 
-    {/* METODOLOGÍA / PROCESO ACTUALIZADO */}
+    {/* METODOLOGÍA / PROCESO */}
     <div id="proceso"></div>
     <h2 class="section-title fade-on-scroll">Nuestro Proceso</h2>
     <div class="process-grid fade-on-scroll">
@@ -88,7 +88,7 @@
       </div>
     </div>
 
-    {/* MAPA Y MÉTRICAS INTEGRADAS */}
+    {/* MAPA Y BUSCADOR REALES (de Cofiteca) + MÉTRICAS */}
     <div class="data-real-container fade-on-scroll">
       <div class="metrics-sidebar">
         <div class="metric-item">
@@ -104,14 +104,24 @@
           <span class="metric-label">Inteligencia de Mercado</span>
         </div>
       </div>
+
       <div class="map-wrapper">
+        <div class="md-buscador">
+          <select id="md-select-ciudad" class="md-input" onchange="mdFiltrar()"></select>
+          <input type="text" id="md-input-busqueda" class="md-input" placeholder="Buscar cafetería o zona..." oninput="mdFiltrar()">
+          <div class="md-botones">
+            <button class="md-btn" onclick="mdBuscarDireccion()">📍 Por dirección</button>
+            <button class="md-btn md-btn-solid" onclick="mdUsarGPS()">🎯 Cerca de mí</button>
+          </div>
+          <div id="md-status" class="md-status"></div>
+        </div>
         <div id="cofiteca-map"></div>
+        <div id="md-resultados"></div>
       </div>
     </div>
 
     <div id="portafolio"></div>
     <h2 class="section-title fade-on-scroll">Casos de Éxito</h2>
-
     <div class="portfolio-grid fade-on-scroll">
       <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-4.png" data-title="Café Ina" data-desc="<strong>Identidad Visual y Experiencia de Barra</strong><br/><em>El Desafío:</em> Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local.">
         <img src="/cafe-ina-4.png" alt="Café Ina" loading="lazy" />
@@ -142,7 +152,6 @@
 
     <div id="contacto"></div>
     <h2 class="section-title fade-on-scroll">Contacto</h2>
-
     <div style="text-align: center;">
       <p class="contact-intro">¿Listos para elevar la experiencia de su café? Hablemos.</p>
       <div class="contact-info fade-on-scroll">
@@ -153,6 +162,203 @@
   </main>
 
   <script is:inline>
+    // ============================================================
+    // Datos reales de Cofiteca (Google Sheets) — solo mapa + buscador
+    // ============================================================
+    const MD_SHEET_ID = "10vUOhRr7IAXlRrkBphxEP4ApXYBgrnuxJq6G83GnfHI";
+    const mdUrlSheet = gid => `https://docs.google.com/spreadsheets/d/${MD_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+    const MD_GIDS = {
+      "Mar del Plata": "0", "CABA y Gran Buenos Aires": "1296176686", "La Plata": "208452991", "Córdoba": "1250014567",
+      "Santa Fe": "1691979590", "Mendoza": "2031963266", "Interior de BS AS": "1634818534", "Neuquén y Río Negro": "155647820",
+      "Salta y Jujuy": "1993653328", "Chubut, Santa Cruz y Tierra del Fuego": "1650814085", "San Juan, San Luis, La Rioja y La Pampa": "1228328818",
+      "Corrientes, Misiones, Entre Rios, Formosa y Chaco": "1097354687", "Catamarca, Tucuman y  Santiago del Estero": "1483010757"
+    };
+
+    let mdBd = [];
+    let mdMap = null;
+    let mdCluster = null;
+    let mdRadarLayer = null;
+
+    const md$ = id => document.getElementById(id);
+    const mdNorm = s => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const mdEsc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    function mdProtocolo(url) {
+      if (!url || typeof url !== 'string') return "#";
+      const u = url.trim();
+      if (!u || u === "#") return "#";
+      return /^https?:\/\//i.test(u) ? u : 'https://' + u;
+    }
+    function mdDistancia(lat1, lon1, lat2, lon2) {
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+      return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function mdCargarCSV(url) {
+      return new Promise((resolve, reject) => {
+        Papa.parse(url, {
+          download: true, header: true, skipEmptyLines: true,
+          transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+          complete: res => resolve(res.data || []), error: reject
+        });
+      });
+    }
+
+    function mdProcesarFilas(filas, ciudad, destino) {
+      filas.forEach(f => {
+        const nombre = f.CAFE;
+        if (!nombre) return;
+        const lat = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
+        const lon = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
+        if (isNaN(lat) || isNaN(lon)) return;
+        destino.push({
+          nombre: nombre.trim(), ciudad,
+          ubicacion: f.UBICACION || "-",
+          instagram: mdProtocolo(f.INSTAGRAM || "#"),
+          lat, lon
+        });
+      });
+    }
+
+    async function mdCargarCafes() {
+      const resultados = await Promise.allSettled(
+        Object.entries(MD_GIDS).map(([ciu, gid]) => mdCargarCSV(mdUrlSheet(gid)).then(filas => ({ ciu, filas })))
+      );
+      const nueva = [];
+      resultados.forEach(r => { if (r.status === 'fulfilled') mdProcesarFilas(r.value.filas, r.value.ciu, nueva); });
+      if (nueva.length > 0) {
+        nueva.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        mdBd = nueva;
+        mdArmarSelectorCiudad();
+        mdDibujarMarcadores(mdBd);
+        mdActualizarMetricas();
+      }
+    }
+
+    function mdActualizarMetricas() {
+      const counters = document.querySelectorAll('.metric-number');
+      const ciudades = new Set(mdBd.map(c => c.ciudad));
+      if (counters[0]) counters[0].setAttribute('data-target', mdBd.length);
+      if (counters[1]) counters[1].setAttribute('data-target', ciudades.size);
+    }
+
+    function mdArmarSelectorCiudad() {
+      const ciudades = [...new Set(mdBd.map(c => c.ciudad))].sort();
+      md$('md-select-ciudad').innerHTML =
+        `<option value="Todas">Toda Argentina (${mdBd.length})</option>` +
+        ciudades.map(c => `<option value="${mdEsc(c)}">${mdEsc(c)}</option>`).join('');
+    }
+
+    function mdPopupHtml(c) {
+      return `<div class="md-popup"><b>${mdEsc(c.nombre)}</b><br><small>${mdEsc(c.ubicacion)}</small><br><a href="${mdEsc(c.instagram)}" target="_blank" rel="noopener noreferrer" class="md-popup-btn">Instagram</a></div>`;
+    }
+
+    function mdDibujarMarcadores(lista) {
+      if (!mdCluster) return;
+      mdCluster.clearLayers();
+      const marcadores = lista.map(c =>
+        L.circleMarker([c.lat, c.lon], { radius: 6, color: "#f5f0e8", weight: 2, fillColor: "#8b4513", fillOpacity: 0.85 })
+          .bindPopup(mdPopupHtml(c))
+      );
+      mdCluster.addLayers(marcadores);
+    }
+
+    function mdFiltrar() {
+      const ciu = md$('md-select-ciudad').value;
+      const txt = mdNorm(md$('md-input-busqueda').value).trim();
+      const filtrados = mdBd.filter(c =>
+        (ciu === "Todas" || c.ciudad === ciu) &&
+        (!txt || mdNorm(c.nombre).includes(txt) || mdNorm(c.ubicacion).includes(txt))
+      );
+      mdDibujarMarcadores(filtrados);
+      md$('md-resultados').innerHTML = '';
+      if (ciu !== "Todas" && filtrados.length) {
+        let lat = 0, lon = 0;
+        filtrados.forEach(c => { lat += c.lat; lon += c.lon; });
+        mdMap.setView([lat / filtrados.length, lon / filtrados.length], 12);
+      } else if (ciu === "Todas") {
+        mdMap.setView([-38.41, -63.61], 4);
+      }
+    }
+
+    function mdRenderizarCercanos(origen, lista) {
+      const cont = md$('md-resultados');
+      cont.innerHTML = '';
+      const cercanos = lista
+        .map(c => ({ ...c, dist: mdDistancia(origen.lat, origen.lon, c.lat, c.lon) }))
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, 5);
+      cercanos.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'md-resultado-card';
+        div.innerHTML = `
+          <div>
+            <strong>${mdEsc(c.nombre)}</strong>
+            <span class="md-resultado-dist">${c.dist < 1 ? Math.round(c.dist * 1000) + ' m' : c.dist.toFixed(1) + ' km'}</span>
+            <div class="md-resultado-ubi">${mdEsc(c.ubicacion)}</div>
+          </div>
+          <a href="${mdEsc(c.instagram)}" target="_blank" rel="noopener noreferrer">Instagram</a>`;
+        cont.appendChild(div);
+      });
+      mdCluster.clearLayers();
+      const marcadores = lista.map(c => L.circleMarker([c.lat, c.lon], { radius: 6, color: "#f5f0e8", weight: 2, fillColor: "#8b4513", fillOpacity: 0.85 }).bindPopup(mdPopupHtml(c)));
+      mdCluster.addLayers(marcadores);
+      if (mdRadarLayer) mdMap.removeLayer(mdRadarLayer);
+      mdRadarLayer = L.circleMarker([origen.lat, origen.lon], { radius: 9, color: "#059669", weight: 3, fillColor: "#fff", fillOpacity: 1 }).addTo(mdMap).bindPopup("Estás acá").openPopup();
+      mdMap.setView([origen.lat, origen.lon], 14);
+    }
+
+    function mdUsarGPS() {
+      if (!navigator.geolocation) { Swal.fire('Error', 'Tu navegador no soporta GPS.', 'error'); return; }
+      md$('md-status').innerText = 'Buscando tu ubicación...';
+      navigator.geolocation.getCurrentPosition(
+        p => { md$('md-status').innerText = ''; mdRenderizarCercanos({ lat: p.coords.latitude, lon: p.coords.longitude }, mdBd); },
+        () => { md$('md-status').innerText = ''; Swal.fire('Aviso', 'No pudimos obtener tu ubicación. Revisá los permisos.', 'warning'); },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+      );
+    }
+
+    function mdBuscarDireccion() {
+      Swal.fire({
+        title: '¿Dónde estás?',
+        input: 'text',
+        inputPlaceholder: 'Ej: Colón 1234, Mar del Plata',
+        confirmButtonText: 'Buscar',
+        showCancelButton: true,
+        cancelButtonText: 'Cerrar',
+        customClass: { popup: 'md-swal-popup', confirmButton: 'md-swal-btn md-swal-btn-confirm', cancelButton: 'md-swal-btn md-swal-btn-cancel', input: 'md-swal-input' }
+      }).then(async (result) => {
+        if (!result.isConfirmed || !result.value) return;
+        Swal.fire({ title: 'Buscando...', didOpen: () => Swal.showLoading() });
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(result.value)}&countrycodes=ar&limit=1`);
+          const data = await res.json();
+          Swal.close();
+          if (!data.length) { Swal.fire('Sin resultados', 'No encontramos esa dirección.', 'info'); return; }
+          mdRenderizarCercanos({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) }, mdBd);
+        } catch (e) {
+          Swal.fire('Error', 'No pudimos conectar con el buscador de direcciones.', 'error');
+        }
+      });
+    }
+
+    function mdInicializarMapa() {
+      mdMap = L.map('cofiteca-map', {
+        zoomControl: true,
+        scrollWheelZoom: false,
+        dragging: !L.Browser.mobile || true
+      }).setView([-38.41, -63.61], 4);
+
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 16
+      }).addTo(mdMap);
+
+      mdCluster = L.markerClusterGroup({ maxClusterRadius: 45, spiderfyOnMaxZoom: true, showCoverageOnHover: false });
+      mdCluster.addTo(mdMap);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       // 1. Rotación de Video
       const video = document.getElementById('video-fondo');
@@ -178,90 +384,32 @@
       }, { threshold: 0.15 });
       fadeElements.forEach(el => fadeObserver.observe(el));
 
-      // 3. Inicializar Mapa (Esri Light Gray Canvas)
-      const map = L.map('cofiteca-map', { 
-        zoomControl: false, 
-        scrollWheelZoom: false,
-        dragging: !L.Browser.mobile
-      }).setView([-36.4161, -63.6167], 4);
-      
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri',
-        maxZoom: 16
-      }).addTo(map);
+      // 3. Mapa real + buscador (Cofiteca)
+      mdInicializarMapa();
+      mdCargarCafes();
 
-      const coffeePoints = [
-        [-38.0055, -57.5426], [-38.0155, -57.5526], // Mar del Plata
-        [-34.6037, -58.3816], [-34.5890, -58.4290], [-34.5720, -58.4340], // CABA/GBA
-        [-31.4201, -64.1888], [-31.4000, -64.2000], // Córdoba
-        [-32.9442, -60.6505], // Rosario
-        [-32.8908, -68.8272], // Mendoza
-        [-41.1456, -71.3082], // Bariloche
-        [-38.9516, -68.0591], // Neuquén
-        [-26.8241, -65.2226], // Tucumán
-        [-24.7821, -65.4232], // Salta
-        [-54.8019, -68.3030]  // Ushuaia
-      ];
-
-      coffeePoints.forEach(coords => {
-        L.circleMarker(coords, {
-          radius: 6,
-          fillColor: "#8b4513",
-          color: "#f5f0e8",
-          weight: 2,
-          opacity: 1,
-          fillOpacity: 0.8
-        }).addTo(map);
-      });
-
-      // 4. Lógica de CSV (Contadores Numéricos)
+      // 4. Animación de contadores numéricos
       const counters = document.querySelectorAll('.metric-number');
-      const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKWHZjUoyHujPoj5kaTJzj-O8K-GBReU2XS_ul1zNhV9nKkDC6ndE2YPgPjElaY-IHXVxcxKWKqs6t/pub?gid=984622585&single=true&output=csv';
-      
-      fetch(csvUrl)
-        .then(response => response.text())
-        .then(csvText => {
-          const rows = csvText.trim().split(/\r?\n/);
-          const counterValues = [];
-          
-          rows.forEach(row => {
-            const cols = row.split(',');
-            cols.forEach(col => {
-               const val = parseFloat(col.trim());
-               if (!isNaN(val) && val >= 0 && Number.isInteger(val)) {
-                   counterValues.push(val);
-               }
-            });
-          });
-
-          if (counterValues.length >= 3 && counters.length >= 3) {
-            counters[0].setAttribute('data-target', counterValues[0]);
-            counters[1].setAttribute('data-target', counterValues[1]);
-            counters[2].setAttribute('data-target', counterValues[2]);
-          }
-          
-          const counterObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-              if (entry.isIntersecting) {
-                const target = +entry.target.getAttribute('data-target');
-                let current = 0;
-                const updateCounter = () => {
-                  current += target / 30;
-                  if (current < target) {
-                    entry.target.innerText = Math.ceil(current);
-                    requestAnimationFrame(updateCounter);
-                  } else {
-                    entry.target.innerText = target;
-                  }
-                };
-                updateCounter();
-                counterObserver.unobserve(entry.target);
+      const counterObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const target = +entry.target.getAttribute('data-target');
+            let current = 0;
+            const updateCounter = () => {
+              current += Math.max(target / 30, 1);
+              if (current < target) {
+                entry.target.innerText = Math.ceil(current);
+                requestAnimationFrame(updateCounter);
+              } else {
+                entry.target.innerText = target;
               }
-            });
-          }, { threshold: 0.5 });
-          counters.forEach(c => counterObserver.observe(c));
-        })
-        .catch(error => console.error('Error CSV:', error));
+            };
+            updateCounter();
+            counterObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.5 });
+      counters.forEach(c => counterObserver.observe(c));
 
       // 5. Lightbox
       const lightbox = document.createElement('div');
@@ -279,24 +427,20 @@
         </div>
       `;
       document.body.appendChild(lightbox);
-
       const overlay = lightbox.querySelector('.lightbox-overlay');
       const wrapper = lightbox.querySelector('.lightbox-content-wrapper');
       const mediaContainer = document.getElementById('lightbox-media-container');
       const titleEl = document.getElementById('lightbox-title');
       const descEl = document.getElementById('lightbox-desc');
       const close = lightbox.querySelector('.lightbox-close');
-
       document.querySelectorAll('.media-trigger').forEach((trigger) => {
         trigger.addEventListener('click', (e) => {
           e.preventDefault();
           const type = trigger.getAttribute('data-type');
           const src = trigger.getAttribute('data-src');
-
           titleEl.textContent = trigger.getAttribute('data-title');
           descEl.innerHTML = trigger.getAttribute('data-desc');
           mediaContainer.innerHTML = '';
-
           if (type === 'text') {
             wrapper.classList.add('text-only-mode');
           } else {
@@ -311,51 +455,39 @@
           document.body.style.overflow = 'hidden';
         });
       });
-
       const closeLightbox = () => {
         lightbox.classList.remove('active');
         document.body.style.overflow = '';
         mediaContainer.innerHTML = '';
       };
-
       close.addEventListener('click', closeLightbox);
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeLightbox();
-      });
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeLightbox();
-      });
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) closeLightbox(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
     });
   </script>
 
   <style is:global>
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
-
     body {
       background-color: #f5f0e8;
       color: #2c1810;
       font-family: 'Georgia', 'Times New Roman', serif;
       line-height: 1.7;
     }
-
     #video-fondo {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       object-fit: cover; z-index: -998; opacity: 0.25; pointer-events: none;
     }
-
     strong { color: #1a0f0a; }
     a { color: #8b4513; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.3s ease; }
     a:hover { border-bottom-color: #8b4513; }
-
     main { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
-
     .section-title {
       text-align: center; font-size: 3.5rem; font-weight: 800; color: #1a0f0a;
       letter-spacing: -0.03em; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1);
       margin: 4rem 0 2rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif;
     }
-
     /* HERO */
     .brand-hero { text-align: center; padding: 7rem 1rem 5rem; position: relative; z-index: 2; }
     .brand-title { font-size: 4.2rem; font-weight: 800; color: #1a0f0a; letter-spacing: -0.03em; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1); margin-bottom: 1.5rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif; }
@@ -366,7 +498,6 @@
     .brand-actions a[href="#servicios"]:hover, .brand-actions a[href="#contacto"]:hover { background-color: #5c3d2e; border-color: #5c3d2e; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(139, 69, 19, 0.35); }
     .brand-actions a[href="#portafolio"], .brand-actions a[href="#proceso"], .brand-actions a[href="https://cofiteca.ar"] { background-color: rgba(255, 255, 255, 0.8); color: #3d2317; border: 2px solid #c4a77d; backdrop-filter: blur(5px); }
     .brand-actions a:hover { transform: translateY(-3px); background-color: #ffffff; }
-
     /* SERVICIOS */
     .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin: 3rem 0; }
     @media (max-width: 768px) { .services-grid { grid-template-columns: 1fr; } }
@@ -381,35 +512,46 @@
     .service-card:hover h3 { transform: translateY(-15px); color: #f5f0e8; z-index: 2; }
     .service-card:hover .service-hover-text { transform: translateX(-50%) translateY(0); opacity: 1; }
     .service-card:hover .service-thumb img { transform: scale(1.05); }
-
-    /* PROCESO ACTUALIZADO (Alineación izquierda y números al fondo) */
+    /* PROCESO */
     .process-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin: 3rem 0; }
     @media (max-width: 992px) { .process-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 576px) { .process-grid { grid-template-columns: 1fr; } }
-    
-    .process-step { 
-      background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); 
-      border-radius: 16px; padding: 2.5rem 2rem; position: relative; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); 
-      text-align: left; /* Alineación limpia para mayor legibilidad */
-      overflow: hidden;
-    }
-    .step-number { 
-      font-size: 8rem; font-weight: 900; color: rgba(196, 167, 125, 0.15); /* Muy suave y grande de fondo */
-      position: absolute; top: -20px; right: 10px; line-height: 1; z-index: 0; pointer-events: none;
-    }
+    .process-step { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 2.5rem 2rem; position: relative; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); text-align: left; overflow: hidden; }
+    .step-number { font-size: 8rem; font-weight: 900; color: rgba(196, 167, 125, 0.15); position: absolute; top: -20px; right: 10px; line-height: 1; z-index: 0; pointer-events: none; }
     .process-step h4 { color: #1a0f0a; font-size: 1.3rem; margin-top: 0; margin-bottom: 1rem; position: relative; z-index: 2; text-align: left; }
     .process-step p { color: #4a332a; font-size: 1.05rem; margin: 0; position: relative; z-index: 2; text-align: left; line-height: 1.6; }
-
-    /* DATA REAL: MAPA + MÉTRICAS */
+    /* DATA REAL: MAPA + BUSCADOR + MÉTRICAS */
     .data-real-container { display: flex; flex-wrap: wrap; gap: 2rem; margin: 4rem 0; background: rgba(255, 255, 255, 0.65); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); overflow: hidden; align-items: stretch; }
     .metrics-sidebar { flex: 1; min-width: 250px; padding: 3rem 2rem; display: flex; flex-direction: column; justify-content: center; gap: 3rem; background: rgba(255,255,255, 0.4); border-right: 1px solid rgba(196, 167, 125, 0.3); }
     .metric-item { text-align: center; }
     .metric-number { font-size: 3.5rem; font-weight: 700; color: #1a0f0a; line-height: 1; display: inline-block; }
     .metric-symbol { font-size: 2rem; font-weight: 700; color: #c4a77d; }
     .metric-label { display: block; font-size: 0.95rem; color: #5c3d2e; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; }
-    .map-wrapper { flex: 2; min-width: 300px; min-height: 400px; position: relative; filter: sepia(0.6) hue-rotate(-15deg) contrast(0.9) opacity(0.85); }
-    #cofiteca-map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; }
-
+    .map-wrapper { flex: 2; min-width: 300px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    #cofiteca-map { width: 100%; height: 380px; border-radius: 12px; filter: sepia(0.5) hue-rotate(-15deg) contrast(0.95) opacity(0.95); }
+    .md-buscador { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+    .md-input { font-family: 'Georgia', serif; padding: 0.6rem 0.9rem; border-radius: 10px; border: 1px solid #c4a77d; background: rgba(255,255,255,0.8); color: #2c1810; font-size: 0.95rem; flex: 1; min-width: 160px; }
+    .md-botones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .md-btn { font-family: 'Georgia', serif; border-radius: 10px; padding: 0.6rem 1rem; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: 2px solid #c4a77d; background: rgba(255,255,255,0.7); color: #3d2317; transition: all 0.2s; }
+    .md-btn:hover { background: #ffffff; }
+    .md-btn-solid { background: #8b4513; color: #fff; border-color: #8b4513; }
+    .md-btn-solid:hover { background: #5c3d2e; }
+    .md-status { width: 100%; text-align: center; font-size: 0.85rem; color: #8b4513; font-weight: 700; min-height: 18px; }
+    .md-popup { font-family: 'Georgia', serif; text-align: center; }
+    .md-popup-btn { background: #8b4513; color: #fff !important; padding: 6px 10px; border-radius: 6px; display: inline-block; margin-top: 6px; font-size: 0.8rem; font-weight: 700; }
+    #md-resultados { display: flex; flex-direction: column; gap: 0.6rem; }
+    .md-resultado-card { display: flex; justify-content: space-between; align-items: center; gap: 1rem; background: rgba(255,255,255,0.7); border: 1px solid rgba(196, 167, 125, 0.4); border-radius: 10px; padding: 0.7rem 1rem; }
+    .md-resultado-dist { color: #8b4513; font-weight: 700; font-size: 0.85rem; margin-left: 0.5rem; }
+    .md-resultado-ubi { font-size: 0.85rem; color: #5c3d2e; opacity: 0.85; }
+    .md-swal-popup { font-family: 'Georgia', serif !important; background: #f5f0e8 !important; border-radius: 16px !important; }
+    .md-swal-input { border: 1px solid #c4a77d !important; border-radius: 10px !important; }
+    .md-swal-btn { font-family: 'Georgia', serif !important; border-radius: 10px !important; font-weight: 700 !important; }
+    .md-swal-btn-confirm { background-color: #8b4513 !important; }
+    .md-swal-btn-cancel { background-color: transparent !important; border: 2px solid #c4a77d !important; color: #3d2317 !important; }
+    @media (max-width: 640px) {
+      #cofiteca-map { height: 300px; }
+      .md-input { min-width: 100%; }
+    }
     /* PORTAFOLIO */
     .portfolio-grid { column-count: 3; column-gap: 1rem; margin: 1.5rem 0 3rem; }
     @media (max-width: 992px) { .portfolio-grid { column-count: 2; } }
@@ -421,7 +563,6 @@
     .portfolio-item img, .thumbnail-video { width: 100%; height: auto; display: block; transition: transform 0.4s ease; }
     .portfolio-item:hover img, .video-trigger:hover .thumbnail-video { transform: scale(1.05); }
     .play-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: rgba(255,255,255,0.9); pointer-events: none; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-
     /* LIGHTBOX */
     #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; }
     #lightbox.active { display: flex; align-items: center; justify-content: center; }
@@ -437,12 +578,10 @@
     @media (min-width: 768px) { .lightbox-close { top: 1rem; right: 2rem; } }
     .lightbox-content-wrapper.text-only-mode #lightbox-media-container { display: none; }
     .lightbox-content-wrapper.text-only-mode .lightbox-text-panel { flex-basis: 100%; max-width: 700px; padding: 4rem 3rem; text-align: left; }
-
     /* CONTACTO */
     .contact-intro { font-size: 1.1rem; color: #2c1810; margin-bottom: 2rem; }
     .contact-info { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); display: inline-block; border-radius: 16px; padding: 2.5rem 4rem; margin: 0 auto 4rem; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); text-align: center; }
     .contact-text { margin: 0.5rem 0; font-size: 1.2rem; color: #2c1810; }
-
     .fade-on-scroll { opacity: 0; transform: translateY(25px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
     .fade-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
   </style>
