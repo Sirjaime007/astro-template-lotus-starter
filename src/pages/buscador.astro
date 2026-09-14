@@ -1,0 +1,459 @@
+---
+// src/pages/buscador.astro
+---
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Base de Datos | Cofiteca x Mad</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style is:global>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background-color: #f5f0e8; color: #2c1810; font-family: 'Inter', sans-serif; }
+    
+    .nav-bar { padding: 1.5rem 2rem; display: flex; align-items: center; border-bottom: 1px solid rgba(196, 167, 125, 0.3); }
+    .btn-back { display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #8b4513; font-weight: 600; font-family: 'Inter', sans-serif; transition: 0.2s; }
+    .btn-back:hover { color: #5c3d2e; transform: translateX(-5px); }
+    
+    .data-real-container { margin: 2rem auto; max-width: 1200px; padding: 0 1rem; display: grid; grid-template-columns: 280px 1fr; gap: 1rem; }
+    @media (max-width: 1024px) { .data-real-container { grid-template-columns: 1fr; } }
+
+    .metrics-sidebar { padding: 2rem; display: flex; flex-direction: column; justify-content: flex-start; gap: 2.5rem; background: rgba(255,255,255, 0.6); border-radius: 16px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); }
+    @media (max-width: 1024px) { .metrics-sidebar { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 1.5rem; } }
+    
+    .metric-item { text-align: center; }
+    @media (max-width: 768px) { .metric-item { flex: 1 1 40%; min-width: 120px; } }
+    .metric-number { font-size: 3rem; font-weight: 700; color: #1a0f0a; line-height: 1; display: inline-block; font-family: 'Georgia', serif; }
+    .metric-symbol { font-size: 2rem; font-weight: 700; color: #c4a77d; font-family: 'Georgia', serif; }
+    .metric-label { display: block; font-size: 0.85rem; color: #5c3d2e; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; font-weight: 700; }
+
+    .buscador-main-panel { display: flex; flex-direction: column; background: rgba(255,255,255, 0.6); border-radius: 16px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); overflow: hidden; }
+    .data-header { padding: 2rem; border-bottom: 1px solid rgba(196, 167, 125, 0.3); text-align: center; }
+    .buscador-ui { padding: 1.5rem 2rem 2rem; flex-grow: 1; display: flex; flex-direction: column; }
+    @media (max-width: 768px) { .data-header { padding: 1.5rem 1rem; } .buscador-ui { padding: 1.5rem 1rem; } }
+    
+    .search-controls { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 1rem; margin-bottom: 1rem; }
+    @media (max-width: 900px) { .search-controls { grid-template-columns: 1fr 1fr; } .search-controls input { grid-column: 1 / -1; } }
+    @media (max-width: 576px) { .search-controls { grid-template-columns: 1fr; } }
+    
+    .search-buttons { display: flex; gap: 10px; margin-bottom: 1.5rem; }
+    @media (max-width: 576px) { .search-buttons { flex-direction: column; } }
+
+    .btn-outline-mad { flex: 1; background: transparent; color: #3d2317; border: 2px solid #c4a77d; padding: 12px 20px; border-radius: 10px; font-family: 'Inter', sans-serif; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.95rem; }
+    .btn-outline-mad:hover { background: rgba(255,255,255,0.8); border-color: #8b4513; }
+    .btn-primary-mad { flex: 1; background: #8b4513; color: white; border: 2px solid #8b4513; padding: 12px 20px; border-radius: 10px; font-family: 'Inter', sans-serif; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.95rem; }
+    .btn-primary-mad:hover { background: #5c3d2e; border-color: #5c3d2e; }
+
+    .input-moderno { width: 100%; padding: 14px 16px; border: 1px solid #c4a77d; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 0.95rem; background: rgba(255,255,255,0.9); color: #2A1F18; outline: none; transition: border-color 0.2s; }
+    .input-moderno:focus { border-color: #8b4513; box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.15); }
+    
+    .map-wrapper { width: 100%; height: 500px; border-radius: 12px; overflow: hidden; border: 1px solid #c4a77d; margin-bottom: 2rem; position: relative; z-index: 1;}
+    @media (max-width: 768px) { .map-wrapper { height: 400px; } }
+    #cofiteca-map { width: 100%; height: 100%; background: #e6e2db; }
+
+    .cafe-label { background: transparent; border: none; box-shadow: none; color: #2c1810; font-weight: 800; font-size: 0.8rem; text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+    .show-labels .cafe-label { opacity: 1; }
+
+    .resultados-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; max-height: 450px; overflow-y: auto; padding-right: 10px;}
+    .resultados-grid::-webkit-scrollbar { width: 8px; }
+    .resultados-grid::-webkit-scrollbar-track { background: rgba(196, 167, 125, 0.2); border-radius: 10px; }
+    .resultados-grid::-webkit-scrollbar-thumb { background: #c4a77d; border-radius: 10px; }
+
+    .cafe-card { background: white; padding: 18px; border-radius: 12px; border: 1px solid rgba(196, 167, 125, 0.4); box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between;}
+    .cafe-card:hover { transform: translateY(-3px); border-color: #8b4513; box-shadow: 0 8px 25px rgba(139, 69, 19, 0.1); }
+    .cafe-card h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: #1a0f0a; font-family: 'Georgia', serif;}
+    .cafe-card p { margin: 0 0 12px 0; font-size: 0.85rem; color: #5c3d2e; }
+    .cafe-card a { text-align: center; display: block; padding: 8px; background: #f5f0e8; border-radius: 8px; font-weight: 600; font-size: 0.8rem; color: #8b4513; border: 1px solid #c4a77d;}
+    .cafe-card a:hover { background: #8b4513; color: white; }
+  </style>
+</head>
+<body>
+  
+  <nav class="nav-bar">
+    <a href="/" class="btn-back">← Volver a Mad Diseño</a>
+  </nav>
+
+  <div class="data-real-container">
+    <div class="metrics-sidebar">
+      <div class="metric-item">
+        <span class="metric-number" data-target="0" id="stat-cafes">0</span>
+        <span class="metric-label">Cafeterías Auditadas</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-number" data-target="24" id="stat-provincias">0</span>
+        <span class="metric-label">Provincias Mapeadas</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-number" data-target="102" id="stat-ciudades">0</span>
+        <span class="metric-label">Ciudades Relevadas</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-number" data-target="100" id="stat-inteligencia">0</span><span class="metric-symbol">%</span>
+        <span class="metric-label">Inteligencia de Mercado</span>
+      </div>
+    </div>
+
+    <div class="buscador-main-panel">
+      <div class="data-header">
+        <p style="font-size: 1.15rem; font-weight: 600; margin: 0; color: #1a0f0a;">Base de Datos Cofiteca x Mad</p>
+        <p id="cofi-status" style="font-size: 0.9rem; color: #8b4513; margin: 5px 0 0 0; font-weight: bold;">Sincronizando con el servidor...</p>
+      </div>
+      
+      <div class="buscador-ui">
+        <div class="search-controls">
+          <select id="select-ciudad" class="input-moderno" onchange="cofiActualizarZonas(); cofiFiltrar()"><option value="Todas">Región / Ciudad</option></select>
+          <select id="select-zona" class="input-moderno" onchange="cofiFiltrar()"><option value="Todas">Zona / Barrio</option></select>
+          <input type="text" id="input-busqueda" class="input-moderno" placeholder="Buscá por nombre o calle..." oninput="cofiFiltrar()">
+        </div>
+        
+        <div class="search-buttons">
+          <button class="btn-outline-mad" onclick="cofiMedirDesdeDireccion()">📍 Buscar por Dirección</button>
+          <button class="btn-primary-mad" onclick="cofiUsarMiGPS()">🎯 Cerca de Mí</button>
+        </div>
+        
+        <div class="map-wrapper">
+          <div id="cofiteca-map"></div>
+        </div>
+        
+        <div id="cofi-resultados" class="resultados-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const SHEET_ID = "10vUOhRr7IAXlRrkBphxEP4ApXYBgrnuxJq6G83GnfHI";
+      const urlSheet = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+
+      const GIDS = {
+          "Mar del Plata": "0", "CABA y Gran Buenos Aires": "1296176686", "La Plata": "208452991", "Córdoba": "1250014567",
+          "Santa Fe": "1691979590", "Mendoza": "2031963266", "Interior de BS AS": "1634818534", "Neuquén y Río Negro": "155647820",
+          "Salta y Jujuy": "1993653328", "Chubut, Santa Cruz y Tierra del Fuego": "1650814085", "San Juan, San Luis, La Rioja y La Pampa": "1228328818",
+          "Corrientes, Misiones, Entre Rios, Formosa y Chaco": "1097354687", "Catamarca, Tucuman y  Santiago del Estero": "1483010757"
+      };
+
+      let baseDatos = [];
+      let mapaCofiteca = null;
+      let markerCluster = null;
+      let markerOrigen = null; 
+
+      const norm = s => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+
+      function calcularD(lat1, lon1, lat2, lon2) {
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+          return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      }
+
+      function initMapa() {
+          if (typeof L === 'undefined') return;
+          mapaCofiteca = L.map('cofiteca-map', { maxBoundsViscosity: 1.0, minZoom: 4 }).setView([-38.41, -63.61], 4);
+          
+          mapaCofiteca.on('zoomend', () => {
+              const mapEl = document.getElementById('cofiteca-map');
+              if(mapEl) mapEl.classList.toggle('show-labels', mapaCofiteca.getZoom() >= 15);
+          });
+
+          L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri',
+            maxZoom: 16
+          }).addTo(mapaCofiteca);
+
+          markerCluster = L.markerClusterGroup({
+              maxClusterRadius: 40, disableClusteringAtZoom: 14, spiderfyOnMaxZoom: true, showCoverageOnHover: false, chunkedLoading: true
+          }).addTo(mapaCofiteca);
+      }
+
+      function dibujarMapa() {
+          if (!markerCluster) return;
+          const ciudadFiltro = document.getElementById('select-ciudad').value;
+          const zonaFiltro = document.getElementById('select-zona').value;
+          const texto = norm(document.getElementById('input-busqueda').value).trim();
+          
+          const filtrados = baseDatos.filter(c => 
+              (ciudadFiltro === "Todas" || c.ciudad === ciudadFiltro) &&
+              (zonaFiltro === "Todas" || c.zona === zonaFiltro) &&
+              (!texto || norm(c.nombre).includes(texto) || norm(c.ubicacion).includes(texto))
+          );
+
+          const markers = filtrados.map(c => {
+              return L.circleMarker([c.lat, c.lon], { radius: 6, color: '#f5f0e8', fillColor: '#8b4513', fillOpacity: 0.9, weight: 1.5 })
+              .bindPopup(`<div style="text-align:center; font-family:'Inter', sans-serif;"><b>${esc(c.nombre)}</b><br><small>${esc(c.ubicacion)}</small><br><a href="${esc(c.instagram)}" target="_blank" style="display:inline-block; margin-top:5px; background:#8b4513; color:white; padding:5px 10px; border-radius:5px; font-size:0.8rem; text-decoration:none;">Instagram</a></div>`)
+              .bindTooltip(esc(c.nombre), { permanent: true, direction: 'top', className: 'cafe-label', offset: [0, -10] });
+          });
+
+          markerCluster.clearLayers();
+          markerCluster.addLayers(markers);
+
+          if (!markerOrigen) {
+            if (ciudadFiltro === "Todas" && texto === "") {
+                mapaCofiteca.setView([-38.41, -63.61], 4);
+            } else if (filtrados.length > 0) {
+                let lat = 0, lon = 0;
+                filtrados.forEach(c => { lat += c.lat; lon += c.lon; });
+                mapaCofiteca.setView([lat / filtrados.length, lon / filtrados.length], zonaFiltro === "Todas" ? 12 : 14);
+            }
+          }
+      }
+
+      function renderizarResultados(datos, origen = null) {
+          const contenedor = document.getElementById('cofi-resultados');
+          const frag = document.createDocumentFragment();
+          let lista = datos;
+          
+          if (origen) {
+              lista = datos.map(c => ({ ...c, dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) }))
+                           .sort((a, b) => a.dist - b.dist)
+                           .slice(0, 30); 
+          } else {
+              lista = datos.slice(0, 60); 
+          }
+
+          lista.forEach(c => {
+              let txtDist = "";
+              if (origen && c.dist !== undefined) {
+                  const cuadras = Math.round(c.dist * 10);
+                  txtDist = cuadras === 0 
+                    ? `<br><b style="color:#8b4513;">📍 ¡A menos de 1 cuadra!</b>` 
+                    : `<br><b style="color:#8b4513;">📍 A ${cuadras} cuadra${cuadras !== 1 ? 's' : ''}</b>`;
+              }
+              const div = document.createElement('div');
+              div.className = 'cafe-card';
+              div.innerHTML = `
+                  <div>
+                      <h3>${esc(c.nombre)}</h3>
+                      <p>${esc(c.ubicacion)} • <b>${esc(c.ciudad)}</b>${txtDist}</p>
+                  </div>
+                  <a href="${esc(c.instagram)}" target="_blank" rel="noopener noreferrer">Ver Instagram</a>
+              `;
+              frag.appendChild(div);
+          });
+          contenedor.replaceChildren(frag);
+          
+          if(!origen && datos.length > 60) {
+              const aviso = document.createElement('p');
+              aviso.style.cssText = "grid-column: 1/-1; text-align:center; font-size:0.9rem; opacity:0.7;";
+              aviso.innerText = `Mostrando 60 de ${datos.length} resultados. Refiná tu búsqueda.`;
+              contenedor.appendChild(aviso);
+          }
+      }
+
+      function cofiProcesarOrigen(lat, lon, label) {
+          if (markerOrigen) mapaCofiteca.removeLayer(markerOrigen);
+          markerOrigen = L.circleMarker([lat, lon], { radius: 8, color: "#059669", fillColor: "#fff", weight: 3, fillOpacity: 1 })
+            .addTo(mapaCofiteca).bindPopup(label).openPopup();
+          
+          mapaCofiteca.setView([lat, lon], 14);
+          renderizarResultados(baseDatos, { lat, lon });
+      }
+
+      window.cofiUsarMiGPS = function() {
+          if (!navigator.geolocation) return Swal.fire("Error", "Tu navegador no soporta GPS.", "error");
+          document.getElementById('cofi-status').innerText = "Conectando con GPS...";
+          navigator.geolocation.getCurrentPosition(
+              p => { 
+                  document.getElementById('cofi-status').innerText = "Mostrando cafés cerca de tu ubicación actual."; 
+                  cofiProcesarOrigen(p.coords.latitude, p.coords.longitude, "📍 Estás acá"); 
+              },
+              () => { 
+                  document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas.`;
+                  Swal.fire("Aviso", "No pudimos obtener tu ubicación. Revisá los permisos.", "warning"); 
+              },
+              { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+          );
+      };
+
+      window.cofiMedirDesdeDireccion = function() {
+          Swal.fire({
+              title: '¿Dónde estás?',
+              html: `<p style="font-size:0.9rem; color:#5c3d2e; margin-bottom:15px;">Escribí tu calle y ciudad (Ej: Guemes, Mar del Plata)</p>
+                     <input id="swal-autocomplete-input" class="input-moderno" placeholder="Escribir..." autocomplete="off" style="width:100%; box-sizing:border-box;">
+                     <div id="autocomplete-results" style="text-align:left; margin-top:10px; max-height:200px; overflow-y:auto;"></div>`,
+              showConfirmButton: false, showCancelButton: true, cancelButtonText: 'Cerrar',
+              didOpen: () => {
+                  const input = document.getElementById('swal-autocomplete-input'); 
+                  const resultsContainer = document.getElementById('autocomplete-results'); 
+                  let timeout = null; let solicitudId = 0;
+                  input.focus();
+                  input.addEventListener('input', () => {
+                      clearTimeout(timeout); const val = input.value.trim();
+                      if (val.length < 4) { resultsContainer.innerHTML = ''; return; }
+                      resultsContainer.innerHTML = '<div style="padding:10px; color:#8b4513; font-weight:bold; text-align:center;">Buscando...</div>';
+                      timeout = setTimeout(async () => {
+                          const miId = ++solicitudId;
+                          try {
+                              const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&countrycodes=ar&addressdetails=1&limit=6`);
+                              const data = await res.json();
+                              if (miId !== solicitudId) return;
+                              resultsContainer.innerHTML = '';
+                              if (!data.length) { resultsContainer.innerHTML = '<div style="padding:10px; opacity:0.7; text-align:center;">No encontramos la dirección.</div>'; return; }
+                              data.forEach(item => {
+                                  const partes = [];
+                                  if (item.address.road) partes.push(item.address.road + (item.address.house_number ? " " + item.address.house_number : ""));
+                                  const localidad = item.address.city || item.address.town || item.address.village;
+                                  if (localidad) partes.push(localidad);
+                                  
+                                  const nombreStr = partes.length > 0 ? partes.join(", ") : item.display_name.split(',').slice(0, 3).join(', ');
+                                  const btn = document.createElement('button');
+                                  btn.style.cssText = 'width: 100%; text-align: left; background: rgba(255,255,255,0.7); color: #2c1810; border: 1px solid #c4a77d; padding: 12px; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-family: "Inter", sans-serif; font-size:0.9rem; transition: 0.2s;';
+                                  btn.innerHTML = `📍 <b>${esc(nombreStr)}</b>`;
+                                  btn.onmouseover = () => btn.style.borderColor = '#8b4513';
+                                  btn.onmouseout = () => btn.style.borderColor = '#c4a77d';
+                                  btn.onclick = () => { 
+                                      Swal.close(); 
+                                      document.getElementById('cofi-status').innerText = `Lugares cerca de ${nombreStr}`; 
+                                      cofiProcesarOrigen(parseFloat(item.lat), parseFloat(item.lon), nombreStr); 
+                                  };
+                                  resultsContainer.appendChild(btn);
+                              });
+                          } catch (e) { if (miId !== solicitudId) return; resultsContainer.innerHTML = '<div style="padding:10px; color:red; text-align:center;">Error con el mapa.</div>'; }
+                      }, 800);
+                  });
+              }
+          });
+      };
+
+      window.cofiActualizarZonas = function() {
+          const ciudadFiltro = document.getElementById('select-ciudad').value;
+          let zonas = [];
+          if (ciudadFiltro === "Todas") {
+              zonas = [...new Set(baseDatos.map(c => c.zona))];
+          } else {
+              zonas = [...new Set(baseDatos.filter(c => c.ciudad === ciudadFiltro).map(c => c.zona))];
+          }
+          zonas = zonas.filter(z => z && z !== "-" && z !== "Sin Zona").sort();
+          
+          document.getElementById('select-zona').innerHTML = `<option value="Todas">Zonas / Barrios</option>` + 
+              zonas.map(z => `<option value="${esc(z)}">${esc(z)}</option>`).join('');
+      };
+
+      let debounceFiltro = null;
+      window.cofiFiltrar = function() {
+          clearTimeout(debounceFiltro);
+          debounceFiltro = setTimeout(() => {
+              if (markerOrigen) {
+                  mapaCofiteca.removeLayer(markerOrigen);
+                  markerOrigen = null;
+                  document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas.`;
+              }
+              
+              const ciu = document.getElementById('select-ciudad').value;
+              const zon = document.getElementById('select-zona').value;
+              const txt = norm(document.getElementById('input-busqueda').value).trim();
+              
+              const filtrados = baseDatos.filter(c => 
+                  (ciu === "Todas" || c.ciudad === ciu) &&
+                  (zon === "Todas" || c.zona === zon) &&
+                  (!txt || norm(c.nombre).includes(txt) || norm(c.ubicacion).includes(txt))
+              );
+              
+              renderizarResultados(filtrados);
+              dibujarMapa();
+          }, 150);
+      };
+
+      function animarContadores(cafesTotal) {
+          const cCafes = document.getElementById('stat-cafes');
+          if(cCafes) cCafes.setAttribute('data-target', cafesTotal);
+
+          const counters = document.querySelectorAll('.metric-number');
+          const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                const target = +entry.target.getAttribute('data-target');
+                let current = 0;
+                const updateCounter = () => {
+                  current += target / 30;
+                  if (current < target) {
+                    entry.target.innerText = Math.ceil(current);
+                    requestAnimationFrame(updateCounter);
+                  } else {
+                    entry.target.innerText = target;
+                  }
+                };
+                updateCounter();
+                counterObserver.unobserve(entry.target);
+              }
+            });
+          }, { threshold: 0.3 });
+          counters.forEach(c => counterObserver.observe(c));
+      }
+
+      async function cargarBaseDatos() {
+          if (typeof Papa === 'undefined') {
+              document.getElementById('cofi-status').innerText = 'Error al cargar motor de datos.';
+              return;
+          }
+
+          const resultados = await Promise.allSettled(
+              Object.entries(GIDS).map(([ciu, gid]) =>
+                  new Promise((resolve, reject) => {
+                      Papa.parse(urlSheet(gid), {
+                          download: true, header: true, skipEmptyLines: true,
+                          transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+                          complete: res => resolve({ ciu, filas: res.data }),
+                          error: reject
+                      });
+                  })
+              )
+          );
+
+          let tempData = [];
+          resultados.forEach(r => {
+              if (r.status === 'fulfilled') {
+                  r.value.filas.forEach(f => {
+                      if (!f.CAFE) return;
+                      const latClean = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
+                      const lonClean = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
+                      if (isNaN(latClean) || isNaN(lonClean)) return;
+                      tempData.push({
+                          nombre: f.CAFE.trim(), ciudad: r.value.ciu,
+                          zona: f.ZONA || f.BARRIO || "Sin Zona",
+                          ubicacion: f.UBICACION || "-", instagram: asegurarProtocolo(f.INSTAGRAM || "#"),
+                          lat: latClean, lon: lonClean
+                      });
+                  });
+              }
+          });
+
+          if (tempData.length > 0) {
+              tempData.sort((a, b) => a.nombre.localeCompare(b.nombre));
+              baseDatos = tempData;
+              
+              const totalCafes = baseDatos.length;
+              document.getElementById('cofi-status').innerText = `${totalCafes} cafeterías mapeadas.`;
+              
+              animarContadores(totalCafes);
+
+              const ciudades = [...new Set(baseDatos.map(c => c.ciudad))].sort();
+              document.getElementById('select-ciudad').innerHTML = `<option value="Todas">Toda Argentina</option>` + 
+                  ciudades.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+              
+              window.cofiActualizarZonas();
+              initMapa();
+              cofiFiltrar();
+          } else {
+              document.getElementById('cofi-status').innerText = 'Hubo un error de conexión con la base central.';
+          }
+      }
+
+      cargarBaseDatos();
+    });
+  </script>
+</body>
+</html>
