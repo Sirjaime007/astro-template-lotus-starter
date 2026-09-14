@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
-  <!-- LIBRERÍAS CARGADAS EXACTAMENTE COMO FUNCIONABAN EN EL ORIGINAL -->
+  <!-- LIBRERÍAS CARGADAS DE FORMA SEGURA PARA ASTRO -->
   <script is:inline defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script is:inline defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -94,11 +94,11 @@
         <span class="metric-label">Cafeterías Auditadas</span>
       </div>
       <div class="metric-item">
-        <span class="metric-number" data-target="24" id="stat-provincias">0</span>
+        <span class="metric-number" data-target="0" id="stat-provincias">0</span>
         <span class="metric-label">Provincias Mapeadas</span>
       </div>
       <div class="metric-item">
-        <span class="metric-number" data-target="102" id="stat-ciudades">0</span>
+        <span class="metric-number" data-target="0" id="stat-ciudades">0</span>
         <span class="metric-label">Ciudades Relevadas</span>
       </div>
       <div class="metric-item">
@@ -110,7 +110,7 @@
     <div class="buscador-main-panel">
       <div class="data-header">
         <p style="font-size: 1.15rem; font-weight: 600; margin: 0; color: #1a0f0a;">Base de Datos Cofiteca x Mad</p>
-        <p id="cofi-status" style="font-size: 0.9rem; color: #8b4513; margin: 5px 0 0 0; font-weight: bold;">Cargando base de datos...</p>
+        <p id="cofi-status" style="font-size: 0.9rem; color: #8b4513; margin: 5px 0 0 0; font-weight: bold;">Sincronizando con el servidor...</p>
       </div>
       
       <div class="buscador-ui">
@@ -135,33 +135,25 @@
   </div>
 
   <script is:inline>
-    // =========================================================
-    // MOTOR ROBUSTO: ESPERA A QUE BAJEN LAS LIBRERÍAS SÍ O SÍ
-    // =========================================================
     (function iniciarBuscadorSeguro() {
-        // 1. Chequeamos si las dependencias existen. Si no, reintentamos en 50ms.
         if (typeof Papa === 'undefined' || typeof L === 'undefined' || typeof L.markerClusterGroup === 'undefined') {
             setTimeout(iniciarBuscadorSeguro, 50);
             return;
         }
 
-        // 2. Nos aseguramos de que el DOM exista
         const mapContenedor = document.getElementById('cofiteca-map');
         if (!mapContenedor) {
             setTimeout(iniciarBuscadorSeguro, 50);
             return;
         }
 
-        // 3. Evitar ejecución duplicada si Astro ya lo había cargado
         if (window.cofitecaInicializada) return;
         window.cofitecaInicializada = true;
 
-        // Limpiar mapa por si Astro lo dejó cacheado de una visita anterior
         if (mapContenedor._leaflet_id) {
             mapContenedor.outerHTML = '<div id="cofiteca-map" style="width: 100%; height: 100%; background: #e6e2db;"></div>';
         }
 
-        // AQUÍ EMPIEZA LA LÓGICA DE COFITECA
         const SHEET_ID = "10vUOhRr7IAXlRrkBphxEP4ApXYBgrnuxJq6G83GnfHI";
         const urlSheet = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
 
@@ -176,6 +168,13 @@
         let mapaCofiteca = null;
         let markerCluster = null;
         let markerOrigen = null; 
+
+        // FUNCIÓN RESTAURADA: Formatea correctamente los links
+        function asegurarProtocolo(url) {
+            if (!url || typeof url !== 'string') return "#";
+            const u = url.trim();
+            return (!u || u === "#") ? "#" : (/^https?:\/\//i.test(u) ? u : 'https://' + u);
+        }
 
         const norm = s => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
@@ -395,7 +394,12 @@
 
         function animarContadores(cafesTotal) {
             const cCafes = document.getElementById('stat-cafes');
+            const cProvincias = document.getElementById('stat-provincias');
+            const cCiudades = document.getElementById('stat-ciudades');
+            
             if(cCafes) cCafes.setAttribute('data-target', cafesTotal);
+            if(cProvincias) cProvincias.setAttribute('data-target', 24);
+            if(cCiudades) cCiudades.setAttribute('data-target', 102);
 
             const counters = document.querySelectorAll('.metric-number');
             const counterObserver = new IntersectionObserver((entries) => {
@@ -421,60 +425,66 @@
         }
 
         async function cargarBaseDatos() {
-            const resultados = await Promise.allSettled(
-                Object.entries(GIDS).map(([ciu, gid]) =>
-                    new Promise((resolve, reject) => {
-                        Papa.parse(urlSheet(gid), {
-                            download: true, header: true, skipEmptyLines: true,
-                            transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
-                            complete: res => resolve({ ciu, filas: res.data }),
-                            error: reject
-                        });
-                    })
-                )
-            );
+            try {
+                const resultados = await Promise.allSettled(
+                    Object.entries(GIDS).map(([ciu, gid]) =>
+                        new Promise((resolve, reject) => {
+                            Papa.parse(urlSheet(gid), {
+                                download: true, header: true, skipEmptyLines: true,
+                                transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+                                complete: res => resolve({ ciu, filas: res.data }),
+                                error: reject
+                            });
+                        })
+                    )
+                );
 
-            let tempData = [];
-            resultados.forEach(r => {
-                if (r.status === 'fulfilled') {
-                    r.value.filas.forEach(f => {
-                        if (!f.CAFE) return;
-                        const latClean = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
-                        const lonClean = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
-                        if (isNaN(latClean) || isNaN(lonClean)) return;
-                        tempData.push({
-                            nombre: f.CAFE.trim(), ciudad: r.value.ciu,
-                            zona: f.ZONA || f.BARRIO || "Sin Zona",
-                            ubicacion: f.UBICACION || "-", instagram: asegurarProtocolo(f.INSTAGRAM || "#"),
-                            lat: latClean, lon: lonClean
+                let tempData = [];
+                resultados.forEach(r => {
+                    if (r.status === 'fulfilled') {
+                        r.value.filas.forEach(f => {
+                            if (!f.CAFE) return;
+                            const latClean = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
+                            const lonClean = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
+                            if (isNaN(latClean) || isNaN(lonClean)) return;
+                            tempData.push({
+                                nombre: f.CAFE.trim(), ciudad: r.value.ciu,
+                                zona: f.ZONA || f.BARRIO || "Sin Zona",
+                                ubicacion: f.UBICACION || "-", instagram: asegurarProtocolo(f.INSTAGRAM || "#"),
+                                lat: latClean, lon: lonClean
+                            });
                         });
-                    });
+                    }
+                });
+
+                if (tempData.length > 0) {
+                    tempData.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                    baseDatos = tempData;
+                    
+                    const totalCafes = baseDatos.length;
+                    document.getElementById('cofi-status').innerText = `${totalCafes} cafeterías mapeadas.`;
+                    
+                    animarContadores(totalCafes);
+
+                    const ciudades = [...new Set(baseDatos.map(c => c.ciudad))].sort();
+                    document.getElementById('select-ciudad').innerHTML = `<option value="Todas">Región / Ciudad</option>` + 
+                        ciudades.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+                    
+                    window.cofiActualizarZonas();
+                    initMapa();
+                    cofiFiltrar();
+                } else {
+                    document.getElementById('cofi-status').innerText = 'Hubo un error al procesar las cafeterías.';
                 }
-            });
-
-            if (tempData.length > 0) {
-                tempData.sort((a, b) => a.nombre.localeCompare(b.nombre));
-                baseDatos = tempData;
-                
-                const totalCafes = baseDatos.length;
-                document.getElementById('cofi-status').innerText = `${totalCafes} cafeterías mapeadas.`;
-                
-                animarContadores(totalCafes);
-
-                const ciudades = [...new Set(baseDatos.map(c => c.ciudad))].sort();
-                document.getElementById('select-ciudad').innerHTML = `<option value="Todas">Región / Ciudad</option>` + 
-                    ciudades.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-                
-                window.cofiActualizarZonas();
-                initMapa();
-                cofiFiltrar();
-            } else {
-                document.getElementById('cofi-status').innerText = 'Hubo un error de conexión con la base central.';
+            } catch (err) {
+                console.error("Error global de carga:", err);
+                document.getElementById('cofi-status').innerText = 'Error al cargar los datos. Revisá la conexión.';
             }
         }
 
         cargarBaseDatos();
-    })(); // Se invoca automáticamente al leer el script
+    })();
   </script>
 </body>
 </html>
+
