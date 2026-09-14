@@ -1,63 +1,44 @@
+---
+// src/pages/index.astro
+---
 <!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cofiteca x Mad Diseño | Inteligencia & Branding</title>
-  <meta name="description" content="Diseño exclusivo para el mundo del café de especialidad. Identidad visual, packaging, señalética y diseño con data real." />
+  <meta name="description" content="Cofiteca x Mad. El radar de la cultura del café en Argentina. Mapeamos el territorio y creamos identidades visuales que dejan huella en la barra." />
   
-  <!-- FUENTES -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-
-  <!-- LIBRERÍAS DEL MAPA Y DATOS -->
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-  <script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
   <style is:global>
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; scroll-behavior: smooth; overflow-x: hidden; }
-    body {
-      background-color: #f5f0e8;
-      color: #2c1810;
-      font-family: 'Georgia', 'Times New Roman', serif;
-      line-height: 1.7;
-    }
-    #video-fondo {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      object-fit: cover; z-index: -998; opacity: 0.25; pointer-events: none;
-    }
+    body { background-color: #f5f0e8; color: #2c1810; font-family: 'Georgia', 'Times New Roman', serif; line-height: 1.7; }
+    #video-fondo { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -998; opacity: 0.25; pointer-events: none; }
     strong { color: #1a0f0a; }
     a { color: #8b4513; text-decoration: none; transition: all 0.3s ease; }
     main { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
     
-    .section-title {
-      text-align: center; font-size: 3.5rem; font-weight: 800; color: #1a0f0a;
-      letter-spacing: -0.03em; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1);
-      margin: 4rem 0 2rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif;
-    }
+    .section-title { text-align: center; font-size: 3.5rem; font-weight: 800; color: #1a0f0a; letter-spacing: -0.03em; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1); margin: 4rem 0 2rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif; }
 
     /* HERO */
     .brand-hero { text-align: center; padding: 7rem 1rem 5rem; position: relative; z-index: 2; }
-    .brand-title { font-size: 4.2rem; font-weight: 800; color: #1a0f0a; letter-spacing: -0.03em; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1); margin-bottom: 1.5rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif; }
-    .brand-tagline { font-size: 1.3rem; color: #3d2317; font-weight: 500; max-width: 650px; margin: 0 auto 2.5rem; background: rgba(255, 255, 255, 0.6); padding: 0.8rem 1.8rem; border-radius: 50px; backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); display: inline-block; }
+    .brand-title { font-size: 4.2rem; font-weight: 800; color: #1a0f0a; letter-spacing: -0.03em; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1); margin-bottom: 1.5rem; line-height: 1.1; }
+    .brand-tagline { font-size: 1.25rem; color: #3d2317; font-weight: 500; max-width: 700px; margin: 0 auto 2.5rem; background: rgba(255, 255, 255, 0.6); padding: 1rem 2rem; border-radius: 50px; backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); display: inline-block; }
     .brand-actions { display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
-    .brand-actions a { padding: 0.8rem 2.2rem; border-radius: 50px; font-size: 1.05rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'Inter', sans-serif;}
+    .brand-actions a { padding: 0.8rem 2.2rem; border-radius: 50px; font-size: 1.05rem; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'Inter', sans-serif;}
     .brand-actions a[href="#servicios"], .brand-actions a[href="#contacto"] { background-color: #8b4513; color: #ffffff; border: 2px solid #8b4513; box-shadow: 0 4px 15px rgba(139, 69, 19, 0.25); }
     .brand-actions a[href="#servicios"]:hover, .brand-actions a[href="#contacto"]:hover { background-color: #5c3d2e; border-color: #5c3d2e; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(139, 69, 19, 0.35); }
-    .brand-actions a[href="#buscador"], .brand-actions a[href="#proceso"] { background-color: rgba(255, 255, 255, 0.8); color: #3d2317; border: 2px solid #c4a77d; backdrop-filter: blur(5px); }
+    .brand-actions a[href="/buscador"], .brand-actions a[href="#proceso"] { background-color: rgba(255, 255, 255, 0.8); color: #3d2317; border: 2px solid #c4a77d; backdrop-filter: blur(5px); }
     .brand-actions a:hover { transform: translateY(-3px); background-color: #ffffff; }
     
     /* SERVICIOS */
     .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin: 3rem 0; }
     @media (max-width: 768px) { .services-grid { grid-template-columns: 1fr; } }
-    .service-card { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 1.5rem; min-height: 250px; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; text-decoration: none; position: relative; overflow: hidden; }
+    .service-card { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 1.5rem; min-height: 250px; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; position: relative; overflow: hidden; cursor: pointer; }
     .service-thumb { width: 100%; height: 200px; border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem; }
     .service-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
     .service-card h3 { color: #3d2317; font-size: 1.6rem; margin: 0 0 1rem 0; text-align: center; font-weight: 700; transition: transform 0.4s ease; }
@@ -75,102 +56,16 @@
     @media (max-width: 576px) { .process-grid { grid-template-columns: 1fr; } }
     .process-step { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 2.5rem 2rem; position: relative; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); text-align: left; overflow: hidden; }
     .step-number { font-size: 8rem; font-weight: 900; color: rgba(196, 167, 125, 0.15); position: absolute; top: -20px; right: 10px; line-height: 1; z-index: 0; pointer-events: none; font-family: 'Inter', sans-serif;}
-    .process-step h4 { color: #1a0f0a; font-size: 1.3rem; margin-top: 0; margin-bottom: 1rem; position: relative; z-index: 2; text-align: left; }
-    .process-step p { color: #4a332a; font-size: 1.05rem; margin: 0; position: relative; z-index: 2; text-align: left; line-height: 1.6; }
-    
-    /* DATA REAL Y BUSCADOR INTEGRADO (MAPA GRANDE Y METRICAS AJUSTADAS) */
-    .data-real-container { 
-      margin: 3rem 0; background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(255, 255, 255, 0.9); 
-      border-radius: 20px; backdrop-filter: blur(12px); box-shadow: 0 15px 40px rgba(44, 24, 16, 0.08); 
-      overflow: hidden; font-family: 'Inter', sans-serif;
-      display: grid;
-      grid-template-columns: 280px 1fr;
-    }
-    
-    /* Responsive para la sección del mapa y métricas */
-    @media (max-width: 1024px) {
-      .data-real-container { grid-template-columns: 1fr; border-radius: 16px; }
-      .metrics-sidebar { 
-         flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 1rem; 
-         border-right: none !important; border-bottom: 1px solid rgba(196, 167, 125, 0.3); padding: 2rem 1rem !important;
-      }
-    }
-
-    .metrics-sidebar { 
-      padding: 3rem 2rem; display: flex; flex-direction: column; justify-content: center; gap: 2.5rem; 
-      background: rgba(245, 240, 232, 0.6); border-right: 1px solid rgba(196, 167, 125, 0.3); 
-    }
-    .metric-item { text-align: center; }
-    .metric-number { font-size: 3.5rem; font-weight: 700; color: #1a0f0a; line-height: 1; display: inline-block; font-family: 'Georgia', serif; }
-    .metric-symbol { font-size: 2.2rem; font-weight: 700; color: #c4a77d; font-family: 'Georgia', serif; }
-    .metric-label { display: block; font-size: 0.85rem; color: #5c3d2e; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; font-weight: 700; }
-
-    /* Ajuste de fuentes y espacios en celulares para las métricas */
-    @media (max-width: 768px) {
-       .metric-number { font-size: 2.4rem; }
-       .metric-symbol { font-size: 1.5rem; }
-       .metric-label { font-size: 0.75rem; }
-       .metric-item { flex: 1 1 40%; min-width: 120px; }
-    }
-
-    .buscador-main-panel { display: flex; flex-direction: column; }
-    .data-header { padding: 2rem; border-bottom: 1px solid rgba(196, 167, 125, 0.3); text-align: center; }
-    @media (max-width: 768px) { .data-header { padding: 1.5rem 1rem; } }
-    
-    .buscador-ui { padding: 1.5rem 2rem 2rem; flex-grow: 1; display: flex; flex-direction: column; }
-    @media (max-width: 768px) { .buscador-ui { padding: 1.5rem 1rem; } }
-    
-    /* Controles de Búsqueda (3 columnas en PC, 1 en móvil) */
-    .search-controls { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 1rem; margin-bottom: 1rem; }
-    @media (max-width: 900px) { .search-controls { grid-template-columns: 1fr 1fr; } .search-controls input { grid-column: 1 / -1; } }
-    @media (max-width: 576px) { .search-controls { grid-template-columns: 1fr; } }
-    
-    .search-buttons { display: flex; gap: 10px; margin-bottom: 1.5rem; }
-    @media (max-width: 576px) { .search-buttons { flex-direction: column; } }
-
-    .btn-outline-mad { flex: 1; background: transparent; color: #3d2317; border: 2px solid #c4a77d; padding: 12px 20px; border-radius: 10px; font-family: 'Inter', sans-serif; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.95rem; }
-    .btn-outline-mad:hover { background: rgba(255,255,255,0.8); border-color: #8b4513; }
-    .btn-primary-mad { flex: 1; background: #8b4513; color: white; border: 2px solid #8b4513; padding: 12px 20px; border-radius: 10px; font-family: 'Inter', sans-serif; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.95rem; }
-    .btn-primary-mad:hover { background: #5c3d2e; border-color: #5c3d2e; }
-
-    .input-moderno { width: 100%; padding: 14px 16px; border: 1px solid #c4a77d; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 0.95rem; background: rgba(255,255,255,0.9); color: #2A1F18; outline: none; transition: border-color 0.2s; }
-    .input-moderno:focus { border-color: #8b4513; box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.15); }
-    
-    /* MAPA AMPLIADO */
-    .map-wrapper { width: 100%; height: 600px; border-radius: 12px; overflow: hidden; border: 1px solid #c4a77d; margin-bottom: 2rem; position: relative; z-index: 1; box-shadow: 0 5px 15px rgba(0,0,0,0.05);}
-    @media (max-width: 768px) { .map-wrapper { height: 400px; } }
-    #cofiteca-map { width: 100%; height: 100%; background: #e6e2db; }
-
-    /* ESTILO DE ETIQUETAS DE CAFETERÍAS EN EL MAPA */
-    .cafe-label {
-        background: transparent; border: none; box-shadow: none; color: #2c1810;
-        font-weight: 800; font-size: 0.8rem; 
-        text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white; 
-        opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
-        font-family: 'Inter', sans-serif;
-    }
-    .show-labels .cafe-label { opacity: 1; }
-
-    /* GRILLA DE RESULTADOS */
-    .resultados-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; max-height: 450px; overflow-y: auto; padding-right: 10px;}
-    .resultados-grid::-webkit-scrollbar { width: 8px; }
-    .resultados-grid::-webkit-scrollbar-track { background: rgba(196, 167, 125, 0.2); border-radius: 10px; }
-    .resultados-grid::-webkit-scrollbar-thumb { background: #c4a77d; border-radius: 10px; }
-
-    .cafe-card { background: white; padding: 18px; border-radius: 12px; border: 1px solid rgba(196, 167, 125, 0.4); box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between;}
-    .cafe-card:hover { transform: translateY(-3px); border-color: #8b4513; box-shadow: 0 8px 25px rgba(139, 69, 19, 0.1); }
-    .cafe-card h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: #1a0f0a; font-family: 'Georgia', serif;}
-    .cafe-card p { margin: 0 0 12px 0; font-size: 0.85rem; color: #5c3d2e; }
-    .cafe-card a { text-align: center; display: block; padding: 8px; background: #f5f0e8; border-radius: 8px; font-weight: 600; font-size: 0.8rem; color: #8b4513; border: 1px solid #c4a77d;}
-    .cafe-card a:hover { background: #8b4513; color: white; }
+    .process-step h4 { color: #1a0f0a; font-size: 1.3rem; margin-top: 0; margin-bottom: 1rem; position: relative; z-index: 2; }
+    .process-step p { color: #4a332a; font-size: 1.05rem; margin: 0; position: relative; z-index: 2; line-height: 1.6; }
 
     /* PORTAFOLIO */
     .portfolio-grid { column-count: 3; column-gap: 1rem; margin: 1.5rem 0 3rem; }
     @media (max-width: 992px) { .portfolio-grid { column-count: 2; } }
     @media (max-width: 768px) { .portfolio-grid { column-count: 1; } }
-    .portfolio-item { display: block; position: relative; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 15px rgba(44, 24, 16, 0.15); background: transparent; margin-bottom: 1rem; break-inside: avoid; page-break-inside: avoid; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .portfolio-item { display: block; position: relative; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 15px rgba(44, 24, 16, 0.15); background: transparent; margin-bottom: 1rem; break-inside: avoid; transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer; }
     .portfolio-item:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(44, 24, 16, 0.25); }
-    .portfolio-item::after { content: attr(data-title); position: absolute; bottom: 0; left: 0; width: 100%; padding: 3rem 1rem 1rem; background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.95)); color: #e8dcc8; font-size: 1.3rem; font-weight: bold; text-align: center; transform: translateY(100%); transition: transform 0.4s ease; box-sizing: border-box; pointer-events: none; z-index: 10; font-family: 'Inter', sans-serif;}
+    .portfolio-item::after { content: attr(data-title); position: absolute; bottom: 0; left: 0; width: 100%; padding: 3rem 1rem 1rem; background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.95)); color: #e8dcc8; font-size: 1.3rem; font-weight: bold; text-align: center; transform: translateY(100%); transition: transform 0.4s ease; pointer-events: none; z-index: 10; font-family: 'Inter', sans-serif;}
     .portfolio-item:hover::after { transform: translateY(0); }
     .portfolio-item img, .thumbnail-video { width: 100%; height: auto; display: block; transition: transform 0.4s ease; }
     .portfolio-item:hover img, .video-trigger:hover .thumbnail-video { transform: scale(1.05); }
@@ -202,18 +97,16 @@
 </head>
 <body>
 
-  <!-- VIDEO DE FONDO -->
   <video id="video-fondo" autoplay muted playsinline loop>
     <source src="/video-1.mp4" type="video/mp4" />
   </video>
 
-  <!-- SECCIÓN HERO -->
   <div class="brand-hero fade-on-scroll">
     <div class="brand-title">Cofiteca x Mad Diseño</div>
-    <p class="brand-tagline">Diseño exclusivo para el mundo del café de especialidad.</p>
+    <p class="brand-tagline">Conocemos el territorio. Creamos la identidad. El lugar donde el pulso de la calle y el buen diseño se sientan a tomar un café.</p>
     <div class="brand-actions">
       <a href="#servicios">Ver Servicios</a>
-      <a href="#buscador">Base de Datos</a>
+      <a href="/buscador">Explorar Data Real</a>
       <a href="#portafolio">Portafolio</a>
       <a href="#contacto">Contacto</a>
     </div>
@@ -223,25 +116,25 @@
     <div id="servicios"></div>
     <h2 class="section-title fade-on-scroll">Nuestros Servicios</h2>
     <div class="services-grid fade-on-scroll">
-      <a href="#" class="service-card media-trigger" data-type="text" data-title="Identidad Visual" data-desc="Hacemos branding que respira la cultura de especialidad. No importa si tenés una cafetería, si tostás en tu galpón, si formás profesionales o si vendés equipamiento; te armamos la identidad de cero (o te hacemos un rebranding) para que tu proyecto se despegue del ruido y se vea 100% profesional.">
+      <a class="service-card media-trigger" data-type="text" data-title="Identidad Visual" data-desc="Hacemos branding que respira la cultura de especialidad. No importa si tenés una cafetería, si tostás en tu galpón, si formás profesionales o si vendés equipamiento; te armamos la identidad de cero (o te hacemos un rebranding) para que tu proyecto se despegue del ruido y se vea 100% profesional.">
         <div class="service-thumb"><img src="/tio1.jpg" alt="Identidad Visual" loading="lazy" /></div>
         <h3>Identidad Visual</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
       
-      <a href="#" class="service-card media-trigger" data-type="text" data-title="Piezas para tu Negocio" data-desc="Vimos qué funciona y qué falla. Después de analizar casi 2000 menús y más de 160 etiquetas en todo el país, sabemos cómo comunicar. Te diseñamos menús armados a medida, etiquetas que destaquen en la góndola mostrando la trazabilidad, y las tarjetas de presentación del café que acompañan a cada espresso.">
+      <a class="service-card media-trigger" data-type="text" data-title="Piezas para tu Negocio" data-desc="Vimos qué funciona y qué falla. Después de analizar casi 2000 menús y más de 160 etiquetas en todo el país, sabemos cómo comunicar. Te diseñamos menús armados a medida, etiquetas que destaquen en la góndola mostrando la trazabilidad, y las tarjetas de presentación del café que acompañan a cada espresso.">
         <div class="service-thumb"><img src="/black-bean.jpg" alt="Piezas para tu Negocio" loading="lazy" /></div>
         <h3>Piezas para tu Negocio</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
       
-      <a href="#" class="service-card media-trigger" data-type="text" data-title="Señalética y Espacio" data-desc="Hacemos que tu espacio comunique por vos. Cubrimos toda la pata gráfica y de circulación: desde la fachada de tu cafetería hasta la comunicación visual adentro de tu academia o la cartelería para ferias y eventos del rubro.">
+      <a class="service-card media-trigger" data-type="text" data-title="Señalética y Espacio" data-desc="Hacemos que tu espacio comunique por vos. Cubrimos toda la pata gráfica y de circulación: desde la fachada de tu cafetería hasta la comunicación visual adentro de tu academia o la cartelería para ferias y eventos del rubro.">
         <div class="service-thumb"><img src="/cafe-de-obra.jpg" alt="Señalética y Espacio" loading="lazy" /></div>
         <h3>Señalética y Espacio</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
       
-      <a href="#" class="service-card media-trigger" data-type="text" data-title="Diseño con Data Real" data-desc="Diseñamos con los pies en la tierra. Aprovechamos el mapeo masivo de Cofiteca para entender cómo se mueve el sector a nivel nacional. Cada pieza que diseñamos está respaldada por datos de la calle, pensada para potenciar tus ventas y tu posicionamiento.">
+      <a class="service-card media-trigger" data-type="text" data-title="Diseño con Data Real" data-desc="Diseñamos con los pies en la tierra. Aprovechamos el mapeo masivo de Cofiteca para entender cómo se mueve el sector a nivel nacional. Cada pieza que diseñamos está respaldada por datos de la calle, pensada para potenciar tus ventas y tu posicionamiento.">
         <div class="service-thumb"><img src="/Sara.jpg" alt="Diseño con Data Real" loading="lazy" /></div>
         <h3>Diseño con Data Real</h3>
         <span class="service-hover-text">Leer más ✦</span>
@@ -254,112 +147,51 @@
       <div class="process-step">
         <div class="step-number">1</div>
         <h4>Auditoría y Contexto</h4>
-        <p>Analizamos cada caso particular integrando tus ideas con nuestra experiencia. Cuando el proyecto lo requiere, cruzamos esta información con la base de datos de Cofiteca para sumar contexto real y tomar decisiones fundamentadas.</p>
+        <p>Analizamos cada caso particular integrando tus ideas con nuestra experiencia. Cruzamos esta información con la base de datos de Cofiteca para sumar contexto real.</p>
       </div>
       <div class="process-step">
         <div class="step-number">2</div>
         <h4>Conceptualización</h4>
-        <p>Búsqueda de un diseño con propósito. Desarrollamos la identidad visual basándonos en tu visión, nuestro conocimiento técnico y las necesidades del contexto, creando marcas sólidas que representan genuinamente tu propuesta.</p>
+        <p>Búsqueda de un diseño con propósito. Desarrollamos la identidad visual creando marcas sólidas que representan genuinamente tu propuesta.</p>
       </div>
       <div class="process-step">
         <div class="step-number">3</div>
         <h4>Despliegue</h4>
-        <p>Aplicación estratégica. Bajamos el concepto aprobado a los distintos puntos de contacto: desde el diseño de packaging y etiquetas hasta la cartelería y las piezas gráficas impresas o digitales.</p>
+        <p>Aplicación estratégica. Bajamos el concepto aprobado a los distintos puntos de contacto: desde packaging y etiquetas hasta la cartelería.</p>
       </div>
       <div class="process-step">
         <div class="step-number">4</div>
         <h4>Revisión Final</h4>
-        <p>Siempre hay detalles visuales por afinar. Hacemos un control de las piezas que entregamos para asegurarnos de que la calidad y la coherencia gráfica se mantengan impecables al momento de su implementación real.</p>
-      </div>
-    </div>
-
-    <!-- MÓDULO UNIFICADO: BUSCADOR COFITECA CON MAPA GRANDE Y MÉTRICAS DINÁMICAS -->
-    <div id="buscador"></div>
-    <h2 class="section-title fade-on-scroll" style="margin-top: 5rem;">Diseño con Data Real</h2>
-    
-    <div class="data-real-container fade-on-scroll">
-      
-      <!-- MÉTRICAS LATERALES / SUPERIORES EN MÓVIL -->
-      <div class="metrics-sidebar">
-        <div class="metric-item">
-          <span class="metric-number" data-target="0" id="stat-cafes">0</span>
-          <span class="metric-label">Cafeterías Auditadas</span>
-        </div>
-        <div class="metric-item">
-          <span class="metric-number" data-target="24" id="stat-provincias">0</span>
-          <span class="metric-label">Provincias Mapeadas</span>
-        </div>
-        <div class="metric-item">
-          <span class="metric-number" data-target="102" id="stat-ciudades">0</span>
-          <span class="metric-label">Ciudades Relevadas</span>
-        </div>
-        <div class="metric-item">
-          <span class="metric-number" data-target="100" id="stat-inteligencia">0</span><span class="metric-symbol">%</span>
-          <span class="metric-label">Inteligencia de Mercado</span>
-        </div>
-      </div>
-
-      <!-- PANEL PRINCIPAL DEL BUSCADOR -->
-      <div class="buscador-main-panel">
-        <div class="data-header">
-          <p style="font-size: 1.15rem; font-weight: 600; margin: 0; color: #1a0f0a;">Explorá nuestra base de datos nacional en tiempo real.</p>
-          <p id="cofi-status" style="font-size: 0.9rem; color: #8b4513; margin: 5px 0 0 0; font-weight: bold;">Sincronizando base de datos...</p>
-        </div>
-        
-        <div class="buscador-ui">
-          
-          <!-- CONTROLES COMPLETOS (CIUDAD, BARRIO Y TEXTO) -->
-          <div class="search-controls">
-            <select id="select-ciudad" class="input-moderno" onchange="cofiActualizarZonas(); cofiFiltrar()"><option value="Todas">Región / Ciudad</option></select>
-            <select id="select-zona" class="input-moderno" onchange="cofiFiltrar()"><option value="Todas">Zona / Barrio</option></select>
-            <input type="text" id="input-busqueda" class="input-moderno" placeholder="Buscá por nombre o calle..." oninput="cofiFiltrar()">
-          </div>
-          
-          <!-- BOTONES DE UBICACIÓN -->
-          <div class="search-buttons">
-            <button class="btn-outline-mad" onclick="cofiMedirDesdeDireccion()">📍 Buscar por Dirección</button>
-            <button class="btn-primary-mad" onclick="cofiUsarMiGPS()">🎯 Cerca de Mí</button>
-          </div>
-          
-          <!-- MAPA AMPLIADO -->
-          <div class="map-wrapper">
-            <div id="cofiteca-map"></div>
-          </div>
-          
-          <!-- RESULTADOS -->
-          <div id="cofi-resultados" class="resultados-grid">
-              <!-- Cards generadas por JS -->
-          </div>
-        </div>
+        <p>Siempre hay detalles visuales por afinar. Hacemos un control de las piezas que entregamos para asegurarnos de que la calidad se mantenga impecable.</p>
       </div>
     </div>
 
     <div id="portafolio"></div>
     <h2 class="section-title fade-on-scroll">Casos de Éxito</h2>
     <div class="portfolio-grid fade-on-scroll">
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-4.png" data-title="Café Ina" data-desc="<strong>Identidad Visual y Experiencia de Barra</strong><br/><em>El Desafío:</em> Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local.">
+      <a class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-4.png" data-title="Café Ina" data-desc="<strong>Identidad Visual y Experiencia de Barra</strong><br/><em>El Desafío:</em> Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local.">
         <img src="/cafe-ina-4.png" alt="Café Ina" loading="lazy" />
       </a>
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-5.jpg" data-title="Café Ina" data-desc="<strong>Aplicación de Marca</strong><br/>Detalle de la identidad visual en los puntos de contacto del local.">
+      <a class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-5.jpg" data-title="Café Ina" data-desc="<strong>Aplicación de Marca</strong><br/>Detalle de la identidad visual en los puntos de contacto del local.">
         <img src="/cafe-ina-5.jpg" alt="Café Ina Detalle" loading="lazy" />
       </a>
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-de-obra.jpg" data-title="Café de Obra" data-desc="<strong>Branding Institucional</strong><br/><em>El Desafío:</em> Integrar una cafetería de especialidad dentro del Centro de Constructores, respetando el entorno histórico.">
+      <a class="portfolio-item media-trigger" data-type="image" data-src="/cafe-de-obra.jpg" data-title="Café de Obra" data-desc="<strong>Branding Institucional</strong><br/><em>El Desafío:</em> Integrar una cafetería de especialidad dentro del Centro de Constructores, respetando el entorno histórico.">
         <img src="/cafe-de-obra.jpg" alt="Café de Obra" loading="lazy" />
       </a>
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/black-bean.jpg" data-title="Black Bean" data-desc="<strong>Producto B2B y Packaging</strong><br/><em>El Desafío:</em> Introducir brownies a base de porotos negros diseñados para maridar con café de especialidad.">
+      <a class="portfolio-item media-trigger" data-type="image" data-src="/black-bean.jpg" data-title="Black Bean" data-desc="<strong>Producto B2B y Packaging</strong><br/><em>El Desafío:</em> Introducir brownies a base de porotos negros diseñados para maridar con café de especialidad.">
         <img src="/black-bean.jpg" alt="Black Bean" loading="lazy" />
       </a>
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/Sara.jpg" data-title="Sara Coffee Shop" data-desc="<strong>Identidad y Redes</strong><br/>Concepto visual, paleta tipográfica y piezas de comunicación.">
+      <a class="portfolio-item media-trigger" data-type="image" data-src="/Sara.jpg" data-title="Sara Coffee Shop" data-desc="<strong>Identidad y Redes</strong><br/>Concepto visual, paleta tipográfica y piezas de comunicación.">
         <img src="/Sara.jpg" alt="Sara" loading="lazy" />
       </a>
-      <a href="#" class="portfolio-item media-trigger video-trigger" data-type="video" data-src="/luccianos.mp4" data-title="Luccianos" data-desc="<strong>Producción Audiovisual</strong><br/>Registro dinámico de la experiencia y el flujo de trabajo en el local.">
+      <a class="portfolio-item media-trigger video-trigger" data-type="video" data-src="/luccianos.mp4" data-title="Luccianos" data-desc="<strong>Producción Audiovisual</strong><br/>Registro dinámico de la experiencia y el flujo de trabajo en el local.">
         <video src="/luccianos.mp4" muted loop playsinline autoplay class="thumbnail-video"></video>
         <div class="play-indicator">▶</div>
       </a>
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/tio1.jpg" data-title="Proyecto Tio" data-desc="<strong>Diseño y Aplicación</strong><br/>Exploración visual y desarrollo de estética.">
+      <a class="portfolio-item media-trigger" data-type="image" data-src="/tio1.jpg" data-title="Proyecto Tio" data-desc="<strong>Diseño y Aplicación</strong><br/>Exploración visual y desarrollo de estética.">
         <img src="/tio1.jpg" alt="Tio" loading="lazy" />
       </a>
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/tio2.jpg" data-title="Proyecto Tio" data-desc="<strong>Diseño y Aplicación</strong><br/>Variación de las piezas visuales.">
+      <a class="portfolio-item media-trigger" data-type="image" data-src="/tio2.jpg" data-title="Proyecto Tio" data-desc="<strong>Diseño y Aplicación</strong><br/>Variación de las piezas visuales.">
         <img src="/tio2.jpg" alt="Tio 2" loading="lazy" />
       </a>
     </div>
@@ -376,11 +208,7 @@
   </main>
 
   <script is:inline>
-    // ============================================================
-    // LÓGICA DE COFITECA X MAD (UI & Video)
-    // ============================================================
     document.addEventListener('DOMContentLoaded', () => {
-      // 1. Rotación de Video
       const video = document.getElementById('video-fondo');
       const playlist = ['/video-1.mp4', '/video-2.mp4', '/video-3.mp4'];
       let currentVideo = 0;
@@ -392,7 +220,6 @@
         });
       }
       
-      // 2. Animaciones Fade-in
       const fadeElements = document.querySelectorAll('.fade-on-scroll');
       const fadeObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -404,22 +231,7 @@
       }, { threshold: 0.15 });
       fadeElements.forEach(el => fadeObserver.observe(el));
 
-      // 3. Lightbox del Portafolio
-      const lightbox = document.createElement('div');
-      lightbox.id = 'lightbox';
-      lightbox.innerHTML = `
-        <div class="lightbox-overlay">
-          <span class="lightbox-close">&times;</span>
-          <div class="lightbox-content-wrapper">
-            <div id="lightbox-media-container"></div>
-            <div class="lightbox-text-panel">
-              <h3 id="lightbox-title"></h3>
-              <p id="lightbox-desc"></p>
-            </div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(lightbox);
+      const lightbox = document.getElementById('lightbox');
       const overlay = lightbox.querySelector('.lightbox-overlay');
       const wrapper = lightbox.querySelector('.lightbox-content-wrapper');
       const mediaContainer = document.getElementById('lightbox-media-container');
@@ -458,341 +270,6 @@
       close.addEventListener('click', closeLightbox);
       overlay.addEventListener('click', (e) => { if (e.target === overlay) closeLightbox(); });
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
-
-      // ============================================================
-      // LÓGICA DE COFITECA (BUSCADOR, ETIQUETAS, DISTANCIAS Y ZONAS)
-      // ============================================================
-      const SHEET_ID = "10vUOhRr7IAXlRrkBphxEP4ApXYBgrnuxJq6G83GnfHI";
-      const urlSheet = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
-
-      const GIDS = {
-          "Mar del Plata": "0", "CABA y Gran Buenos Aires": "1296176686", "La Plata": "208452991", "Córdoba": "1250014567",
-          "Santa Fe": "1691979590", "Mendoza": "2031963266", "Interior de BS AS": "1634818534", "Neuquén y Río Negro": "155647820",
-          "Salta y Jujuy": "1993653328", "Chubut, Santa Cruz y Tierra del Fuego": "1650814085", "San Juan, San Luis, La Rioja y La Pampa": "1228328818",
-          "Corrientes, Misiones, Entre Rios, Formosa y Chaco": "1097354687", "Catamarca, Tucuman y  Santiago del Estero": "1483010757"
-      };
-
-      let baseDatos = [];
-      let mapaCofiteca = null;
-      let markerCluster = null;
-      let markerOrigen = null; 
-
-      const norm = s => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-
-      function asegurarProtocolo(url) {
-          if (!url || typeof url !== 'string') return "#";
-          const u = url.trim();
-          return (!u || u === "#") ? "#" : (/^https?:\/\//i.test(u) ? u : 'https://' + u);
-      }
-
-      function calcularD(lat1, lon1, lat2, lon2) {
-          const dLat = (lat2 - lat1) * Math.PI / 180;
-          const dLon = (lon2 - lon1) * Math.PI / 180;
-          const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-          return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      }
-
-      function initMapa() {
-          if (typeof L === 'undefined') return;
-          mapaCofiteca = L.map('cofiteca-map', { maxBoundsViscosity: 1.0, minZoom: 4 }).setView([-38.41, -63.61], 4);
-          
-          mapaCofiteca.on('zoomend', () => {
-              const mapEl = document.getElementById('cofiteca-map');
-              if(mapEl) mapEl.classList.toggle('show-labels', mapaCofiteca.getZoom() >= 15);
-          });
-
-          L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri',
-            maxZoom: 16
-          }).addTo(mapaCofiteca);
-
-          markerCluster = L.markerClusterGroup({
-              maxClusterRadius: 40, disableClusteringAtZoom: 14, spiderfyOnMaxZoom: true, showCoverageOnHover: false, chunkedLoading: true
-          }).addTo(mapaCofiteca);
-      }
-
-      function dibujarMapa() {
-          if (!markerCluster) return;
-          const ciudadFiltro = document.getElementById('select-ciudad').value;
-          const zonaFiltro = document.getElementById('select-zona').value;
-          const texto = norm(document.getElementById('input-busqueda').value).trim();
-          
-          const filtrados = baseDatos.filter(c => 
-              (ciudadFiltro === "Todas" || c.ciudad === ciudadFiltro) &&
-              (zonaFiltro === "Todas" || c.zona === zonaFiltro) &&
-              (!texto || norm(c.nombre).includes(texto) || norm(c.ubicacion).includes(texto))
-          );
-
-          const markers = filtrados.map(c => {
-              return L.circleMarker([c.lat, c.lon], { radius: 6, color: '#f5f0e8', fillColor: '#8b4513', fillOpacity: 0.9, weight: 1.5 })
-              .bindPopup(`<div style="text-align:center; font-family:'Inter', sans-serif;"><b>${esc(c.nombre)}</b><br><small>${esc(c.ubicacion)}</small><br><a href="${esc(c.instagram)}" target="_blank" style="display:inline-block; margin-top:5px; background:#8b4513; color:white; padding:5px 10px; border-radius:5px; font-size:0.8rem; text-decoration:none;">Instagram</a></div>`)
-              .bindTooltip(esc(c.nombre), { permanent: true, direction: 'top', className: 'cafe-label', offset: [0, -10] });
-          });
-
-          markerCluster.clearLayers();
-          markerCluster.addLayers(markers);
-
-          if (!markerOrigen) {
-            if (ciudadFiltro === "Todas" && texto === "") {
-                mapaCofiteca.setView([-38.41, -63.61], 4);
-            } else if (filtrados.length > 0) {
-                let lat = 0, lon = 0;
-                filtrados.forEach(c => { lat += c.lat; lon += c.lon; });
-                mapaCofiteca.setView([lat / filtrados.length, lon / filtrados.length], zonaFiltro === "Todas" ? 12 : 14);
-            }
-          }
-      }
-
-      function renderizarResultados(datos, origen = null) {
-          const contenedor = document.getElementById('cofi-resultados');
-          const frag = document.createDocumentFragment();
-          let lista = datos;
-          
-          if (origen) {
-              lista = datos.map(c => ({ ...c, dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) }))
-                           .sort((a, b) => a.dist - b.dist)
-                           .slice(0, 30); 
-          } else {
-              lista = datos.slice(0, 60); 
-          }
-
-          lista.forEach(c => {
-              let txtDist = "";
-              if (origen && c.dist !== undefined) {
-                  const cuadras = Math.round(c.dist * 10);
-                  txtDist = cuadras === 0 
-                    ? `<br><b style="color:#8b4513;">📍 ¡A menos de 1 cuadra!</b>` 
-                    : `<br><b style="color:#8b4513;">📍 A ${cuadras} cuadra${cuadras !== 1 ? 's' : ''}</b>`;
-              }
-              const div = document.createElement('div');
-              div.className = 'cafe-card';
-              div.innerHTML = `
-                  <div>
-                      <h3>${esc(c.nombre)}</h3>
-                      <p>${esc(c.ubicacion)} • <b>${esc(c.ciudad)}</b>${txtDist}</p>
-                  </div>
-                  <a href="${esc(c.instagram)}" target="_blank" rel="noopener noreferrer">Ver Instagram</a>
-              `;
-              frag.appendChild(div);
-          });
-          contenedor.replaceChildren(frag);
-          
-          if(!origen && datos.length > 60) {
-              const aviso = document.createElement('p');
-              aviso.style.cssText = "grid-column: 1/-1; text-align:center; font-size:0.9rem; opacity:0.7;";
-              aviso.innerText = `Mostrando 60 de ${datos.length} resultados. Refiná tu búsqueda.`;
-              contenedor.appendChild(aviso);
-          }
-      }
-
-      function cofiProcesarOrigen(lat, lon, label) {
-          if (markerOrigen) mapaCofiteca.removeLayer(markerOrigen);
-          markerOrigen = L.circleMarker([lat, lon], { radius: 8, color: "#059669", fillColor: "#fff", weight: 3, fillOpacity: 1 })
-            .addTo(mapaCofiteca).bindPopup(label).openPopup();
-          
-          mapaCofiteca.setView([lat, lon], 14);
-          renderizarResultados(baseDatos, { lat, lon });
-      }
-
-      window.cofiUsarMiGPS = function() {
-          if (!navigator.geolocation) return Swal.fire("Error", "Tu navegador no soporta GPS.", "error");
-          document.getElementById('cofi-status').innerText = "Conectando con GPS...";
-          navigator.geolocation.getCurrentPosition(
-              p => { 
-                  document.getElementById('cofi-status').innerText = "Mostrando cafés cerca de tu ubicación actual."; 
-                  cofiProcesarOrigen(p.coords.latitude, p.coords.longitude, "📍 Estás acá"); 
-              },
-              () => { 
-                  document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas.`;
-                  Swal.fire("Aviso", "No pudimos obtener tu ubicación. Revisá los permisos.", "warning"); 
-              },
-              { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-          );
-      };
-
-      window.cofiMedirDesdeDireccion = function() {
-          Swal.fire({
-              title: '¿Dónde estás?',
-              html: `<p style="font-size:0.9rem; color:#5c3d2e; margin-bottom:15px;">Escribí tu calle y ciudad (Ej: Guemes, Mar del Plata)</p>
-                     <input id="swal-autocomplete-input" class="input-moderno" placeholder="Escribir..." autocomplete="off" style="width:100%; box-sizing:border-box;">
-                     <div id="autocomplete-results" style="text-align:left; margin-top:10px; max-height:200px; overflow-y:auto;"></div>`,
-              showConfirmButton: false, showCancelButton: true, cancelButtonText: 'Cerrar',
-              didOpen: () => {
-                  const input = document.getElementById('swal-autocomplete-input'); 
-                  const resultsContainer = document.getElementById('autocomplete-results'); 
-                  let timeout = null; let solicitudId = 0;
-                  input.focus();
-                  input.addEventListener('input', () => {
-                      clearTimeout(timeout); const val = input.value.trim();
-                      if (val.length < 4) { resultsContainer.innerHTML = ''; return; }
-                      resultsContainer.innerHTML = '<div style="padding:10px; color:#8b4513; font-weight:bold; text-align:center;">Buscando...</div>';
-                      timeout = setTimeout(async () => {
-                          const miId = ++solicitudId;
-                          try {
-                              const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&countrycodes=ar&addressdetails=1&limit=6`);
-                              const data = await res.json();
-                              if (miId !== solicitudId) return;
-                              resultsContainer.innerHTML = '';
-                              if (!data.length) { resultsContainer.innerHTML = '<div style="padding:10px; opacity:0.7; text-align:center;">No encontramos la dirección.</div>'; return; }
-                              data.forEach(item => {
-                                  const partes = [];
-                                  if (item.address.road) partes.push(item.address.road + (item.address.house_number ? " " + item.address.house_number : ""));
-                                  const localidad = item.address.city || item.address.town || item.address.village;
-                                  if (localidad) partes.push(localidad);
-                                  
-                                  const nombreStr = partes.length > 0 ? partes.join(", ") : item.display_name.split(',').slice(0, 3).join(', ');
-                                  const btn = document.createElement('button');
-                                  btn.style.cssText = 'width: 100%; text-align: left; background: rgba(255,255,255,0.7); color: #2c1810; border: 1px solid #c4a77d; padding: 12px; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-family: "Inter", sans-serif; font-size:0.9rem; transition: 0.2s;';
-                                  btn.innerHTML = `📍 <b>${esc(nombreStr)}</b>`;
-                                  btn.onmouseover = () => btn.style.borderColor = '#8b4513';
-                                  btn.onmouseout = () => btn.style.borderColor = '#c4a77d';
-                                  btn.onclick = () => { 
-                                      Swal.close(); 
-                                      document.getElementById('cofi-status').innerText = `Lugares cerca de ${nombreStr}`; 
-                                      cofiProcesarOrigen(parseFloat(item.lat), parseFloat(item.lon), nombreStr); 
-                                  };
-                                  resultsContainer.appendChild(btn);
-                              });
-                          } catch (e) { if (miId !== solicitudId) return; resultsContainer.innerHTML = '<div style="padding:10px; color:red; text-align:center;">Error con el mapa.</div>'; }
-                      }, 800);
-                  });
-              }
-          });
-      };
-
-      // Controladores de los Dropdowns
-      window.cofiActualizarZonas = function() {
-          const ciudadFiltro = document.getElementById('select-ciudad').value;
-          let zonas = [];
-          if (ciudadFiltro === "Todas") {
-              zonas = [...new Set(baseDatos.map(c => c.zona))];
-          } else {
-              zonas = [...new Set(baseDatos.filter(c => c.ciudad === ciudadFiltro).map(c => c.zona))];
-          }
-          zonas = zonas.filter(z => z && z !== "-" && z !== "Sin Zona").sort();
-          
-          document.getElementById('select-zona').innerHTML = `<option value="Todas">Zonas / Barrios</option>` + 
-              zonas.map(z => `<option value="${esc(z)}">${esc(z)}</option>`).join('');
-      };
-
-      let debounceFiltro = null;
-      window.cofiFiltrar = function() {
-          clearTimeout(debounceFiltro);
-          debounceFiltro = setTimeout(() => {
-              if (markerOrigen) {
-                  mapaCofiteca.removeLayer(markerOrigen);
-                  markerOrigen = null;
-                  document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas y listas para analizar.`;
-              }
-              
-              const ciu = document.getElementById('select-ciudad').value;
-              const zon = document.getElementById('select-zona').value;
-              const txt = norm(document.getElementById('input-busqueda').value).trim();
-              
-              const filtrados = baseDatos.filter(c => 
-                  (ciu === "Todas" || c.ciudad === ciu) &&
-                  (zon === "Todas" || c.zona === zon) &&
-                  (!txt || norm(c.nombre).includes(txt) || norm(c.ubicacion).includes(txt))
-              );
-              
-              renderizarResultados(filtrados);
-              dibujarMapa();
-          }, 150);
-      };
-
-      function animarContadores(cafesTotal) {
-          const cCafes = document.getElementById('stat-cafes');
-          const cProvincias = document.getElementById('stat-provincias');
-          const cCiudades = document.getElementById('stat-ciudades');
-          const cInte = document.getElementById('stat-inteligencia');
-          
-          if(cCafes) cCafes.setAttribute('data-target', cafesTotal);
-          // Los otros ya tienen el data-target="24", "102" y "100" directo en el HTML
-
-          const counters = document.querySelectorAll('.metric-number');
-          const counterObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-              if (entry.isIntersecting) {
-                const target = +entry.target.getAttribute('data-target');
-                let current = 0;
-                const updateCounter = () => {
-                  current += target / 30; // Velocidad de la animación
-                  if (current < target) {
-                    entry.target.innerText = Math.ceil(current);
-                    requestAnimationFrame(updateCounter);
-                  } else {
-                    entry.target.innerText = target;
-                  }
-                };
-                updateCounter();
-                counterObserver.unobserve(entry.target);
-              }
-            });
-          }, { threshold: 0.3 });
-          counters.forEach(c => counterObserver.observe(c));
-      }
-
-      async function cargarBaseDatos() {
-          if (typeof Papa === 'undefined') {
-              document.getElementById('cofi-status').innerText = 'Error al cargar motor de datos.';
-              return;
-          }
-
-          const resultados = await Promise.allSettled(
-              Object.entries(GIDS).map(([ciu, gid]) =>
-                  new Promise((resolve, reject) => {
-                      Papa.parse(urlSheet(gid), {
-                          download: true, header: true, skipEmptyLines: true,
-                          transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
-                          complete: res => resolve({ ciu, filas: res.data }),
-                          error: reject
-                      });
-                  })
-              )
-          );
-
-          let tempData = [];
-          resultados.forEach(r => {
-              if (r.status === 'fulfilled') {
-                  r.value.filas.forEach(f => {
-                      if (!f.CAFE) return;
-                      const latClean = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
-                      const lonClean = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
-                      if (isNaN(latClean) || isNaN(lonClean)) return;
-                      tempData.push({
-                          nombre: f.CAFE.trim(), ciudad: r.value.ciu,
-                          zona: f.ZONA || f.BARRIO || "Sin Zona",
-                          ubicacion: f.UBICACION || "-", instagram: asegurarProtocolo(f.INSTAGRAM || "#"),
-                          lat: latClean, lon: lonClean
-                      });
-                  });
-              }
-          });
-
-          if (tempData.length > 0) {
-              tempData.sort((a, b) => a.nombre.localeCompare(b.nombre));
-              baseDatos = tempData;
-              
-              const totalCafes = baseDatos.length;
-
-              document.getElementById('cofi-status').innerText = `${totalCafes} cafeterías mapeadas y listas para analizar.`;
-              
-              animarContadores(totalCafes);
-
-              const ciudades = [...new Set(baseDatos.map(c => c.ciudad))].sort();
-              document.getElementById('select-ciudad').innerHTML = `<option value="Todas">Toda Argentina</option>` + 
-                  ciudades.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-              
-              window.cofiActualizarZonas(); // Inicializa el menú de barrios
-              initMapa();
-              cofiFiltrar();
-          } else {
-              document.getElementById('cofi-status').innerText = 'Hubo un error de conexión con la base central.';
-          }
-      }
-
-      cargarBaseDatos();
     });
   </script>
 </body>
