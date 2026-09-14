@@ -1,36 +1,199 @@
-/ src/pages/index.astro
----
----
 <!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cofiteca x Mad Diseño</title>
+  <title>Cofiteca x Mad Diseño | Inteligencia & Branding</title>
   <meta name="description" content="Diseño exclusivo para el mundo del café de especialidad. Identidad visual, packaging, señalética y diseño con data real." />
+  
+  <!-- FUENTES -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
-  {/* LIBRERÍAS DEL MAPA + BUSCADOR (Cofiteca) */}
+  <!-- LIBRERÍAS DEL MAPA, DATOS Y ALERTAS -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-  <script is:inline src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <script is:inline src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style is:global>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
+    body {
+      background-color: #f5f0e8;
+      color: #2c1810;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      line-height: 1.7;
+    }
+    #video-fondo {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: cover; z-index: -998; opacity: 0.25; pointer-events: none;
+    }
+    strong { color: #1a0f0a; }
+    a { color: #8b4513; text-decoration: none; transition: all 0.3s ease; }
+    main { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+    
+    .section-title {
+      text-align: center; font-size: 3.5rem; font-weight: 800; color: #1a0f0a;
+      letter-spacing: -0.03em; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1);
+      margin: 4rem 0 2rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif;
+    }
+
+    /* HERO */
+    .brand-hero { text-align: center; padding: 7rem 1rem 5rem; position: relative; z-index: 2; }
+    .brand-title { font-size: 4.2rem; font-weight: 800; color: #1a0f0a; letter-spacing: -0.03em; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1); margin-bottom: 1.5rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif; }
+    .brand-tagline { font-size: 1.3rem; color: #3d2317; font-weight: 500; max-width: 650px; margin: 0 auto 2.5rem; background: rgba(255, 255, 255, 0.6); padding: 0.8rem 1.8rem; border-radius: 50px; backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); display: inline-block; }
+    .brand-actions { display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
+    .brand-actions a { padding: 0.8rem 2.2rem; border-radius: 50px; font-size: 1.05rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'Inter', sans-serif;}
+    .brand-actions a[href="#servicios"], .brand-actions a[href="#contacto"] { background-color: #8b4513; color: #ffffff; border: 2px solid #8b4513; box-shadow: 0 4px 15px rgba(139, 69, 19, 0.25); }
+    .brand-actions a[href="#servicios"]:hover, .brand-actions a[href="#contacto"]:hover { background-color: #5c3d2e; border-color: #5c3d2e; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(139, 69, 19, 0.35); }
+    .brand-actions a[href="#buscador"], .brand-actions a[href="#proceso"] { background-color: rgba(255, 255, 255, 0.8); color: #3d2317; border: 2px solid #c4a77d; backdrop-filter: blur(5px); }
+    .brand-actions a:hover { transform: translateY(-3px); background-color: #ffffff; }
+    
+    /* SERVICIOS */
+    .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin: 3rem 0; }
+    @media (max-width: 768px) { .services-grid { grid-template-columns: 1fr; } }
+    .service-card { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 1.5rem; min-height: 250px; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; text-decoration: none; position: relative; overflow: hidden; }
+    .service-thumb { width: 100%; height: 200px; border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem; }
+    .service-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+    .service-card h3 { color: #3d2317; font-size: 1.6rem; margin: 0 0 1rem 0; text-align: center; font-weight: 700; transition: transform 0.4s ease; }
+    .service-card::after { content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.90)); transform: translateY(100%); transition: transform 0.4s ease; z-index: 1; pointer-events: none; }
+    .service-hover-text { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0; transition: all 0.4s ease; color: #e8dcc8; font-size: 1.1rem; font-weight: bold; z-index: 2; font-family: 'Inter', sans-serif;}
+    .service-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(44, 24, 16, 0.15); }
+    .service-card:hover::after { transform: translateY(0); }
+    .service-card:hover h3 { transform: translateY(-15px); color: #f5f0e8; z-index: 2; }
+    .service-card:hover .service-hover-text { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .service-card:hover .service-thumb img { transform: scale(1.05); }
+    
+    /* PROCESO */
+    .process-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin: 3rem 0; }
+    @media (max-width: 992px) { .process-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 576px) { .process-grid { grid-template-columns: 1fr; } }
+    .process-step { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 2.5rem 2rem; position: relative; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); text-align: left; overflow: hidden; }
+    .step-number { font-size: 8rem; font-weight: 900; color: rgba(196, 167, 125, 0.15); position: absolute; top: -20px; right: 10px; line-height: 1; z-index: 0; pointer-events: none; font-family: 'Inter', sans-serif;}
+    .process-step h4 { color: #1a0f0a; font-size: 1.3rem; margin-top: 0; margin-bottom: 1rem; position: relative; z-index: 2; text-align: left; }
+    .process-step p { color: #4a332a; font-size: 1.05rem; margin: 0; position: relative; z-index: 2; text-align: left; line-height: 1.6; }
+    
+    /* DATA REAL Y BUSCADOR INTEGRADO (MAPA GRANDE) */
+    .data-real-container { 
+      margin: 4rem 0; background: rgba(255, 255, 255, 0.75); border: 1px solid rgba(255, 255, 255, 0.8); 
+      border-radius: 16px; backdrop-filter: blur(12px); box-shadow: 0 10px 40px rgba(44, 24, 16, 0.08); 
+      overflow: hidden; font-family: 'Inter', sans-serif;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+    }
+    @media (max-width: 992px) {
+      .data-real-container { grid-template-columns: 1fr; }
+    }
+
+    .metrics-sidebar { 
+      padding: 3rem 2rem; display: flex; flex-direction: column; justify-content: center; gap: 3rem; 
+      background: rgba(255,255,255, 0.5); border-right: 1px solid rgba(196, 167, 125, 0.3); 
+    }
+    @media (max-width: 992px) {
+      .metrics-sidebar { flex-direction: row; flex-wrap: wrap; justify-content: space-around; border-right: none; border-bottom: 1px solid rgba(196, 167, 125, 0.3); }
+    }
+    .metric-item { text-align: center; }
+    .metric-number { font-size: 3.5rem; font-weight: 700; color: #1a0f0a; line-height: 1; display: inline-block; font-family: 'Georgia', serif; }
+    .metric-symbol { font-size: 2rem; font-weight: 700; color: #c4a77d; font-family: 'Georgia', serif; }
+    .metric-label { display: block; font-size: 0.9rem; color: #5c3d2e; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; font-weight: 600; }
+
+    .buscador-main-panel { display: flex; flex-direction: column; }
+    .data-header { padding: 2rem 2rem 1rem; border-bottom: 1px solid rgba(196, 167, 125, 0.3); }
+    
+    .buscador-ui { padding: 1.5rem 2rem 2rem; background: rgba(245, 240, 232, 0.3); flex-grow: 1; display: flex; flex-direction: column; }
+    .search-controls { display: grid; grid-template-columns: 1fr 2fr; gap: 1rem; margin-bottom: 10px; }
+    @media (max-width: 768px) { .search-controls { grid-template-columns: 1fr; } }
+    
+    .search-buttons { display: flex; gap: 10px; margin-bottom: 1.5rem; }
+    .btn-outline-mad { flex: 1; background: transparent; color: #3d2317; border: 2px solid #c4a77d; padding: 12px 20px; border-radius: 10px; font-family: 'Inter', sans-serif; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+    .btn-outline-mad:hover { background: rgba(255,255,255,0.8); border-color: #8b4513; }
+    .btn-primary-mad { flex: 1; background: #8b4513; color: white; border: 2px solid #8b4513; padding: 12px 20px; border-radius: 10px; font-family: 'Inter', sans-serif; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+    .btn-primary-mad:hover { background: #5c3d2e; border-color: #5c3d2e; }
+
+    .input-moderno { width: 100%; padding: 14px 16px; border: 1px solid #c4a77d; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 0.95rem; background: rgba(255,255,255,0.9); color: #2A1F18; outline: none; transition: border-color 0.2s; }
+    .input-moderno:focus { border-color: #8b4513; box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.15); }
+    
+    /* MAPA AMPLIADO */
+    .map-wrapper { width: 100%; height: 550px; border-radius: 12px; overflow: hidden; border: 1px solid #c4a77d; margin-bottom: 2rem; position: relative; z-index: 1;}
+    #cofiteca-map { width: 100%; height: 100%; background: #e6e2db; }
+
+    /* ESTILO DE ETIQUETAS DE CAFETERÍAS EN EL MAPA */
+    .cafe-label {
+        background: transparent; border: none; box-shadow: none; color: #2c1810;
+        font-weight: 800; font-size: 0.75rem; 
+        text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white; 
+        opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+        font-family: 'Inter', sans-serif;
+    }
+    .show-labels .cafe-label { opacity: 1; }
+
+    .resultados-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; max-height: 400px; overflow-y: auto; padding-right: 10px;}
+    .resultados-grid::-webkit-scrollbar { width: 8px; }
+    .resultados-grid::-webkit-scrollbar-track { background: rgba(196, 167, 125, 0.2); border-radius: 10px; }
+    .resultados-grid::-webkit-scrollbar-thumb { background: #c4a77d; border-radius: 10px; }
+
+    .cafe-card { background: white; padding: 18px; border-radius: 12px; border: 1px solid rgba(196, 167, 125, 0.4); box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between;}
+    .cafe-card:hover { transform: translateY(-3px); border-color: #8b4513; box-shadow: 0 8px 25px rgba(139, 69, 19, 0.1); }
+    .cafe-card h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: #1a0f0a; font-family: 'Georgia', serif;}
+    .cafe-card p { margin: 0 0 12px 0; font-size: 0.85rem; color: #5c3d2e; }
+    .cafe-card a { text-align: center; display: block; padding: 8px; background: #f5f0e8; border-radius: 8px; font-weight: 600; font-size: 0.8rem; color: #8b4513; border: 1px solid #c4a77d;}
+    .cafe-card a:hover { background: #8b4513; color: white; }
+
+    /* PORTAFOLIO */
+    .portfolio-grid { column-count: 3; column-gap: 1rem; margin: 1.5rem 0 3rem; }
+    @media (max-width: 992px) { .portfolio-grid { column-count: 2; } }
+    @media (max-width: 768px) { .portfolio-grid { column-count: 1; } }
+    .portfolio-item { display: block; position: relative; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 15px rgba(44, 24, 16, 0.15); background: transparent; margin-bottom: 1rem; break-inside: avoid; page-break-inside: avoid; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .portfolio-item:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(44, 24, 16, 0.25); }
+    .portfolio-item::after { content: attr(data-title); position: absolute; bottom: 0; left: 0; width: 100%; padding: 3rem 1rem 1rem; background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.95)); color: #e8dcc8; font-size: 1.3rem; font-weight: bold; text-align: center; transform: translateY(100%); transition: transform 0.4s ease; box-sizing: border-box; pointer-events: none; z-index: 10; font-family: 'Inter', sans-serif;}
+    .portfolio-item:hover::after { transform: translateY(0); }
+    .portfolio-item img, .thumbnail-video { width: 100%; height: auto; display: block; transition: transform 0.4s ease; }
+    .portfolio-item:hover img, .video-trigger:hover .thumbnail-video { transform: scale(1.05); }
+    .play-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: rgba(255,255,255,0.9); pointer-events: none; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    
+    /* LIGHTBOX */
+    #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; }
+    #lightbox.active { display: flex; align-items: center; justify-content: center; }
+    .lightbox-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26, 15, 10, 0.95); display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .lightbox-content-wrapper { position: relative; display: flex; flex-direction: column; background: #f5f0e8; border-radius: 12px; overflow: hidden; width: 100%; max-width: 1000px; max-height: 90vh; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+    @media (min-width: 768px) { .lightbox-content-wrapper { flex-direction: row; } }
+    #lightbox-media-container { flex: 1; background: #1a0f0a; display: flex; align-items: center; justify-content: center; min-height: 300px; }
+    .lightbox-media { max-width: 100%; max-height: 70vh; object-fit: contain; }
+    .lightbox-text-panel { padding: 2.5rem 2rem; flex-basis: 400px; overflow-y: auto; }
+    .lightbox-text-panel h3 { margin-top: 0; color: #3d2317; font-size: 1.8rem; border-bottom: 2px solid #c4a77d; padding-bottom: 0.5rem; display: inline-block; font-weight: 700; }
+    .lightbox-text-panel p { color: #5c3d2e; font-size: 1.1rem; font-family: 'Inter', sans-serif;}
+    .lightbox-close { position: absolute; top: -2.5rem; right: 0; color: #e8dcc8; font-size: 2.5rem; cursor: pointer; line-height: 1; z-index: 10; font-family: 'Inter', sans-serif;}
+    @media (min-width: 768px) { .lightbox-close { top: 1rem; right: 2rem; } }
+    .lightbox-content-wrapper.text-only-mode #lightbox-media-container { display: none; }
+    .lightbox-content-wrapper.text-only-mode .lightbox-text-panel { flex-basis: 100%; max-width: 700px; padding: 4rem 3rem; text-align: left; }
+    
+    /* CONTACTO */
+    .contact-intro { font-size: 1.1rem; color: #2c1810; margin-bottom: 2rem; }
+    .contact-info { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); display: inline-block; border-radius: 16px; padding: 2.5rem 4rem; margin: 0 auto 4rem; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); text-align: center; }
+    .contact-text { margin: 0.5rem 0; font-size: 1.2rem; color: #2c1810; font-family: 'Inter', sans-serif;}
+    .fade-on-scroll { opacity: 0; transform: translateY(25px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+    .fade-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
+  </style>
 </head>
 <body>
-  {/* VIDEO DE FONDO */}
+
+  <!-- VIDEO DE FONDO -->
   <video id="video-fondo" autoplay muted playsinline loop>
     <source src="/video-1.mp4" type="video/mp4" />
   </video>
 
-  {/* SECCIÓN HERO */}
+  <!-- SECCIÓN HERO -->
   <div class="brand-hero fade-on-scroll">
     <div class="brand-title">Cofiteca x Mad Diseño</div>
     <p class="brand-tagline">Diseño exclusivo para el mundo del café de especialidad.</p>
     <div class="brand-actions">
       <a href="#servicios">Ver Servicios</a>
-      <a href="#proceso">Proceso</a>
+      <a href="#buscador">Base de Datos</a>
       <a href="#portafolio">Portafolio</a>
       <a href="#contacto">Contacto</a>
     </div>
@@ -45,16 +208,19 @@
         <h3>Identidad Visual</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
+      
       <a href="#" class="service-card media-trigger" data-type="text" data-title="Piezas para tu Negocio" data-desc="Vimos qué funciona y qué falla. Después de analizar casi 2000 menús y más de 160 etiquetas en todo el país, sabemos cómo comunicar. Te diseñamos menús armados a medida, etiquetas que destaquen en la góndola mostrando la trazabilidad, y las tarjetas de presentación del café que acompañan a cada espresso.">
         <div class="service-thumb"><img src="/black-bean.jpg" alt="Piezas para tu Negocio" loading="lazy" /></div>
         <h3>Piezas para tu Negocio</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
+      
       <a href="#" class="service-card media-trigger" data-type="text" data-title="Señalética y Espacio" data-desc="Hacemos que tu espacio comunique por vos. Cubrimos toda la pata gráfica y de circulación: desde la fachada de tu cafetería hasta la comunicación visual adentro de tu academia o la cartelería para ferias y eventos del rubro.">
         <div class="service-thumb"><img src="/cafe-de-obra.jpg" alt="Señalética y Espacio" loading="lazy" /></div>
         <h3>Señalética y Espacio</h3>
         <span class="service-hover-text">Leer más ✦</span>
       </a>
+      
       <a href="#" class="service-card media-trigger" data-type="text" data-title="Diseño con Data Real" data-desc="Diseñamos con los pies en la tierra. Aprovechamos el mapeo masivo de Cofiteca para entender cómo se mueve el sector a nivel nacional. Cada pieza que diseñamos está respaldada por datos de la calle, pensada para potenciar tus ventas y tu posicionamiento.">
         <div class="service-thumb"><img src="/Sara.jpg" alt="Diseño con Data Real" loading="lazy" /></div>
         <h3>Diseño con Data Real</h3>
@@ -62,7 +228,6 @@
       </a>
     </div>
 
-    {/* METODOLOGÍA / PROCESO */}
     <div id="proceso"></div>
     <h2 class="section-title fade-on-scroll">Nuestro Proceso</h2>
     <div class="process-grid fade-on-scroll">
@@ -83,21 +248,24 @@
       </div>
       <div class="process-step">
         <div class="step-number">4</div>
-        <h4>Revisión Gráfica Final</h4>
+        <h4>Revisión Final</h4>
         <p>Siempre hay detalles visuales por afinar. Hacemos un control de las piezas que entregamos para asegurarnos de que la calidad y la coherencia gráfica se mantengan impecables al momento de su implementación real.</p>
       </div>
     </div>
 
-    {/* MAPA Y BUSCADOR REALES (de Cofiteca) + MÉTRICAS */}
+    <!-- MÓDULO UNIFICADO: BUSCADOR COFITECA CON MAPA GRANDE Y MÉTRICAS DINÁMICAS -->
+    <div id="buscador"></div>
+    <h2 class="section-title fade-on-scroll" style="margin-top: 5rem;">Diseño con Data Real</h2>
+    
     <div class="data-real-container fade-on-scroll">
       <div class="metrics-sidebar">
         <div class="metric-item">
-          <span class="metric-number" data-target="420">0</span>
+          <span class="metric-number" data-target="0" id="stat-cafes">0</span>
           <span class="metric-label">Cafeterías Auditadas</span>
         </div>
         <div class="metric-item">
-          <span class="metric-number" data-target="18">0</span>
-          <span class="metric-label">Provincias Mapeadas</span>
+          <span class="metric-number" data-target="0" id="stat-provincias">0</span>
+          <span class="metric-label">Ciudades / Zonas</span>
         </div>
         <div class="metric-item">
           <span class="metric-number" data-target="100">0</span><span class="metric-symbol">%</span>
@@ -105,18 +273,32 @@
         </div>
       </div>
 
-      <div class="map-wrapper">
-        <div class="md-buscador">
-          <select id="md-select-ciudad" class="md-input" onchange="mdFiltrar()"></select>
-          <input type="text" id="md-input-busqueda" class="md-input" placeholder="Buscar cafetería o zona..." oninput="mdFiltrar()">
-          <div class="md-botones">
-            <button class="md-btn" onclick="mdBuscarDireccion()">📍 Por dirección</button>
-            <button class="md-btn md-btn-solid" onclick="mdUsarGPS()">🎯 Cerca de mí</button>
-          </div>
-          <div id="md-status" class="md-status"></div>
+      <div class="buscador-main-panel">
+        <div class="data-header">
+          <p style="font-size: 1.1rem; font-weight: 600; margin: 0;">Explorá nuestra base de datos nacional en tiempo real.</p>
+          <p id="cofi-status" style="font-size: 0.85rem; color: #8b4513; margin: 5px 0 0 0; font-weight: bold;">Sincronizando base de datos...</p>
         </div>
-        <div id="cofiteca-map"></div>
-        <div id="md-resultados"></div>
+        
+        <div class="buscador-ui">
+          <div class="search-controls">
+            <select id="select-ciudad" class="input-moderno" onchange="cofiFiltrar()"><option value="Todas">Todas las Ciudades</option></select>
+            <input type="text" id="input-busqueda" class="input-moderno" placeholder="Buscá por nombre, barrio o dirección..." oninput="cofiFiltrar()">
+          </div>
+          
+          <div class="search-buttons">
+            <button class="btn-outline-mad" onclick="cofiMedirDesdeDireccion()">📍 Buscar por Dirección</button>
+            <button class="btn-primary-mad" onclick="cofiUsarMiGPS()">🎯 Cerca de Mí</button>
+          </div>
+          
+          <!-- MAPA AMPLIADO -->
+          <div class="map-wrapper">
+            <div id="cofiteca-map"></div>
+          </div>
+          
+          <div id="cofi-resultados" class="resultados-grid">
+              <!-- Cards generadas por JS -->
+          </div>
+        </div>
       </div>
     </div>
 
@@ -163,202 +345,8 @@
 
   <script is:inline>
     // ============================================================
-    // Datos reales de Cofiteca (Google Sheets) — solo mapa + buscador
+    // LÓGICA DE COFITECA X MAD (UI & Video)
     // ============================================================
-    const MD_SHEET_ID = "10vUOhRr7IAXlRrkBphxEP4ApXYBgrnuxJq6G83GnfHI";
-    const mdUrlSheet = gid => `https://docs.google.com/spreadsheets/d/${MD_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
-    const MD_GIDS = {
-      "Mar del Plata": "0", "CABA y Gran Buenos Aires": "1296176686", "La Plata": "208452991", "Córdoba": "1250014567",
-      "Santa Fe": "1691979590", "Mendoza": "2031963266", "Interior de BS AS": "1634818534", "Neuquén y Río Negro": "155647820",
-      "Salta y Jujuy": "1993653328", "Chubut, Santa Cruz y Tierra del Fuego": "1650814085", "San Juan, San Luis, La Rioja y La Pampa": "1228328818",
-      "Corrientes, Misiones, Entre Rios, Formosa y Chaco": "1097354687", "Catamarca, Tucuman y  Santiago del Estero": "1483010757"
-    };
-
-    let mdBd = [];
-    let mdMap = null;
-    let mdCluster = null;
-    let mdRadarLayer = null;
-
-    const md$ = id => document.getElementById(id);
-    const mdNorm = s => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const mdEsc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-    function mdProtocolo(url) {
-      if (!url || typeof url !== 'string') return "#";
-      const u = url.trim();
-      if (!u || u === "#") return "#";
-      return /^https?:\/\//i.test(u) ? u : 'https://' + u;
-    }
-    function mdDistancia(lat1, lon1, lat2, lon2) {
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-      return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
-
-    function mdCargarCSV(url) {
-      return new Promise((resolve, reject) => {
-        Papa.parse(url, {
-          download: true, header: true, skipEmptyLines: true,
-          transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
-          complete: res => resolve(res.data || []), error: reject
-        });
-      });
-    }
-
-    function mdProcesarFilas(filas, ciudad, destino) {
-      filas.forEach(f => {
-        const nombre = f.CAFE;
-        if (!nombre) return;
-        const lat = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
-        const lon = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
-        if (isNaN(lat) || isNaN(lon)) return;
-        destino.push({
-          nombre: nombre.trim(), ciudad,
-          ubicacion: f.UBICACION || "-",
-          instagram: mdProtocolo(f.INSTAGRAM || "#"),
-          lat, lon
-        });
-      });
-    }
-
-    async function mdCargarCafes() {
-      const resultados = await Promise.allSettled(
-        Object.entries(MD_GIDS).map(([ciu, gid]) => mdCargarCSV(mdUrlSheet(gid)).then(filas => ({ ciu, filas })))
-      );
-      const nueva = [];
-      resultados.forEach(r => { if (r.status === 'fulfilled') mdProcesarFilas(r.value.filas, r.value.ciu, nueva); });
-      if (nueva.length > 0) {
-        nueva.sort((a, b) => a.nombre.localeCompare(b.nombre));
-        mdBd = nueva;
-        mdArmarSelectorCiudad();
-        mdDibujarMarcadores(mdBd);
-        mdActualizarMetricas();
-      }
-    }
-
-    function mdActualizarMetricas() {
-      const counters = document.querySelectorAll('.metric-number');
-      const ciudades = new Set(mdBd.map(c => c.ciudad));
-      if (counters[0]) counters[0].setAttribute('data-target', mdBd.length);
-      if (counters[1]) counters[1].setAttribute('data-target', ciudades.size);
-    }
-
-    function mdArmarSelectorCiudad() {
-      const ciudades = [...new Set(mdBd.map(c => c.ciudad))].sort();
-      md$('md-select-ciudad').innerHTML =
-        `<option value="Todas">Toda Argentina (${mdBd.length})</option>` +
-        ciudades.map(c => `<option value="${mdEsc(c)}">${mdEsc(c)}</option>`).join('');
-    }
-
-    function mdPopupHtml(c) {
-      return `<div class="md-popup"><b>${mdEsc(c.nombre)}</b><br><small>${mdEsc(c.ubicacion)}</small><br><a href="${mdEsc(c.instagram)}" target="_blank" rel="noopener noreferrer" class="md-popup-btn">Instagram</a></div>`;
-    }
-
-    function mdDibujarMarcadores(lista) {
-      if (!mdCluster) return;
-      mdCluster.clearLayers();
-      const marcadores = lista.map(c =>
-        L.circleMarker([c.lat, c.lon], { radius: 6, color: "#f5f0e8", weight: 2, fillColor: "#8b4513", fillOpacity: 0.85 })
-          .bindPopup(mdPopupHtml(c))
-      );
-      mdCluster.addLayers(marcadores);
-    }
-
-    function mdFiltrar() {
-      const ciu = md$('md-select-ciudad').value;
-      const txt = mdNorm(md$('md-input-busqueda').value).trim();
-      const filtrados = mdBd.filter(c =>
-        (ciu === "Todas" || c.ciudad === ciu) &&
-        (!txt || mdNorm(c.nombre).includes(txt) || mdNorm(c.ubicacion).includes(txt))
-      );
-      mdDibujarMarcadores(filtrados);
-      md$('md-resultados').innerHTML = '';
-      if (ciu !== "Todas" && filtrados.length) {
-        let lat = 0, lon = 0;
-        filtrados.forEach(c => { lat += c.lat; lon += c.lon; });
-        mdMap.setView([lat / filtrados.length, lon / filtrados.length], 12);
-      } else if (ciu === "Todas") {
-        mdMap.setView([-38.41, -63.61], 4);
-      }
-    }
-
-    function mdRenderizarCercanos(origen, lista) {
-      const cont = md$('md-resultados');
-      cont.innerHTML = '';
-      const cercanos = lista
-        .map(c => ({ ...c, dist: mdDistancia(origen.lat, origen.lon, c.lat, c.lon) }))
-        .sort((a, b) => a.dist - b.dist)
-        .slice(0, 5);
-      cercanos.forEach(c => {
-        const div = document.createElement('div');
-        div.className = 'md-resultado-card';
-        div.innerHTML = `
-          <div>
-            <strong>${mdEsc(c.nombre)}</strong>
-            <span class="md-resultado-dist">${c.dist < 1 ? Math.round(c.dist * 1000) + ' m' : c.dist.toFixed(1) + ' km'}</span>
-            <div class="md-resultado-ubi">${mdEsc(c.ubicacion)}</div>
-          </div>
-          <a href="${mdEsc(c.instagram)}" target="_blank" rel="noopener noreferrer">Instagram</a>`;
-        cont.appendChild(div);
-      });
-      mdCluster.clearLayers();
-      const marcadores = lista.map(c => L.circleMarker([c.lat, c.lon], { radius: 6, color: "#f5f0e8", weight: 2, fillColor: "#8b4513", fillOpacity: 0.85 }).bindPopup(mdPopupHtml(c)));
-      mdCluster.addLayers(marcadores);
-      if (mdRadarLayer) mdMap.removeLayer(mdRadarLayer);
-      mdRadarLayer = L.circleMarker([origen.lat, origen.lon], { radius: 9, color: "#059669", weight: 3, fillColor: "#fff", fillOpacity: 1 }).addTo(mdMap).bindPopup("Estás acá").openPopup();
-      mdMap.setView([origen.lat, origen.lon], 14);
-    }
-
-    function mdUsarGPS() {
-      if (!navigator.geolocation) { Swal.fire('Error', 'Tu navegador no soporta GPS.', 'error'); return; }
-      md$('md-status').innerText = 'Buscando tu ubicación...';
-      navigator.geolocation.getCurrentPosition(
-        p => { md$('md-status').innerText = ''; mdRenderizarCercanos({ lat: p.coords.latitude, lon: p.coords.longitude }, mdBd); },
-        () => { md$('md-status').innerText = ''; Swal.fire('Aviso', 'No pudimos obtener tu ubicación. Revisá los permisos.', 'warning'); },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-      );
-    }
-
-    function mdBuscarDireccion() {
-      Swal.fire({
-        title: '¿Dónde estás?',
-        input: 'text',
-        inputPlaceholder: 'Ej: Colón 1234, Mar del Plata',
-        confirmButtonText: 'Buscar',
-        showCancelButton: true,
-        cancelButtonText: 'Cerrar',
-        customClass: { popup: 'md-swal-popup', confirmButton: 'md-swal-btn md-swal-btn-confirm', cancelButton: 'md-swal-btn md-swal-btn-cancel', input: 'md-swal-input' }
-      }).then(async (result) => {
-        if (!result.isConfirmed || !result.value) return;
-        Swal.fire({ title: 'Buscando...', didOpen: () => Swal.showLoading() });
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(result.value)}&countrycodes=ar&limit=1`);
-          const data = await res.json();
-          Swal.close();
-          if (!data.length) { Swal.fire('Sin resultados', 'No encontramos esa dirección.', 'info'); return; }
-          mdRenderizarCercanos({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) }, mdBd);
-        } catch (e) {
-          Swal.fire('Error', 'No pudimos conectar con el buscador de direcciones.', 'error');
-        }
-      });
-    }
-
-    function mdInicializarMapa() {
-      mdMap = L.map('cofiteca-map', {
-        zoomControl: true,
-        scrollWheelZoom: false,
-        dragging: !L.Browser.mobile || true
-      }).setView([-38.41, -63.61], 4);
-
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri',
-        maxZoom: 16
-      }).addTo(mdMap);
-
-      mdCluster = L.markerClusterGroup({ maxClusterRadius: 45, spiderfyOnMaxZoom: true, showCoverageOnHover: false });
-      mdCluster.addTo(mdMap);
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
       // 1. Rotación de Video
       const video = document.getElementById('video-fondo');
@@ -371,8 +359,8 @@
           video.play();
         });
       }
-
-      // 2. Fade-in
+      
+      // 2. Animaciones Fade-in
       const fadeElements = document.querySelectorAll('.fade-on-scroll');
       const fadeObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -384,34 +372,7 @@
       }, { threshold: 0.15 });
       fadeElements.forEach(el => fadeObserver.observe(el));
 
-      // 3. Mapa real + buscador (Cofiteca)
-      mdInicializarMapa();
-      mdCargarCafes();
-
-      // 4. Animación de contadores numéricos
-      const counters = document.querySelectorAll('.metric-number');
-      const counterObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const target = +entry.target.getAttribute('data-target');
-            let current = 0;
-            const updateCounter = () => {
-              current += Math.max(target / 30, 1);
-              if (current < target) {
-                entry.target.innerText = Math.ceil(current);
-                requestAnimationFrame(updateCounter);
-              } else {
-                entry.target.innerText = target;
-              }
-            };
-            updateCounter();
-            counterObserver.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.5 });
-      counters.forEach(c => counterObserver.observe(c));
-
-      // 5. Lightbox
+      // 3. Lightbox del Portafolio
       const lightbox = document.createElement('div');
       lightbox.id = 'lightbox';
       lightbox.innerHTML = `
@@ -433,6 +394,7 @@
       const titleEl = document.getElementById('lightbox-title');
       const descEl = document.getElementById('lightbox-desc');
       const close = lightbox.querySelector('.lightbox-close');
+      
       document.querySelectorAll('.media-trigger').forEach((trigger) => {
         trigger.addEventListener('click', (e) => {
           e.preventDefault();
@@ -455,6 +417,7 @@
           document.body.style.overflow = 'hidden';
         });
       });
+      
       const closeLightbox = () => {
         lightbox.classList.remove('active');
         document.body.style.overflow = '';
@@ -463,127 +426,326 @@
       close.addEventListener('click', closeLightbox);
       overlay.addEventListener('click', (e) => { if (e.target === overlay) closeLightbox(); });
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+
+      // ============================================================
+      // LÓGICA DE COFITECA (BUSCADOR, ETIQUETAS, DISTANCIAS Y DEBOUNCE)
+      // ============================================================
+      const SHEET_ID = "10vUOhRr7IAXlRrkBphxEP4ApXYBgrnuxJq6G83GnfHI";
+      const urlSheet = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+
+      const GIDS = {
+          "Mar del Plata": "0", "CABA y Gran Buenos Aires": "1296176686", "La Plata": "208452991", "Córdoba": "1250014567",
+          "Santa Fe": "1691979590", "Mendoza": "2031963266", "Interior de BS AS": "1634818534", "Neuquén y Río Negro": "155647820",
+          "Salta y Jujuy": "1993653328", "Chubut, Santa Cruz y Tierra del Fuego": "1650814085", "San Juan, San Luis, La Rioja y La Pampa": "1228328818",
+          "Corrientes, Misiones, Entre Rios, Formosa y Chaco": "1097354687", "Catamarca, Tucuman y  Santiago del Estero": "1483010757"
+      };
+
+      let baseDatos = [];
+      let mapaCofiteca = null;
+      let markerCluster = null;
+      let markerOrigen = null; // Para mostrar el punto de partida (GPS/Dirección)
+
+      const norm = s => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+
+      function asegurarProtocolo(url) {
+          if (!url || typeof url !== 'string') return "#";
+          const u = url.trim();
+          return (!u || u === "#") ? "#" : (/^https?:\/\//i.test(u) ? u : 'https://' + u);
+      }
+
+      function calcularD(lat1, lon1, lat2, lon2) {
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+          return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      }
+
+      function initMapa() {
+          if (typeof L === 'undefined') return;
+          mapaCofiteca = L.map('cofiteca-map', { maxBoundsViscosity: 1.0, minZoom: 4 }).setView([-38.41, -63.61], 4);
+          
+          mapaCofiteca.on('zoomend', () => {
+              const mapEl = document.getElementById('cofiteca-map');
+              if(mapEl) mapEl.classList.toggle('show-labels', mapaCofiteca.getZoom() >= 15);
+          });
+
+          L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri',
+            maxZoom: 16
+          }).addTo(mapaCofiteca);
+
+          markerCluster = L.markerClusterGroup({
+              maxClusterRadius: 40, disableClusteringAtZoom: 14, spiderfyOnMaxZoom: true, showCoverageOnHover: false, chunkedLoading: true
+          }).addTo(mapaCofiteca);
+      }
+
+      function dibujarMapa() {
+          if (!markerCluster) return;
+          const ciudadFiltro = document.getElementById('select-ciudad').value;
+          const texto = norm(document.getElementById('input-busqueda').value).trim();
+          
+          const filtrados = baseDatos.filter(c => 
+              (ciudadFiltro === "Todas" || c.ciudad === ciudadFiltro) &&
+              (!texto || norm(c.nombre).includes(texto) || norm(c.ubicacion).includes(texto))
+          );
+
+          const markers = filtrados.map(c => {
+              return L.circleMarker([c.lat, c.lon], { radius: 6, color: '#f5f0e8', fillColor: '#8b4513', fillOpacity: 0.9, weight: 1.5 })
+              .bindPopup(`<div style="text-align:center; font-family:'Inter', sans-serif;"><b>${esc(c.nombre)}</b><br><small>${esc(c.ubicacion)}</small><br><a href="${esc(c.instagram)}" target="_blank" style="display:inline-block; margin-top:5px; background:#8b4513; color:white; padding:5px 10px; border-radius:5px; font-size:0.8rem; text-decoration:none;">Instagram</a></div>`)
+              .bindTooltip(esc(c.nombre), { permanent: true, direction: 'top', className: 'cafe-label', offset: [0, -10] });
+          });
+
+          markerCluster.clearLayers();
+          markerCluster.addLayers(markers);
+
+          // Centrar mapa si hay filtros activos, caso contrario volver a general (a menos que haya GPS)
+          if (!markerOrigen) {
+            if (ciudadFiltro === "Todas" && texto === "") {
+                mapaCofiteca.setView([-38.41, -63.61], 4);
+            } else if (filtrados.length > 0) {
+                let lat = 0, lon = 0;
+                filtrados.forEach(c => { lat += c.lat; lon += c.lon; });
+                mapaCofiteca.setView([lat / filtrados.length, lon / filtrados.length], 13);
+            }
+          }
+      }
+
+      function renderizarResultados(datos, origen = null) {
+          const contenedor = document.getElementById('cofi-resultados');
+          const frag = document.createDocumentFragment();
+          let lista = datos;
+          
+          if (origen) {
+              lista = datos.map(c => ({ ...c, dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) }))
+                           .sort((a, b) => a.dist - b.dist)
+                           .slice(0, 30); // Si usa GPS, mostramos los 30 más cercanos
+          } else {
+              lista = datos.slice(0, 60); // Filtro normal
+          }
+
+          lista.forEach(c => {
+              let txtDist = "";
+              if (origen && c.dist !== undefined) {
+                  const cuadras = Math.round(c.dist * 10);
+                  txtDist = cuadras === 0 
+                    ? `<br><b style="color:#8b4513;">📍 ¡A menos de 1 cuadra!</b>` 
+                    : `<br><b style="color:#8b4513;">📍 A ${cuadras} cuadra${cuadras !== 1 ? 's' : ''}</b>`;
+              }
+              const div = document.createElement('div');
+              div.className = 'cafe-card';
+              div.innerHTML = `
+                  <div>
+                      <h3>${esc(c.nombre)}</h3>
+                      <p>${esc(c.ubicacion)} • <b>${esc(c.ciudad)}</b>${txtDist}</p>
+                  </div>
+                  <a href="${esc(c.instagram)}" target="_blank" rel="noopener noreferrer">Ver Instagram</a>
+              `;
+              frag.appendChild(div);
+          });
+          contenedor.replaceChildren(frag);
+          
+          if(!origen && datos.length > 60) {
+              const aviso = document.createElement('p');
+              aviso.style.cssText = "grid-column: 1/-1; text-align:center; font-size:0.9rem; opacity:0.7;";
+              aviso.innerText = `Mostrando 60 de ${datos.length} resultados. Refiná tu búsqueda.`;
+              contenedor.appendChild(aviso);
+          }
+      }
+
+      function cofiProcesarOrigen(lat, lon, label) {
+          if (markerOrigen) mapaCofiteca.removeLayer(markerOrigen);
+          markerOrigen = L.circleMarker([lat, lon], { radius: 8, color: "#059669", fillColor: "#fff", weight: 3, fillOpacity: 1 })
+            .addTo(mapaCofiteca).bindPopup(label).openPopup();
+          
+          mapaCofiteca.setView([lat, lon], 14);
+          renderizarResultados(baseDatos, { lat, lon });
+      }
+
+      // Funciones Globales para los Botones
+      window.cofiUsarMiGPS = function() {
+          if (!navigator.geolocation) return Swal.fire("Error", "Tu navegador no soporta GPS.", "error");
+          document.getElementById('cofi-status').innerText = "Conectando con GPS...";
+          navigator.geolocation.getCurrentPosition(
+              p => { 
+                  document.getElementById('cofi-status').innerText = "Mostrando cafés cerca de tu ubicación actual."; 
+                  cofiProcesarOrigen(p.coords.latitude, p.coords.longitude, "📍 Estás acá"); 
+              },
+              () => { 
+                  document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas y listas para analizar.`;
+                  Swal.fire("Aviso", "No pudimos obtener tu ubicación. Revisá los permisos.", "warning"); 
+              },
+              { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+          );
+      };
+
+      window.cofiMedirDesdeDireccion = function() {
+          Swal.fire({
+              title: '¿Dónde estás?',
+              html: `<p style="font-size:0.9rem; color:#5c3d2e; margin-bottom:15px;">Escribí tu calle y ciudad (Ej: Guemes, Mar del Plata)</p>
+                     <input id="swal-autocomplete-input" class="input-moderno" placeholder="Escribir..." autocomplete="off" style="width:100%; box-sizing:border-box;">
+                     <div id="autocomplete-results" style="text-align:left; margin-top:10px; max-height:200px; overflow-y:auto;"></div>`,
+              showConfirmButton: false, showCancelButton: true, cancelButtonText: 'Cerrar',
+              didOpen: () => {
+                  const input = document.getElementById('swal-autocomplete-input'); 
+                  const resultsContainer = document.getElementById('autocomplete-results'); 
+                  let timeout = null; let solicitudId = 0;
+                  input.focus();
+                  input.addEventListener('input', () => {
+                      clearTimeout(timeout); const val = input.value.trim();
+                      if (val.length < 4) { resultsContainer.innerHTML = ''; return; }
+                      resultsContainer.innerHTML = '<div style="padding:10px; color:#8b4513; font-weight:bold; text-align:center;">Buscando...</div>';
+                      timeout = setTimeout(async () => {
+                          const miId = ++solicitudId;
+                          try {
+                              const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&countrycodes=ar&addressdetails=1&limit=6`);
+                              const data = await res.json();
+                              if (miId !== solicitudId) return;
+                              resultsContainer.innerHTML = '';
+                              if (!data.length) { resultsContainer.innerHTML = '<div style="padding:10px; opacity:0.7; text-align:center;">No encontramos la dirección.</div>'; return; }
+                              data.forEach(item => {
+                                  const partes = [];
+                                  if (item.address.road) partes.push(item.address.road + (item.address.house_number ? " " + item.address.house_number : ""));
+                                  const localidad = item.address.city || item.address.town || item.address.village;
+                                  if (localidad) partes.push(localidad);
+                                  
+                                  const nombreStr = partes.length > 0 ? partes.join(", ") : item.display_name.split(',').slice(0, 3).join(', ');
+                                  const btn = document.createElement('button');
+                                  btn.style.cssText = 'width: 100%; text-align: left; background: rgba(255,255,255,0.7); color: #2c1810; border: 1px solid #c4a77d; padding: 12px; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-family: "Inter", sans-serif; font-size:0.9rem; transition: 0.2s;';
+                                  btn.innerHTML = `📍 <b>${esc(nombreStr)}</b>`;
+                                  btn.onmouseover = () => btn.style.borderColor = '#8b4513';
+                                  btn.onmouseout = () => btn.style.borderColor = '#c4a77d';
+                                  btn.onclick = () => { 
+                                      Swal.close(); 
+                                      document.getElementById('cofi-status').innerText = `Lugares cerca de ${nombreStr}`; 
+                                      cofiProcesarOrigen(parseFloat(item.lat), parseFloat(item.lon), nombreStr); 
+                                  };
+                                  resultsContainer.appendChild(btn);
+                              });
+                          } catch (e) { if (miId !== solicitudId) return; resultsContainer.innerHTML = '<div style="padding:10px; color:red; text-align:center;">Error con el mapa.</div>'; }
+                      }, 800);
+                  });
+              }
+          });
+      };
+
+      // Debounce para evitar renderizar el mapa en cada tecla pulsada
+      let debounceFiltro = null;
+      window.cofiFiltrar = function() {
+          clearTimeout(debounceFiltro);
+          debounceFiltro = setTimeout(() => {
+              // Si filtra manual, sacamos el pincho de origen GPS
+              if (markerOrigen) {
+                  mapaCofiteca.removeLayer(markerOrigen);
+                  markerOrigen = null;
+                  document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas y listas para analizar.`;
+              }
+              
+              const ciu = document.getElementById('select-ciudad').value;
+              const txt = norm(document.getElementById('input-busqueda').value).trim();
+              
+              const filtrados = baseDatos.filter(c => 
+                  (ciu === "Todas" || c.ciudad === ciu) &&
+                  (!txt || norm(c.nombre).includes(txt) || norm(c.ubicacion).includes(txt))
+              );
+              
+              renderizarResultados(filtrados);
+              dibujarMapa();
+          }, 150);
+      };
+
+      function animarContadores(cafesTotal, ciudadesTotal) {
+          const cCafes = document.getElementById('stat-cafes');
+          const cProvincias = document.getElementById('stat-provincias');
+          
+          if(cCafes) cCafes.setAttribute('data-target', cafesTotal);
+          if(cProvincias) cProvincias.setAttribute('data-target', ciudadesTotal);
+
+          const counters = document.querySelectorAll('.metric-number');
+          const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                const target = +entry.target.getAttribute('data-target');
+                let current = 0;
+                const updateCounter = () => {
+                  current += target / 30;
+                  if (current < target) {
+                    entry.target.innerText = Math.ceil(current);
+                    requestAnimationFrame(updateCounter);
+                  } else {
+                    entry.target.innerText = target;
+                  }
+                };
+                updateCounter();
+                counterObserver.unobserve(entry.target);
+              }
+            });
+          }, { threshold: 0.3 });
+          counters.forEach(c => counterObserver.observe(c));
+      }
+
+      async function cargarBaseDatos() {
+          if (typeof Papa === 'undefined') {
+              document.getElementById('cofi-status').innerText = 'Error al cargar motor de datos.';
+              return;
+          }
+
+          const resultados = await Promise.allSettled(
+              Object.entries(GIDS).map(([ciu, gid]) =>
+                  new Promise((resolve, reject) => {
+                      Papa.parse(urlSheet(gid), {
+                          download: true, header: true, skipEmptyLines: true,
+                          transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+                          complete: res => resolve({ ciu, filas: res.data }),
+                          error: reject
+                      });
+                  })
+              )
+          );
+
+          let tempData = [];
+          resultados.forEach(r => {
+              if (r.status === 'fulfilled') {
+                  r.value.filas.forEach(f => {
+                      if (!f.CAFE) return;
+                      const latClean = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
+                      const lonClean = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
+                      if (isNaN(latClean) || isNaN(lonClean)) return;
+                      tempData.push({
+                          nombre: f.CAFE.trim(), ciudad: r.value.ciu,
+                          ubicacion: f.UBICACION || "-", instagram: asegurarProtocolo(f.INSTAGRAM || "#"),
+                          lat: latClean, lon: lonClean
+                      });
+                  });
+              }
+          });
+
+          if (tempData.length > 0) {
+              tempData.sort((a, b) => a.nombre.localeCompare(b.nombre));
+              baseDatos = tempData;
+              
+              const totalCafes = baseDatos.length;
+              const totalCiudades = Object.keys(GIDS).length;
+
+              document.getElementById('cofi-status').innerText = `${totalCafes} cafeterías mapeadas y listas para analizar.`;
+              
+              // Animación métricas reales
+              animarContadores(totalCafes, totalCiudades);
+
+              // Armar Menú de Ciudades
+              const ciudades = [...new Set(baseDatos.map(c => c.ciudad))].sort();
+              document.getElementById('select-ciudad').innerHTML = `<option value="Todas">Todas las Ciudades</option>` + 
+                  ciudades.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+              
+              initMapa();
+              cofiFiltrar();
+          } else {
+              document.getElementById('cofi-status').innerText = 'Hubo un error de conexión con la base central.';
+          }
+      }
+
+      cargarBaseDatos();
     });
   </script>
-
-  <style is:global>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
-    body {
-      background-color: #f5f0e8;
-      color: #2c1810;
-      font-family: 'Georgia', 'Times New Roman', serif;
-      line-height: 1.7;
-    }
-    #video-fondo {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      object-fit: cover; z-index: -998; opacity: 0.25; pointer-events: none;
-    }
-    strong { color: #1a0f0a; }
-    a { color: #8b4513; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.3s ease; }
-    a:hover { border-bottom-color: #8b4513; }
-    main { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
-    .section-title {
-      text-align: center; font-size: 3.5rem; font-weight: 800; color: #1a0f0a;
-      letter-spacing: -0.03em; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1);
-      margin: 4rem 0 2rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif;
-    }
-    /* HERO */
-    .brand-hero { text-align: center; padding: 7rem 1rem 5rem; position: relative; z-index: 2; }
-    .brand-title { font-size: 4.2rem; font-weight: 800; color: #1a0f0a; letter-spacing: -0.03em; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(255, 255, 255, 1); margin-bottom: 1.5rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif; }
-    .brand-tagline { font-size: 1.3rem; color: #3d2317; font-weight: 500; max-width: 650px; margin: 0 auto 2.5rem; background: rgba(255, 255, 255, 0.6); padding: 0.8rem 1.8rem; border-radius: 50px; backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); display: inline-block; }
-    .brand-actions { display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
-    .brand-actions a { padding: 0.8rem 2.2rem; border-radius: 50px; font-size: 1.05rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; }
-    .brand-actions a[href="#servicios"], .brand-actions a[href="#contacto"] { background-color: #8b4513; color: #ffffff; border: 2px solid #8b4513; box-shadow: 0 4px 15px rgba(139, 69, 19, 0.25); }
-    .brand-actions a[href="#servicios"]:hover, .brand-actions a[href="#contacto"]:hover { background-color: #5c3d2e; border-color: #5c3d2e; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(139, 69, 19, 0.35); }
-    .brand-actions a[href="#portafolio"], .brand-actions a[href="#proceso"], .brand-actions a[href="https://cofiteca.ar"] { background-color: rgba(255, 255, 255, 0.8); color: #3d2317; border: 2px solid #c4a77d; backdrop-filter: blur(5px); }
-    .brand-actions a:hover { transform: translateY(-3px); background-color: #ffffff; }
-    /* SERVICIOS */
-    .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin: 3rem 0; }
-    @media (max-width: 768px) { .services-grid { grid-template-columns: 1fr; } }
-    .service-card { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 1.5rem; min-height: 250px; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; text-decoration: none; position: relative; overflow: hidden; }
-    .service-thumb { width: 100%; height: 200px; border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem; }
-    .service-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
-    .service-card h3 { color: #3d2317; font-size: 1.6rem; margin: 0 0 1rem 0; text-align: center; font-weight: 700; transition: transform 0.4s ease; }
-    .service-card::after { content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.90)); transform: translateY(100%); transition: transform 0.4s ease; z-index: 1; pointer-events: none; }
-    .service-hover-text { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0; transition: all 0.4s ease; color: #e8dcc8; font-size: 1.1rem; font-weight: bold; z-index: 2; }
-    .service-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(44, 24, 16, 0.15); }
-    .service-card:hover::after { transform: translateY(0); }
-    .service-card:hover h3 { transform: translateY(-15px); color: #f5f0e8; z-index: 2; }
-    .service-card:hover .service-hover-text { transform: translateX(-50%) translateY(0); opacity: 1; }
-    .service-card:hover .service-thumb img { transform: scale(1.05); }
-    /* PROCESO */
-    .process-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin: 3rem 0; }
-    @media (max-width: 992px) { .process-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 576px) { .process-grid { grid-template-columns: 1fr; } }
-    .process-step { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 2.5rem 2rem; position: relative; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); text-align: left; overflow: hidden; }
-    .step-number { font-size: 8rem; font-weight: 900; color: rgba(196, 167, 125, 0.15); position: absolute; top: -20px; right: 10px; line-height: 1; z-index: 0; pointer-events: none; }
-    .process-step h4 { color: #1a0f0a; font-size: 1.3rem; margin-top: 0; margin-bottom: 1rem; position: relative; z-index: 2; text-align: left; }
-    .process-step p { color: #4a332a; font-size: 1.05rem; margin: 0; position: relative; z-index: 2; text-align: left; line-height: 1.6; }
-    /* DATA REAL: MAPA + BUSCADOR + MÉTRICAS */
-    .data-real-container { display: flex; flex-wrap: wrap; gap: 2rem; margin: 4rem 0; background: rgba(255, 255, 255, 0.65); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); overflow: hidden; align-items: stretch; }
-    .metrics-sidebar { flex: 1; min-width: 250px; padding: 3rem 2rem; display: flex; flex-direction: column; justify-content: center; gap: 3rem; background: rgba(255,255,255, 0.4); border-right: 1px solid rgba(196, 167, 125, 0.3); }
-    .metric-item { text-align: center; }
-    .metric-number { font-size: 3.5rem; font-weight: 700; color: #1a0f0a; line-height: 1; display: inline-block; }
-    .metric-symbol { font-size: 2rem; font-weight: 700; color: #c4a77d; }
-    .metric-label { display: block; font-size: 0.95rem; color: #5c3d2e; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; }
-    .map-wrapper { flex: 2; min-width: 300px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-    #cofiteca-map { width: 100%; height: 380px; border-radius: 12px; filter: sepia(0.5) hue-rotate(-15deg) contrast(0.95) opacity(0.95); }
-    .md-buscador { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
-    .md-input { font-family: 'Georgia', serif; padding: 0.6rem 0.9rem; border-radius: 10px; border: 1px solid #c4a77d; background: rgba(255,255,255,0.8); color: #2c1810; font-size: 0.95rem; flex: 1; min-width: 160px; }
-    .md-botones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    .md-btn { font-family: 'Georgia', serif; border-radius: 10px; padding: 0.6rem 1rem; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: 2px solid #c4a77d; background: rgba(255,255,255,0.7); color: #3d2317; transition: all 0.2s; }
-    .md-btn:hover { background: #ffffff; }
-    .md-btn-solid { background: #8b4513; color: #fff; border-color: #8b4513; }
-    .md-btn-solid:hover { background: #5c3d2e; }
-    .md-status { width: 100%; text-align: center; font-size: 0.85rem; color: #8b4513; font-weight: 700; min-height: 18px; }
-    .md-popup { font-family: 'Georgia', serif; text-align: center; }
-    .md-popup-btn { background: #8b4513; color: #fff !important; padding: 6px 10px; border-radius: 6px; display: inline-block; margin-top: 6px; font-size: 0.8rem; font-weight: 700; }
-    #md-resultados { display: flex; flex-direction: column; gap: 0.6rem; }
-    .md-resultado-card { display: flex; justify-content: space-between; align-items: center; gap: 1rem; background: rgba(255,255,255,0.7); border: 1px solid rgba(196, 167, 125, 0.4); border-radius: 10px; padding: 0.7rem 1rem; }
-    .md-resultado-dist { color: #8b4513; font-weight: 700; font-size: 0.85rem; margin-left: 0.5rem; }
-    .md-resultado-ubi { font-size: 0.85rem; color: #5c3d2e; opacity: 0.85; }
-    .md-swal-popup { font-family: 'Georgia', serif !important; background: #f5f0e8 !important; border-radius: 16px !important; }
-    .md-swal-input { border: 1px solid #c4a77d !important; border-radius: 10px !important; }
-    .md-swal-btn { font-family: 'Georgia', serif !important; border-radius: 10px !important; font-weight: 700 !important; }
-    .md-swal-btn-confirm { background-color: #8b4513 !important; }
-    .md-swal-btn-cancel { background-color: transparent !important; border: 2px solid #c4a77d !important; color: #3d2317 !important; }
-    @media (max-width: 640px) {
-      #cofiteca-map { height: 300px; }
-      .md-input { min-width: 100%; }
-    }
-    /* PORTAFOLIO */
-    .portfolio-grid { column-count: 3; column-gap: 1rem; margin: 1.5rem 0 3rem; }
-    @media (max-width: 992px) { .portfolio-grid { column-count: 2; } }
-    @media (max-width: 768px) { .portfolio-grid { column-count: 1; } }
-    .portfolio-item { display: block; position: relative; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 15px rgba(44, 24, 16, 0.15); background: transparent; margin-bottom: 1rem; break-inside: avoid; page-break-inside: avoid; transition: transform 0.3s ease, box-shadow 0.3s ease; }
-    .portfolio-item:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(44, 24, 16, 0.25); }
-    .portfolio-item::after { content: attr(data-title); position: absolute; bottom: 0; left: 0; width: 100%; padding: 3rem 1rem 1rem; background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.95)); color: #e8dcc8; font-size: 1.3rem; font-weight: bold; text-align: center; transform: translateY(100%); transition: transform 0.4s ease; box-sizing: border-box; pointer-events: none; z-index: 10; }
-    .portfolio-item:hover::after { transform: translateY(0); }
-    .portfolio-item img, .thumbnail-video { width: 100%; height: auto; display: block; transition: transform 0.4s ease; }
-    .portfolio-item:hover img, .video-trigger:hover .thumbnail-video { transform: scale(1.05); }
-    .play-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: rgba(255,255,255,0.9); pointer-events: none; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-    /* LIGHTBOX */
-    #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; }
-    #lightbox.active { display: flex; align-items: center; justify-content: center; }
-    .lightbox-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26, 15, 10, 0.95); display: flex; align-items: center; justify-content: center; padding: 1rem; }
-    .lightbox-content-wrapper { position: relative; display: flex; flex-direction: column; background: #f5f0e8; border-radius: 12px; overflow: hidden; width: 100%; max-width: 1000px; max-height: 90vh; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
-    @media (min-width: 768px) { .lightbox-content-wrapper { flex-direction: row; } }
-    #lightbox-media-container { flex: 1; background: #1a0f0a; display: flex; align-items: center; justify-content: center; min-height: 300px; }
-    .lightbox-media { max-width: 100%; max-height: 70vh; object-fit: contain; }
-    .lightbox-text-panel { padding: 2.5rem 2rem; flex-basis: 400px; overflow-y: auto; }
-    .lightbox-text-panel h3 { margin-top: 0; color: #3d2317; font-size: 1.8rem; border-bottom: 2px solid #c4a77d; padding-bottom: 0.5rem; display: inline-block; font-weight: 700; }
-    .lightbox-text-panel p { color: #5c3d2e; font-size: 1.1rem;}
-    .lightbox-close { position: absolute; top: -2.5rem; right: 0; color: #e8dcc8; font-size: 2.5rem; cursor: pointer; line-height: 1; z-index: 10; }
-    @media (min-width: 768px) { .lightbox-close { top: 1rem; right: 2rem; } }
-    .lightbox-content-wrapper.text-only-mode #lightbox-media-container { display: none; }
-    .lightbox-content-wrapper.text-only-mode .lightbox-text-panel { flex-basis: 100%; max-width: 700px; padding: 4rem 3rem; text-align: left; }
-    /* CONTACTO */
-    .contact-intro { font-size: 1.1rem; color: #2c1810; margin-bottom: 2rem; }
-    .contact-info { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); display: inline-block; border-radius: 16px; padding: 2.5rem 4rem; margin: 0 auto 4rem; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); text-align: center; }
-    .contact-text { margin: 0.5rem 0; font-size: 1.2rem; color: #2c1810; }
-    .fade-on-scroll { opacity: 0; transform: translateY(25px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
-    .fade-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
-  </style>
 </body>
 </html>
