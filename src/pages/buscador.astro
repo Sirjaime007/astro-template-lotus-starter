@@ -124,6 +124,11 @@
         <span class="metric-number" data-target="0" id="stat-cafes">0</span>
         <span class="metric-label">Cafeterías Auditadas</span>
       </div>
+      <!-- NUEVA MÉTRICA: TOSTADORES -->
+      <div class="metric-item">
+        <span class="metric-number" data-target="0" id="stat-tostadores">0</span>
+        <span class="metric-label">Tostadores Mapeados</span>
+      </div>
       <div class="metric-item">
         <span class="metric-number" data-target="0" id="stat-provincias">0</span>
         <span class="metric-label">Provincias Mapeadas</span>
@@ -131,10 +136,6 @@
       <div class="metric-item">
         <span class="metric-number" data-target="0" id="stat-ciudades">0</span>
         <span class="metric-label">Ciudades Relevadas</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-number" data-target="100" id="stat-inteligencia">0</span><span class="metric-symbol">%</span>
-        <span class="metric-label">Inteligencia de Mercado</span>
       </div>
     </div>
 
@@ -225,9 +226,6 @@
         let markerCluster = null;
         let markerOrigen = null; 
 
-        // ==========================================
-        // FUNCIONES GENERALES Y TABS
-        // ==========================================
         window.cofiSwitchTab = function(tab) {
             document.getElementById('vista-mapa').classList.toggle('hidden', tab !== 'mapa');
             document.getElementById('vista-tostadores').classList.toggle('hidden', tab !== 'tostadores');
@@ -254,9 +252,6 @@
             return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
 
-        // ==========================================
-        // MAPA Y BUSCADOR (CAFETERÍAS)
-        // ==========================================
         function initMapa() {
             mapaCofiteca = L.map('cofiteca-map', { maxBoundsViscosity: 1.0, minZoom: 4 }).setView([-38.41, -63.61], 4);
             
@@ -388,9 +383,6 @@
             }, 150);
         };
 
-        // ==========================================
-        // MÓDULO TOSTADORES
-        // ==========================================
         window.cofiRenderizarTostadores = function() {
             const ciudad = document.getElementById('select-ciudad-tostadores').value;
             const filtrados = tostadoresDatos.filter(t => ciudad === 'Todas' || t.ciudad === ciudad);
@@ -427,9 +419,6 @@
             contenedor.replaceChildren(frag);
         };
 
-        // ==========================================
-        // INTERACCIONES (GPS, REPORTE Y ALTA)
-        // ==========================================
         function cofiProcesarOrigen(lat, lon, label) {
             if (markerOrigen) mapaCofiteca.removeLayer(markerOrigen);
             markerOrigen = L.circleMarker([lat, lon], { radius: 8, color: "#059669", fillColor: "#fff", weight: 3, fillOpacity: 1 })
@@ -506,6 +495,7 @@
             });
         };
 
+        // LÓGICA DE BOTONES FLOTANTES CON SOLUCIÓN NO-CORS PARA EVITAR EL BLOQUEO
         window.cofiAbrirReporte = async function() {
             const { value: formValues } = await Swal.fire({
                 title: 'Reportar Novedad',
@@ -550,28 +540,44 @@
             if (formValues) cofiEnviarReporteEmail(formValues);
         };
 
-        async function cofiEnviarReporteEmail(datos) {
+        window.cofiEnviarReporteEmail = async function(datos) {
             try {
-                const response = await fetch('/api/reporte?t=' + Date.now(), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }, body: new URLSearchParams(datos) });
-                if (response.ok) { 
-                    Swal.fire({ title: '¡Enviado!', text: 'Gracias por ayudar a mejorar la comunidad.', icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } }); 
-                } else { 
-                    throw new Error("Error en servidor"); 
-                }
+                // ACORDATE: Para evitar el problema de CORS de Google, usamos mode: 'no-cors'.
+                // Si la URL es la de Vercel API, dejá '/api/reporte'. Si usás el link directo de Google Script, cambialo acá.
+                const URL_DESTINO = '/api/reporte'; 
+                
+                await fetch(URL_DESTINO + '?t=' + Date.now(), { 
+                    method: 'POST', 
+                    mode: 'no-cors', // CRUCIAL para evitar el bloqueo de SPAM/CORS
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+                    body: new URLSearchParams(datos) 
+                });
+                
+                // Con no-cors la respuesta es opaca, así que si llegó acá sin romper la red, asumimos éxito
+                Swal.fire({ 
+                    title: '¡Enviado!', 
+                    text: 'Gracias por ayudar a mejorar la comunidad.', 
+                    icon: 'success', 
+                    customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } 
+                }); 
             } catch (error) { 
-                Swal.fire({ title: 'Aviso', text: 'El reporte se procesará más tarde.', icon: 'info', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } }); 
+                Swal.fire({ 
+                    title: 'Error', 
+                    text: 'Revisá tu conexión, el servidor no pudo procesarlo.', 
+                    icon: 'error', 
+                    customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } 
+                }); 
             }
-        }
+        };
 
-        // ==========================================
-        // CARGA Y CACHÉ
-        // ==========================================
-        function animarContadores(cafesTotal) {
+        function animarContadores(cafesTotal, tostadoresTotal) {
             const cCafes = document.getElementById('stat-cafes');
+            const cTostadores = document.getElementById('stat-tostadores');
             const cProvincias = document.getElementById('stat-provincias');
             const cCiudades = document.getElementById('stat-ciudades');
             
             if(cCafes) cCafes.setAttribute('data-target', cafesTotal);
+            if(cTostadores) cTostadores.setAttribute('data-target', tostadoresTotal);
             if(cProvincias) cProvincias.setAttribute('data-target', 24);
             if(cCiudades) cCiudades.setAttribute('data-target', 102);
 
@@ -598,11 +604,12 @@
             counters.forEach(c => counterObserver.observe(c));
         }
 
-        function encenderInterfaz(datosMap) {
+        function encenderInterfaz(datosMap, tostadoresMap) {
             const totalCafes = datosMap.length;
+            const totalTostadores = tostadoresMap ? tostadoresMap.length : 0;
             document.getElementById('cofi-status').innerText = `${totalCafes} cafeterías y tostadores mapeados.`;
             
-            animarContadores(totalCafes);
+            animarContadores(totalCafes, totalTostadores);
 
             const ciudades = [...new Set(datosMap.map(c => c.ciudad))].sort();
             document.getElementById('select-ciudad').innerHTML = `<option value="Todas">Región / Ciudad</option>` + 
@@ -614,7 +621,7 @@
         }
 
         async function cargarBaseDatos() {
-            const CACHE_KEY = 'cofi_data_cache_v2';
+            const CACHE_KEY = 'cofi_data_cache_v3';
             const CACHE_TTL = 15 * 60 * 1000; 
             
             try {
@@ -625,9 +632,8 @@
                         baseDatos = cacheData.data;
                         tostadoresDatos = cacheData.tostadores || [];
                         
-                        encenderInterfaz(baseDatos);
+                        encenderInterfaz(baseDatos, tostadoresDatos);
                         
-                        // Si tenemos tostadores cacheados, armamos el select
                         if (tostadoresDatos.length > 0) {
                             const ciudadesTost = [...new Set(tostadoresDatos.map(t => t.ciudad))].sort();
                             document.getElementById('select-ciudad-tostadores').innerHTML = `<option value="Todas">Todas las Ciudades</option>` + ciudadesTost.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
@@ -641,7 +647,6 @@
             }
 
             try {
-                // 1. Descargamos Cafeterías (GIDS) y Tostadores al mismo tiempo
                 const mapFetchPromises = Object.entries(GIDS).map(([ciu, gid]) =>
                     new Promise((resolve, reject) => {
                         Papa.parse(urlSheet(gid), {
@@ -662,13 +667,11 @@
                     });
                 });
 
-                // Esperamos que termine todo
                 const [mapResults, tostadoresDataRaw] = await Promise.all([
                     Promise.allSettled(mapFetchPromises),
                     tostadoresFetchPromise.catch(() => [])
                 ]);
 
-                // 2. Procesamos Cafeterías
                 let tempData = [];
                 mapResults.forEach(r => {
                     if (r.status === 'fulfilled') {
@@ -687,7 +690,6 @@
                     }
                 });
 
-                // 3. Procesamos Tostadores
                 tostadoresDatos = tostadoresDataRaw.map(f => ({ 
                     nombre: f.TOSTADOR || f.TOSTADORES || f.NOMBRE, 
                     ig: asegurarProtocolo(f.INSTAGRAM || f.IG || "#"), 
@@ -696,7 +698,6 @@
                     foto: asegurarProtocolo(f.IMAGENES || f.IMAGEN || f.FOTO || f.FOTOS || "#") 
                 })).filter(t => t.nombre);
 
-                // 4. Guardamos e Iniciamos la UI
                 if (tempData.length > 0) {
                     tempData.sort((a, b) => a.nombre.localeCompare(b.nombre));
                     baseDatos = tempData;
@@ -705,7 +706,7 @@
                         localStorage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), data: baseDatos, tostadores: tostadoresDatos }));
                     } catch(e) { console.warn("No se pudo guardar la caché"); }
 
-                    encenderInterfaz(baseDatos);
+                    encenderInterfaz(baseDatos, tostadoresDatos);
 
                     const ciudadesTost = [...new Set(tostadoresDatos.map(t => t.ciudad))].sort();
                     document.getElementById('select-ciudad-tostadores').innerHTML = `<option value="Todas">Todas las Ciudades</option>` + ciudadesTost.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
