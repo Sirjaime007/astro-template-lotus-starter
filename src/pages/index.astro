@@ -7,7 +7,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cofiteca x Mad Diseño | Inteligencia & Branding</title>
-  <meta name="description" content="Cofiteca x Mad. El radar de la cultura del café en Argentina. Mapeamos el territorio y creamos identidades visuales que dejan huella en la barra." />
+  <meta name="description" content="Data y diseño para el mundo del café de especialidad. La base de datos más grande de Argentina unida a un estudio de branding estratégico." />
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,6 +34,12 @@
     .brand-actions a[href="#servicios"]:hover, .brand-actions a[href="#contacto"]:hover { background-color: #5c3d2e; border-color: #5c3d2e; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(139, 69, 19, 0.35); }
     .brand-actions a[href="/buscador"], .brand-actions a[href="#proceso"] { background-color: rgba(255, 255, 255, 0.8); color: #3d2317; border: 2px solid #c4a77d; backdrop-filter: blur(5px); }
     .brand-actions a:hover { transform: translateY(-3px); background-color: #ffffff; }
+
+    /* QUIÉNES SOMOS */
+    .about-container { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 3.5rem 4rem; margin: 0 auto 4rem; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); text-align: left; max-width: 900px; }
+    .about-container p { font-size: 1.2rem; color: #4a332a; line-height: 1.8; margin-bottom: 1.5rem; font-family: 'Inter', sans-serif;}
+    .about-container p:last-child { margin-bottom: 0; }
+    @media (max-width: 768px) { .about-container { padding: 2rem; } .about-container p { font-size: 1.05rem; } }
     
     /* SERVICIOS */
     .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin: 3rem 0; }
@@ -103,16 +109,25 @@
 
   <div class="brand-hero fade-on-scroll">
     <div class="brand-title">Cofiteca x Mad Diseño</div>
-    <p class="brand-tagline">Conocemos el territorio. Creamos la identidad. El lugar donde el pulso de la calle y el buen diseño se sientan a tomar un café.</p>
+    <p class="brand-tagline">Data y diseño para el mundo del café de especialidad.</p>
     <div class="brand-actions">
-      <a href="#servicios">Ver Servicios</a>
-      <a href="/buscador">Explorar Data Real</a>
+      <a href="#quienes-somos">Quiénes Somos</a>
+      <a href="/buscador">Mapa Cofiteca</a>
       <a href="#portafolio">Portafolio</a>
       <a href="#contacto">Contacto</a>
     </div>
   </div>
 
   <main>
+    <!-- NUEVA SECCIÓN: QUIÉNES SOMOS -->
+    <div id="quienes-somos"></div>
+    <h2 class="section-title fade-on-scroll">Quiénes Somos</h2>
+    <div class="about-container fade-on-scroll">
+      <p>No somos un estudio de diseño tradicional que mira la industria desde un escritorio.</p>
+      <p>Nacimos del otro lado de la barra. Calibrando espressos, testeando perfiles y recorriendo el país con un propósito fundacional: <strong>crear la base de datos de café de especialidad más grande y precisa de Argentina (Cofiteca).</strong></p>
+      <p>Ese mapeo exhaustivo nos dio algo que ninguna otra agencia tiene: <em>calle, territorio y métricas reales</em>. Hoy cruzamos toda esa inteligencia de mercado con branding de alto nivel para crear identidades, packaging y espacios que no solo se ven increíbles, sino que están calibrados estratégicamente con lo que el consumidor busca.</p>
+    </div>
+
     <div id="servicios"></div>
     <h2 class="section-title fade-on-scroll">Nuestros Servicios</h2>
     <div class="services-grid fade-on-scroll">
