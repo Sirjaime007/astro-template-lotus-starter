@@ -42,7 +42,6 @@
 
     .buscador-main-panel { display: flex; flex-direction: column; background: rgba(255,255,255, 0.6); border-radius: 16px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); overflow: hidden; }
     
-    /* Pestañas (Tabs) */
     .data-header { padding: 2rem; border-bottom: 1px solid rgba(196, 167, 125, 0.3); text-align: center; }
     .view-tabs { display: flex; gap: 15px; justify-content: center; margin-top: 15px; flex-wrap: wrap;}
     .view-tab-btn { background: transparent; border: 2px solid transparent; color: #5c3d2e; font-size: 0.95rem; font-weight: 700; cursor: pointer; padding: 10px 20px; border-radius: 12px; transition: 0.2s; font-family: 'Inter', sans-serif; }
@@ -118,13 +117,11 @@
   </nav>
 
   <div class="data-real-container">
-    <!-- PANEL LATERAL -->
     <div class="metrics-sidebar">
       <div class="metric-item">
         <span class="metric-number" data-target="0" id="stat-cafes">0</span>
         <span class="metric-label">Cafeterías Auditadas</span>
       </div>
-      <!-- NUEVA MÉTRICA: TOSTADORES -->
       <div class="metric-item">
         <span class="metric-number" data-target="0" id="stat-tostadores">0</span>
         <span class="metric-label">Tostadores Mapeados</span>
@@ -139,20 +136,17 @@
       </div>
     </div>
 
-    <!-- PANEL PRINCIPAL -->
     <div class="buscador-main-panel">
       <div class="data-header">
         <p style="font-size: 1.25rem; font-weight: 800; margin: 0; color: #1a0f0a; font-family: 'Georgia', serif;">Base de Datos Nacional</p>
         <p id="cofi-status" style="font-size: 0.9rem; color: #8b4513; margin: 5px 0 0 0; font-weight: bold;">Sincronizando con el servidor...</p>
         
-        <!-- PESTAÑAS -->
         <div class="view-tabs">
             <button class="view-tab-btn active" onclick="cofiSwitchTab('mapa')" id="btn-tab-mapa">📍 Mapa de Cafés</button>
             <button class="view-tab-btn" onclick="cofiSwitchTab('tostadores')" id="btn-tab-tostadores">☕ Catálogo de Tostadores</button>
         </div>
       </div>
       
-      <!-- VISTA 1: MAPA Y BUSCADOR -->
       <div class="buscador-ui" id="vista-mapa">
         <div class="search-controls">
           <select id="select-ciudad" class="input-moderno" onchange="cofiActualizarZonas(); cofiFiltrar()"><option value="Todas">Región / Ciudad</option></select>
@@ -172,7 +166,6 @@
         <div id="cofi-resultados" class="resultados-grid"></div>
       </div>
 
-      <!-- VISTA 2: TOSTADORES -->
       <div class="buscador-ui hidden" id="vista-tostadores">
         <div class="search-controls" style="grid-template-columns: 1fr; margin-bottom: 2rem;">
             <select id="select-ciudad-tostadores" class="input-moderno" onchange="cofiRenderizarTostadores()"><option value="Todas">Todas las Ciudades</option></select>
@@ -184,7 +177,6 @@
     </div>
   </div>
 
-  <!-- BOTONES FLOTANTES DE INTERACCIÓN -->
   <button class="btn-flotante-reporte" onclick="cofiAbrirReporte()">💬 Reportar</button>
   <button class="btn-flotante-sumate" onclick="cofiAbrirSumate()">✨ ¡Sumar local!</button>
 
@@ -225,14 +217,21 @@
         let mapaCofiteca = null;
         let markerCluster = null;
         let markerOrigen = null; 
+        let tostadoresRenderizados = false;
 
         window.cofiSwitchTab = function(tab) {
             document.getElementById('vista-mapa').classList.toggle('hidden', tab !== 'mapa');
             document.getElementById('vista-tostadores').classList.toggle('hidden', tab !== 'tostadores');
             document.getElementById('btn-tab-mapa').classList.toggle('active', tab === 'mapa');
             document.getElementById('btn-tab-tostadores').classList.toggle('active', tab === 'tostadores');
+            
             if (tab === 'mapa' && mapaCofiteca) {
                 setTimeout(() => mapaCofiteca.invalidateSize(), 200);
+            }
+            
+            if (tab === 'tostadores' && !tostadoresRenderizados) {
+                window.cofiRenderizarTostadores();
+                tostadoresRenderizados = true;
             }
         };
 
@@ -405,7 +404,7 @@
                 }
 
                 div.innerHTML = `
-                    <img src="${esc(imgUrl)}" class="tostador-img" onerror="this.src='${IMG_FALLBACK}'">
+                    <img src="${esc(imgUrl)}" class="tostador-img" loading="lazy" decoding="async" onerror="this.src='${IMG_FALLBACK}'">
                     <div class="tostador-content">
                         <div>
                             <h3 style="margin: 0 0 5px 0; font-family:'Georgia', serif; font-size:1.2rem; color:#1a0f0a;">${esc(t.nombre)}</h3>
@@ -495,7 +494,6 @@
             });
         };
 
-        // LÓGICA DE BOTONES FLOTANTES CON SOLUCIÓN NO-CORS PARA EVITAR EL BLOQUEO
         window.cofiAbrirReporte = async function() {
             const { value: formValues } = await Swal.fire({
                 title: 'Reportar Novedad',
@@ -542,18 +540,15 @@
 
         window.cofiEnviarReporteEmail = async function(datos) {
             try {
-                // ACORDATE: Para evitar el problema de CORS de Google, usamos mode: 'no-cors'.
-                // Si la URL es la de Vercel API, dejá '/api/reporte'. Si usás el link directo de Google Script, cambialo acá.
                 const URL_DESTINO = '/api/reporte'; 
                 
                 await fetch(URL_DESTINO + '?t=' + Date.now(), { 
                     method: 'POST', 
-                    mode: 'no-cors', // CRUCIAL para evitar el bloqueo de SPAM/CORS
+                    mode: 'no-cors',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
                     body: new URLSearchParams(datos) 
                 });
                 
-                // Con no-cors la respuesta es opaca, así que si llegó acá sin romper la red, asumimos éxito
                 Swal.fire({ 
                     title: '¡Enviado!', 
                     text: 'Gracias por ayudar a mejorar la comunidad.', 
@@ -618,6 +613,11 @@
             window.cofiActualizarZonas();
             initMapa();
             cofiFiltrar();
+            
+            if (tostadoresMap && tostadoresMap.length > 0) {
+                const ciudadesTost = [...new Set(tostadoresMap.map(t => t.ciudad))].sort();
+                document.getElementById('select-ciudad-tostadores').innerHTML = `<option value="Todas">Todas las Ciudades</option>` + ciudadesTost.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+            }
         }
 
         async function cargarBaseDatos() {
@@ -633,12 +633,6 @@
                         tostadoresDatos = cacheData.tostadores || [];
                         
                         encenderInterfaz(baseDatos, tostadoresDatos);
-                        
-                        if (tostadoresDatos.length > 0) {
-                            const ciudadesTost = [...new Set(tostadoresDatos.map(t => t.ciudad))].sort();
-                            document.getElementById('select-ciudad-tostadores').innerHTML = `<option value="Todas">Todas las Ciudades</option>` + ciudadesTost.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-                            window.cofiRenderizarTostadores();
-                        }
                         return; 
                     }
                 }
@@ -707,11 +701,6 @@
                     } catch(e) { console.warn("No se pudo guardar la caché"); }
 
                     encenderInterfaz(baseDatos, tostadoresDatos);
-
-                    const ciudadesTost = [...new Set(tostadoresDatos.map(t => t.ciudad))].sort();
-                    document.getElementById('select-ciudad-tostadores').innerHTML = `<option value="Todas">Todas las Ciudades</option>` + ciudadesTost.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-                    window.cofiRenderizarTostadores();
-
                 } else {
                     document.getElementById('cofi-status').innerText = 'Hubo un error al procesar las cafeterías.';
                 }
@@ -724,8 +713,15 @@
         cargarBaseDatos();
     })();
 
+    if (document.readyState === 'interactive' || document.readyState === 'complete') {
+        if (!window.cofitecaInicializada) iniciarBuscadorSeguro();
+    } else {
+        document.addEventListener('DOMContentLoaded', iniciarBuscadorSeguro);
+    }
+
     document.addEventListener('astro:page-load', () => {
         window.cofitecaInicializada = false;
+        iniciarBuscadorSeguro();
     });
   </script>
 </body>
