@@ -188,29 +188,29 @@
     <div id="portafolio"></div>
     <h2 class="section-title fade-on-scroll">Casos de Éxito</h2>
     <div class="portfolio-grid fade-on-scroll">
-      <a class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-4.png" data-title="Café Ina" data-desc="<strong>Identidad Visual y Experiencia de Barra</strong><br/><em>El Desafío:</em> Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local.">
+      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-4.png" data-title="Café Ina" data-desc="<strong>Identidad Visual y Experiencia de Barra</strong><br/><em>El Desafío:</em> Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local.">
         <img src="/cafe-ina-4.png" alt="Café Ina" loading="lazy" />
       </a>
-      <a class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-5.jpg" data-title="Café Ina" data-desc="<strong>Aplicación de Marca</strong><br/>Detalle de la identidad visual en los puntos de contacto del local.">
+      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-5.jpg" data-title="Café Ina" data-desc="<strong>Aplicación de Marca</strong><br/>Detalle de la identidad visual en los puntos de contacto del local.">
         <img src="/cafe-ina-5.jpg" alt="Café Ina Detalle" loading="lazy" />
       </a>
-      <a class="portfolio-item media-trigger" data-type="image" data-src="/cafe-de-obra.jpg" data-title="Café de Obra" data-desc="<strong>Branding Institucional</strong><br/><em>El Desafío:</em> Integrar una cafetería de especialidad dentro del Centro de Constructores, respetando el entorno histórico.">
+      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-de-obra.jpg" data-title="Café de Obra" data-desc="<strong>Branding Institucional</strong><br/><em>El Desafío:</em> Integrar una cafetería de especialidad dentro del Centro de Constructores, respetando el entorno histórico.">
         <img src="/cafe-de-obra.jpg" alt="Café de Obra" loading="lazy" />
       </a>
-      <a class="portfolio-item media-trigger" data-type="image" data-src="/black-bean.jpg" data-title="Black Bean" data-desc="<strong>Producto B2B y Packaging</strong><br/><em>El Desafío:</em> Introducir brownies a base de porotos negros diseñados para maridar con café de especialidad.">
+      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/black-bean.jpg" data-title="Black Bean" data-desc="<strong>Producto B2B y Packaging</strong><br/><em>El Desafío:</em> Introducir brownies a base de porotos negros diseñados para maridar con café de especialidad.">
         <img src="/black-bean.jpg" alt="Black Bean" loading="lazy" />
       </a>
-      <a class="portfolio-item media-trigger" data-type="image" data-src="/Sara.jpg" data-title="Sara Coffee Shop" data-desc="<strong>Identidad y Redes</strong><br/>Concepto visual, paleta tipográfica y piezas de comunicación.">
+      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/Sara.jpg" data-title="Sara Coffee Shop" data-desc="<strong>Identidad y Redes</strong><br/>Concepto visual, paleta tipográfica y piezas de comunicación.">
         <img src="/Sara.jpg" alt="Sara" loading="lazy" />
       </a>
-      <a class="portfolio-item media-trigger video-trigger" data-type="video" data-src="/luccianos.mp4" data-title="Luccianos" data-desc="<strong>Producción Audiovisual</strong><br/>Registro dinámico de la experiencia y el flujo de trabajo en el local.">
+      <a href="#" class="portfolio-item media-trigger video-trigger" data-type="video" data-src="/luccianos.mp4" data-title="Luccianos" data-desc="<strong>Producción Audiovisual</strong><br/>Registro dinámico de la experiencia y el flujo de trabajo en el local.">
         <video src="/luccianos.mp4" muted loop playsinline autoplay class="thumbnail-video"></video>
         <div class="play-indicator">▶</div>
       </a>
-      <a class="portfolio-item media-trigger" data-type="image" data-src="/tio1.jpg" data-title="Proyecto Tio" data-desc="<strong>Diseño y Aplicación</strong><br/>Exploración visual y desarrollo de estética.">
+      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/tio1.jpg" data-title="Proyecto Tio" data-desc="<strong>Diseño y Aplicación</strong><br/>Exploración visual y desarrollo de estética.">
         <img src="/tio1.jpg" alt="Tio" loading="lazy" />
       </a>
-      <a class="portfolio-item media-trigger" data-type="image" data-src="/tio2.jpg" data-title="Proyecto Tio" data-desc="<strong>Diseño y Aplicación</strong><br/>Variación de las piezas visuales.">
+      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/tio2.jpg" data-title="Proyecto Tio" data-desc="<strong>Diseño y Aplicación</strong><br/>Variación de las piezas visuales.">
         <img src="/tio2.jpg" alt="Tio 2" loading="lazy" />
       </a>
     </div>
@@ -228,8 +228,23 @@
     </div>
   </main>
 
+  <!-- HTML DEL LIGHTBOX (EL CONTENEDOR FALTANTE) -->
+  <div id="lightbox">
+    <div class="lightbox-overlay">
+      <span class="lightbox-close">&times;</span>
+      <div class="lightbox-content-wrapper">
+        <div id="lightbox-media-container"></div>
+        <div class="lightbox-text-panel">
+          <h3 id="lightbox-title"></h3>
+          <p id="lightbox-desc"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script is:inline>
     document.addEventListener('DOMContentLoaded', () => {
+      // 1. Rotación de video
       const video = document.getElementById('video-fondo');
       const playlist = ['/video-1.mp4', '/video-2.mp4', '/video-3.mp4'];
       let currentVideo = 0;
@@ -241,6 +256,7 @@
         });
       }
       
+      // 2. Animación de scroll
       const fadeElements = document.querySelectorAll('.fade-on-scroll');
       const fadeObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -252,6 +268,7 @@
       }, { threshold: 0.15 });
       fadeElements.forEach(el => fadeObserver.observe(el));
 
+      // 3. Lógica del Lightbox (Ventana emergente)
       const lightbox = document.getElementById('lightbox');
       const overlay = lightbox.querySelector('.lightbox-overlay');
       const wrapper = lightbox.querySelector('.lightbox-content-wrapper');
@@ -262,12 +279,15 @@
       
       document.querySelectorAll('.media-trigger').forEach((trigger) => {
         trigger.addEventListener('click', (e) => {
-          e.preventDefault();
+          e.preventDefault(); // Evita que la página salte arriba
+          
           const type = trigger.getAttribute('data-type');
           const src = trigger.getAttribute('data-src');
+          
           titleEl.textContent = trigger.getAttribute('data-title');
           descEl.innerHTML = trigger.getAttribute('data-desc');
           mediaContainer.innerHTML = '';
+          
           if (type === 'text') {
             wrapper.classList.add('text-only-mode');
           } else {
@@ -288,6 +308,7 @@
         document.body.style.overflow = '';
         mediaContainer.innerHTML = '';
       };
+      
       close.addEventListener('click', closeLightbox);
       overlay.addEventListener('click', (e) => { if (e.target === overlay) closeLightbox(); });
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
