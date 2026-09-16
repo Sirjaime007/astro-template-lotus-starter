@@ -43,8 +43,8 @@
     .buscador-main-panel { display: flex; flex-direction: column; background: rgba(255,255,255, 0.6); border-radius: 16px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); overflow: hidden; }
     
     .data-header { padding: 2rem; border-bottom: 1px solid rgba(196, 167, 125, 0.3); text-align: center; }
-    .view-tabs { display: flex; gap: 15px; justify-content: center; margin-top: 15px; flex-wrap: wrap;}
-    .view-tab-btn { background: transparent; border: 2px solid transparent; color: #5c3d2e; font-size: 0.95rem; font-weight: 700; cursor: pointer; padding: 10px 20px; border-radius: 12px; transition: 0.2s; font-family: 'Inter', sans-serif; }
+    .view-tabs { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap;}
+    .view-tab-btn { background: transparent; border: 2px solid transparent; color: #5c3d2e; font-size: 0.9rem; font-weight: 700; cursor: pointer; padding: 10px 18px; border-radius: 12px; transition: 0.2s; font-family: 'Inter', sans-serif; }
     .view-tab-btn:hover { background: rgba(196, 167, 125, 0.1); }
     .view-tab-btn.active { background: #8b4513; color: white; border-color: #8b4513; box-shadow: 0 4px 10px rgba(139, 69, 19, 0.2); }
 
@@ -68,9 +68,12 @@
     
     .map-wrapper { width: 100%; height: 500px; border-radius: 12px; overflow: hidden; border: 1px solid #c4a77d; margin-bottom: 2rem; position: relative; z-index: 1;}
     @media (max-width: 768px) { .map-wrapper { height: 400px; } }
-    #cofiteca-map { width: 100%; height: 100%; background: #e6e2db; }
+    #cofiteca-map, #ranking-map { width: 100%; height: 100%; background: #e6e2db; }
+    
     .cafe-label { background: transparent; border: none; box-shadow: none; color: #2c1810; font-weight: 800; font-size: 0.8rem; text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
     .show-labels .cafe-label { opacity: 1; }
+
+    .custom-ranking-icon { background: none; border: none; }
 
     .resultados-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; max-height: 450px; overflow-y: auto; padding-right: 10px;}
     .resultados-grid::-webkit-scrollbar { width: 8px; }
@@ -79,19 +82,19 @@
 
     .cafe-card { background: white; padding: 18px; border-radius: 12px; border: 1px solid rgba(196, 167, 125, 0.4); box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between;}
     .cafe-card:hover { transform: translateY(-3px); border-color: #8b4513; box-shadow: 0 8px 25px rgba(139, 69, 19, 0.1); }
-    .cafe-card h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: #1a0f0a; font-family: 'Georgia', serif;}
+    .cafe-card h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: #1a0f0a; font-family: 'Georgia', serif; display: flex; align-items: center; gap: 8px; }
     .cafe-card p { margin: 0 0 12px 0; font-size: 0.85rem; color: #5c3d2e; }
     .cafe-card a { text-align: center; display: block; padding: 8px; background: #f5f0e8; border-radius: 8px; font-weight: 600; font-size: 0.8rem; color: #8b4513; border: 1px solid #c4a77d;}
     .cafe-card a:hover { background: #8b4513; color: white; }
+    
+    .rank-badge { color: white; font-weight: bold; border-radius: 6px; padding: 2px 8px; font-size: 0.85rem; font-family: 'Inter', sans-serif;}
 
-    /* ESTILOS PARA TOSTADORES */
     .tostadores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
     .tostador-card { background: white; border: 1px solid rgba(196, 167, 125, 0.4); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; transition: transform 0.2s; }
     .tostador-card:hover { transform: translateY(-3px); border-color: #8b4513; }
     .tostador-img { width: 100%; height: 180px; object-fit: cover; background-color: #f5f0e8; }
     .tostador-content { padding: 18px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
 
-    /* BOTONES FLOTANTES */
     .btn-flotante-reporte { position: fixed; bottom: 20px; right: 20px; background: #1E293B; color: white; border: none; padding: 14px 20px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 9997; transition: transform 0.2s; display: flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif;}
     .btn-flotante-sumate { position: fixed; bottom: 20px; left: 20px; background: #c4a77d; color: #1a0f0a; border: none; padding: 14px 20px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 9997; transition: transform 0.2s; display: flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif;}
     .btn-flotante-reporte:hover, .btn-flotante-sumate:hover { transform: scale(1.05); }
@@ -102,7 +105,6 @@
     
     .hidden { display: none !important; }
 
-    /* ESTILOS SWEETALERT */
     .swal2-popup.swal-custom-popup { border-radius: 24px !important; padding: 30px !important; border: 1px solid #c4a77d !important; font-family: 'Inter', sans-serif; background: #f5f0e8 !important; }
     .swal-custom-input { width: 100% !important; padding: 14px 16px !important; border: 1px solid #c4a77d !important; border-radius: 12px !important; font-family: 'Inter', sans-serif !important; font-size: 0.95rem !important; box-sizing: border-box !important; background: white !important; color: #2A1F18 !important; margin: 0 !important; }
     .swal-custom-input:focus { border-color: #8b4513 !important; outline: none !important; box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.15) !important; }
@@ -120,19 +122,19 @@
     <div class="metrics-sidebar">
       <div class="metric-item">
         <span class="metric-number" data-target="0" id="stat-cafes">0</span>
-        <span class="metric-label">Cafeterías</span>
+        <span class="metric-label">Cafeterías Auditadas</span>
       </div>
       <div class="metric-item">
         <span class="metric-number" data-target="0" id="stat-tostadores">0</span>
-        <span class="metric-label">Tostadores</span>
+        <span class="metric-label">Tostadores Mapeados</span>
       </div>
       <div class="metric-item">
         <span class="metric-number" data-target="0" id="stat-provincias">0</span>
-        <span class="metric-label">Provincias</span>
+        <span class="metric-label">Provincias Mapeadas</span>
       </div>
       <div class="metric-item">
         <span class="metric-number" data-target="0" id="stat-ciudades">0</span>
-        <span class="metric-label">Ciudades</span>
+        <span class="metric-label">Ciudades Relevadas</span>
       </div>
     </div>
 
@@ -142,30 +144,44 @@
         <p id="cofi-status" style="font-size: 0.9rem; color: #8b4513; margin: 5px 0 0 0; font-weight: bold;">Sincronizando con el servidor...</p>
         
         <div class="view-tabs">
-            <button class="view-tab-btn active" onclick="cofiSwitchTab('mapa')" id="btn-tab-mapa">📍 Mapa de Cafés</button>
-            <button class="view-tab-btn" onclick="cofiSwitchTab('tostadores')" id="btn-tab-tostadores">☕ Catálogo de Tostadores</button>
+            <button class="view-tab-btn active" onclick="cofiSwitchTab('mapa')" id="btn-tab-mapa">📍 Mapa General</button>
+            <button class="view-tab-btn" onclick="cofiSwitchTab('ranking')" id="btn-tab-ranking">🏆 The Best Coffee Shops</button>
+            <button class="view-tab-btn" onclick="cofiSwitchTab('tostadores')" id="btn-tab-tostadores">☕ Tostadores</button>
         </div>
       </div>
       
+      <!-- VISTA 1: MAPA GENERAL -->
       <div class="buscador-ui" id="vista-mapa">
         <div class="search-controls">
           <select id="select-ciudad" class="input-moderno" onchange="cofiActualizarZonas(); cofiFiltrar()"><option value="Todas">Región / Ciudad</option></select>
           <select id="select-zona" class="input-moderno" onchange="cofiFiltrar()"><option value="Todas">Zona / Barrio</option></select>
           <input type="text" id="input-busqueda" class="input-moderno" placeholder="Buscá por nombre o calle..." oninput="cofiFiltrar()">
         </div>
-        
         <div class="search-buttons">
           <button class="btn-outline-mad" onclick="cofiMedirDesdeDireccion()">📍 Buscar por Dirección</button>
           <button class="btn-primary-mad" onclick="cofiUsarMiGPS()">🎯 Cerca de Mí</button>
         </div>
-        
-        <div class="map-wrapper">
-          <div id="cofiteca-map"></div>
-        </div>
-        
+        <div class="map-wrapper"><div id="cofiteca-map"></div></div>
         <div id="cofi-resultados" class="resultados-grid"></div>
       </div>
 
+      <!-- VISTA 2: RANKING INTERNACIONAL -->
+      <div class="buscador-ui hidden" id="vista-ranking">
+        <div class="search-controls" style="grid-template-columns: 1fr 1fr;">
+          <select id="select-ranking-tipo" class="input-moderno" onchange="cofiActualizarRankingCiudades(); cofiFiltrarRanking()">
+            <option value="arg">🇦🇷 Top 100 Argentina</option>
+            <option value="sud">🌎 Top 100 Sudamérica</option>
+            <option value="mun">🌍 Top 100 Mundial</option>
+          </select>
+          <select id="select-ranking-ciudad" class="input-moderno" onchange="cofiFiltrarRanking()">
+            <option value="Todas">Todas las Ciudades</option>
+          </select>
+        </div>
+        <div class="map-wrapper"><div id="ranking-map"></div></div>
+        <div id="ranking-resultados" class="resultados-grid"></div>
+      </div>
+
+      <!-- VISTA 3: TOSTADORES -->
       <div class="buscador-ui hidden" id="vista-tostadores">
         <div class="search-controls" style="grid-template-columns: 1fr; margin-bottom: 2rem;">
             <select id="select-ciudad-tostadores" class="input-moderno" onchange="cofiRenderizarTostadores()"><option value="Todas">Todas las Ciudades</option></select>
@@ -200,6 +216,9 @@
             mapContenedor.outerHTML = '<div id="cofiteca-map" style="width: 100%; height: 100%; background: #e6e2db;"></div>';
         }
 
+        // ==========================================
+        // VARIABLES Y GIDs
+        // ==========================================
         const SHEET_ID = "10vUOhRr7IAXlRrkBphxEP4ApXYBgrnuxJq6G83GnfHI";
         const urlSheet = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
 
@@ -210,28 +229,49 @@
             "Corrientes, Misiones, Entre Rios, Formosa y Chaco": "1097354687", "Catamarca, Tucuman y  Santiago del Estero": "1483010757"
         };
         const TOSTADORES_GID = "1590442133";
+        const RANKING_GIDS = { arg: "35250567", sud: "1698883223", mun: "629924037" };
         const IMG_FALLBACK = 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=600';
 
         let baseDatos = [];
         let tostadoresDatos = [];
+        let rankingDatos = { arg: [], sud: [], mun: [] };
+        
         let mapaCofiteca = null;
         let markerCluster = null;
         let markerOrigen = null; 
-        let tostadoresRenderizados = false;
 
+        let mapaRanking = null;
+        let markerClusterRanking = null;
+
+        let tostadoresRenderizados = false;
+        let rankingIniciado = false;
+
+        // ==========================================
+        // FUNCIONES GENERALES
+        // ==========================================
         window.cofiSwitchTab = function(tab) {
             document.getElementById('vista-mapa').classList.toggle('hidden', tab !== 'mapa');
             document.getElementById('vista-tostadores').classList.toggle('hidden', tab !== 'tostadores');
+            document.getElementById('vista-ranking').classList.toggle('hidden', tab !== 'ranking');
+            
             document.getElementById('btn-tab-mapa').classList.toggle('active', tab === 'mapa');
             document.getElementById('btn-tab-tostadores').classList.toggle('active', tab === 'tostadores');
+            document.getElementById('btn-tab-ranking').classList.toggle('active', tab === 'ranking');
             
             if (tab === 'mapa' && mapaCofiteca) {
                 setTimeout(() => mapaCofiteca.invalidateSize(), 200);
             }
-            
             if (tab === 'tostadores' && !tostadoresRenderizados) {
                 window.cofiRenderizarTostadores();
                 tostadoresRenderizados = true;
+            }
+            if (tab === 'ranking' && !rankingIniciado) {
+                initMapaRanking();
+                window.cofiActualizarRankingCiudades();
+                window.cofiFiltrarRanking();
+                rankingIniciado = true;
+            } else if (tab === 'ranking' && mapaRanking) {
+                setTimeout(() => mapaRanking.invalidateSize(), 200);
             }
         };
 
@@ -251,22 +291,17 @@
             return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
 
+        // ==========================================
+        // MAPA GENERAL
+        // ==========================================
         function initMapa() {
             mapaCofiteca = L.map('cofiteca-map', { maxBoundsViscosity: 1.0, minZoom: 4 }).setView([-38.41, -63.61], 4);
-            
             mapaCofiteca.on('zoomend', () => {
                 const mapEl = document.getElementById('cofiteca-map');
                 if(mapEl) mapEl.classList.toggle('show-labels', mapaCofiteca.getZoom() >= 15);
             });
-
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-              attribution: 'Tiles &copy; Esri',
-              maxZoom: 16
-            }).addTo(mapaCofiteca);
-
-            markerCluster = L.markerClusterGroup({
-                maxClusterRadius: 40, disableClusteringAtZoom: 14, spiderfyOnMaxZoom: true, showCoverageOnHover: false, chunkedLoading: true
-            }).addTo(mapaCofiteca);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 16 }).addTo(mapaCofiteca);
+            markerCluster = L.markerClusterGroup({ maxClusterRadius: 40, disableClusteringAtZoom: 14, spiderfyOnMaxZoom: true, showCoverageOnHover: false, chunkedLoading: true }).addTo(mapaCofiteca);
         }
 
         function dibujarMapa() {
@@ -307,9 +342,7 @@
             let lista = datos;
             
             if (origen) {
-                lista = datos.map(c => ({ ...c, dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) }))
-                             .sort((a, b) => a.dist - b.dist)
-                             .slice(0, 30); 
+                lista = datos.map(c => ({ ...c, dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) })).sort((a, b) => a.dist - b.dist).slice(0, 30); 
             } else {
                 lista = datos.slice(0, 60); 
             }
@@ -318,17 +351,12 @@
                 let txtDist = "";
                 if (origen && c.dist !== undefined) {
                     const cuadras = Math.round(c.dist * 10);
-                    txtDist = cuadras === 0 
-                      ? `<br><b style="color:#8b4513;">📍 ¡A menos de 1 cuadra!</b>` 
-                      : `<br><b style="color:#8b4513;">📍 A ${cuadras} cuadra${cuadras !== 1 ? 's' : ''}</b>`;
+                    txtDist = cuadras === 0 ? `<br><b style="color:#8b4513;">📍 ¡A menos de 1 cuadra!</b>` : `<br><b style="color:#8b4513;">📍 A ${cuadras} cuadra${cuadras !== 1 ? 's' : ''}</b>`;
                 }
                 const div = document.createElement('div');
                 div.className = 'cafe-card';
                 div.innerHTML = `
-                    <div>
-                        <h3>${esc(c.nombre)}</h3>
-                        <p>${esc(c.ubicacion)} • <b>${esc(c.ciudad)}</b>${txtDist}</p>
-                    </div>
+                    <div><h3>${esc(c.nombre)}</h3><p>${esc(c.ubicacion)} • <b>${esc(c.ciudad)}</b>${txtDist}</p></div>
                     <a href="${esc(c.instagram)}" target="_blank" rel="noopener noreferrer">Ver Instagram</a>
                 `;
                 frag.appendChild(div);
@@ -352,9 +380,7 @@
                 zonas = [...new Set(baseDatos.filter(c => c.ciudad === ciudadFiltro).map(c => c.zona))];
             }
             zonas = zonas.filter(z => z && z !== "-" && z !== "Sin Zona").sort();
-            
-            document.getElementById('select-zona').innerHTML = `<option value="Todas">Zonas / Barrios</option>` + 
-                zonas.map(z => `<option value="${esc(z)}">${esc(z)}</option>`).join('');
+            document.getElementById('select-zona').innerHTML = `<option value="Todas">Zonas / Barrios</option>` + zonas.map(z => `<option value="${esc(z)}">${esc(z)}</option>`).join('');
         };
 
         let debounceFiltro = null;
@@ -366,7 +392,6 @@
                     markerOrigen = null;
                     document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas.`;
                 }
-                
                 const ciu = document.getElementById('select-ciudad').value;
                 const zon = document.getElementById('select-zona').value;
                 const txt = norm(document.getElementById('input-busqueda').value).trim();
@@ -376,12 +401,93 @@
                     (zon === "Todas" || c.zona === zon) &&
                     (!txt || norm(c.nombre).includes(txt) || norm(c.ubicacion).includes(txt))
                 );
-                
                 renderizarResultados(filtrados);
                 dibujarMapa();
             }, 150);
         };
 
+        // ==========================================
+        // MÓDULO RANKING (THE BEST COFFEE SHOPS)
+        // ==========================================
+        function getRankingColor(rank) {
+            if (!rank || isNaN(rank)) return '#34495e';
+            if (rank <= 3) return '#D4AF37'; 
+            if (rank <= 10) return '#E86A33'; 
+            if (rank <= 20) return '#009FBD';
+            if (rank <= 30) return '#8e44ad';
+            if (rank <= 40) return '#27ae60';
+            if (rank <= 50) return '#f39c12';
+            if (rank <= 60) return '#d35400';
+            if (rank <= 70) return '#c0392b';
+            if (rank <= 80) return '#16a085';
+            if (rank <= 90) return '#7f8c8d';
+            return '#2c3e50'; 
+        }
+
+        function initMapaRanking() {
+            const mapContainer = document.getElementById('ranking-map');
+            if (mapContainer && mapContainer._leaflet_id) return;
+
+            mapaRanking = L.map('ranking-map', { maxBoundsViscosity: 1.0, minZoom: 2 }).setView([-38.41, -63.61], 4);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 16 }).addTo(mapaRanking);
+            markerClusterRanking = L.markerClusterGroup({ maxClusterRadius: 35, disableClusteringAtZoom: 12, spiderfyOnMaxZoom: true }).addTo(mapaRanking);
+        }
+
+        window.cofiActualizarRankingCiudades = function() {
+            const tipo = document.getElementById('select-ranking-tipo').value;
+            const data = rankingDatos[tipo] || [];
+            const ciudades = [...new Set(data.map(c => c.ciudad))].sort();
+            document.getElementById('select-ranking-ciudad').innerHTML = `<option value="Todas">Todas las Ciudades</option>` + ciudades.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+        };
+
+        window.cofiFiltrarRanking = function() {
+            if (!markerClusterRanking) return;
+            const tipo = document.getElementById('select-ranking-tipo').value;
+            const ciudad = document.getElementById('select-ranking-ciudad').value;
+            const data = rankingDatos[tipo] || [];
+            
+            const filtrados = data.filter(c => ciudad === 'Todas' || c.ciudad === ciudad);
+            
+            const markers = filtrados.map(c => {
+                const color = getRankingColor(c.rank);
+                const markerHtml = `<div style="background-color: ${color}; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 2px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.3); font-size: 13px; font-family: 'Inter', sans-serif;">${c.rank}</div>`;
+                const icon = L.divIcon({ html: markerHtml, className: 'custom-ranking-icon', iconSize: [28, 28], iconAnchor: [14, 14] });
+                
+                return L.marker([c.lat, c.lon], { icon })
+                .bindPopup(`<div style="text-align:center; font-family:'Inter', sans-serif;"><span class="rank-badge" style="background:${color};">#${c.rank}</span><br><b>${esc(c.nombre)}</b><br><small>${esc(c.ubicacion)} • ${esc(c.ciudad)}</small><br><a href="${esc(c.ig)}" target="_blank" style="display:inline-block; margin-top:5px; background:#8b4513; color:white; padding:5px 10px; border-radius:5px; font-size:0.8rem; text-decoration:none;">Instagram</a></div>`);
+            });
+
+            markerClusterRanking.clearLayers();
+            markerClusterRanking.addLayers(markers);
+
+            if (filtrados.length > 0) {
+                let lat = 0, lon = 0;
+                filtrados.forEach(c => { lat += c.lat; lon += c.lon; });
+                mapaRanking.setView([lat / filtrados.length, lon / filtrados.length], ciudad === "Todas" ? (tipo === 'mun' ? 2 : 4) : 12);
+            }
+
+            // Renderizar grilla
+            const contenedor = document.getElementById('ranking-resultados');
+            const frag = document.createDocumentFragment();
+            filtrados.forEach(c => {
+                const color = getRankingColor(c.rank);
+                const div = document.createElement('div');
+                div.className = 'cafe-card';
+                div.innerHTML = `
+                    <div>
+                        <h3><span class="rank-badge" style="background:${color};">#${c.rank}</span> ${esc(c.nombre)}</h3>
+                        <p>${esc(c.ubicacion)} • <b>${esc(c.ciudad)}</b></p>
+                    </div>
+                    <a href="${esc(c.ig)}" target="_blank" rel="noopener noreferrer">Ver Instagram</a>
+                `;
+                frag.appendChild(div);
+            });
+            contenedor.replaceChildren(frag);
+        };
+
+        // ==========================================
+        // MÓDULO TOSTADORES
+        // ==========================================
         window.cofiRenderizarTostadores = function() {
             const ciudad = document.getElementById('select-ciudad-tostadores').value;
             const filtrados = tostadoresDatos.filter(t => ciudad === 'Todas' || t.ciudad === ciudad);
@@ -418,11 +524,12 @@
             contenedor.replaceChildren(frag);
         };
 
+        // ==========================================
+        // GPS Y REPORTES
+        // ==========================================
         function cofiProcesarOrigen(lat, lon, label) {
             if (markerOrigen) mapaCofiteca.removeLayer(markerOrigen);
-            markerOrigen = L.circleMarker([lat, lon], { radius: 8, color: "#059669", fillColor: "#fff", weight: 3, fillOpacity: 1 })
-              .addTo(mapaCofiteca).bindPopup(label).openPopup();
-            
+            markerOrigen = L.circleMarker([lat, lon], { radius: 8, color: "#059669", fillColor: "#fff", weight: 3, fillOpacity: 1 }).addTo(mapaCofiteca).bindPopup(label).openPopup();
             mapaCofiteca.setView([lat, lon], 14);
             renderizarResultados(baseDatos, { lat, lon });
         }
@@ -541,30 +648,18 @@
         window.cofiEnviarReporteEmail = async function(datos) {
             try {
                 const URL_DESTINO = '/api/reporte'; 
-                
                 await fetch(URL_DESTINO + '?t=' + Date.now(), { 
-                    method: 'POST', 
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
-                    body: new URLSearchParams(datos) 
+                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(datos) 
                 });
-                
-                Swal.fire({ 
-                    title: '¡Enviado!', 
-                    text: 'Gracias por ayudar a mejorar la comunidad.', 
-                    icon: 'success', 
-                    customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } 
-                }); 
+                Swal.fire({ title: '¡Enviado!', text: 'Gracias por ayudar a mejorar la comunidad.', icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } }); 
             } catch (error) { 
-                Swal.fire({ 
-                    title: 'Error', 
-                    text: 'Revisá tu conexión, el servidor no pudo procesarlo.', 
-                    icon: 'error', 
-                    customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } 
-                }); 
+                Swal.fire({ title: 'Error', text: 'Revisá tu conexión, el servidor no pudo procesarlo.', icon: 'error', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } }); 
             }
         };
 
+        // ==========================================
+        // CARGA Y CACHÉ
+        // ==========================================
         function animarContadores(cafesTotal, tostadoresTotal) {
             const cCafes = document.getElementById('stat-cafes');
             const cTostadores = document.getElementById('stat-tostadores');
@@ -620,8 +715,29 @@
             }
         }
 
+        function parseRankingData(rawData) {
+            let currentRank = 999;
+            return rawData.map(f => {
+                const rawRank = (f.RANKING || f.RANK || "").toString().trim();
+                if (rawRank !== "") currentRank = parseInt(rawRank, 10);
+                
+                const lat = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
+                const lon = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
+                
+                return {
+                    rank: currentRank,
+                    nombre: (f.CAFETERIA || f.CAFE || '').trim(),
+                    ubicacion: f.UBICACION || f.DIRECCION || "-",
+                    ig: asegurarProtocolo(f.IG || f.INSTAGRAM || "#"),
+                    ciudad: (f.CUIDAD || f.CIUDAD || 'Desconocida').trim(),
+                    lat: lat,
+                    lon: lon
+                };
+            }).filter(item => item.nombre && !isNaN(item.lat) && !isNaN(item.lon));
+        }
+
         async function cargarBaseDatos() {
-            const CACHE_KEY = 'cofi_data_cache_v3';
+            const CACHE_KEY = 'cofi_data_cache_v4';
             const CACHE_TTL = 15 * 60 * 1000; 
             
             try {
@@ -631,6 +747,7 @@
                     if (Date.now() - cacheData.time < CACHE_TTL && cacheData.data.length > 0) {
                         baseDatos = cacheData.data;
                         tostadoresDatos = cacheData.tostadores || [];
+                        rankingDatos = cacheData.ranking || { arg: [], sud: [], mun: [] };
                         
                         encenderInterfaz(baseDatos, tostadoresDatos);
                         return; 
@@ -652,7 +769,7 @@
                     })
                 );
 
-                const tostadoresFetchPromise = new Promise((resolve, reject) => {
+                const tostadoresPromise = new Promise((resolve, reject) => {
                     Papa.parse(urlSheet(TOSTADORES_GID), {
                         download: true, header: true, skipEmptyLines: true,
                         transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
@@ -661,9 +778,16 @@
                     });
                 });
 
-                const [mapResults, tostadoresDataRaw] = await Promise.all([
+                const rankArgPromise = new Promise((resolve, reject) => { Papa.parse(urlSheet(RANKING_GIDS.arg), { download: true, header: true, skipEmptyLines: true, transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''), complete: res => resolve(res.data), error: reject }); });
+                const rankSudPromise = new Promise((resolve, reject) => { Papa.parse(urlSheet(RANKING_GIDS.sud), { download: true, header: true, skipEmptyLines: true, transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''), complete: res => resolve(res.data), error: reject }); });
+                const rankMunPromise = new Promise((resolve, reject) => { Papa.parse(urlSheet(RANKING_GIDS.mun), { download: true, header: true, skipEmptyLines: true, transformHeader: h => h.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''), complete: res => resolve(res.data), error: reject }); });
+
+                const [mapResults, tostadoresDataRaw, rankArgRaw, rankSudRaw, rankMunRaw] = await Promise.all([
                     Promise.allSettled(mapFetchPromises),
-                    tostadoresFetchPromise.catch(() => [])
+                    tostadoresPromise.catch(() => []),
+                    rankArgPromise.catch(() => []),
+                    rankSudPromise.catch(() => []),
+                    rankMunPromise.catch(() => [])
                 ]);
 
                 let tempData = [];
@@ -692,12 +816,18 @@
                     foto: asegurarProtocolo(f.IMAGENES || f.IMAGEN || f.FOTO || f.FOTOS || "#") 
                 })).filter(t => t.nombre);
 
+                rankingDatos = {
+                    arg: parseRankingData(rankArgRaw),
+                    sud: parseRankingData(rankSudRaw),
+                    mun: parseRankingData(rankMunRaw)
+                };
+
                 if (tempData.length > 0) {
                     tempData.sort((a, b) => a.nombre.localeCompare(b.nombre));
                     baseDatos = tempData;
                     
                     try {
-                        localStorage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), data: baseDatos, tostadores: tostadoresDatos }));
+                        localStorage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), data: baseDatos, tostadores: tostadoresDatos, ranking: rankingDatos }));
                     } catch(e) { console.warn("No se pudo guardar la caché"); }
 
                     encenderInterfaz(baseDatos, tostadoresDatos);
