@@ -342,7 +342,7 @@
             let lista = datos;
             
             if (origen) {
-                lista = datos.map(c => ({ ...c, dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) })).sort((a, b) => a.dist - b.dist).slice(0, 30); 
+                lista = datos.map(c => ({ ...c, dist: calcularD(origen.lat, lon, c.lat, c.lon) })).sort((a, b) => a.dist - b.dist).slice(0, 30); 
             } else {
                 lista = datos.slice(0, 60); 
             }
@@ -436,17 +436,21 @@
         window.cofiActualizarRankingCiudades = function() {
             const tipo = document.getElementById('select-ranking-tipo').value;
             const data = rankingDatos[tipo] || [];
-            const ciudades = [...new Set(data.map(c => c.ciudad))].sort();
-            document.getElementById('select-ranking-ciudad').innerHTML = `<option value="Todas">Todas las Ciudades</option>` + ciudades.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+            
+            // Usamos 'lugar' que ahora contiene País o Ciudad dependiendo del ranking
+            const lugares = [...new Set(data.map(c => c.lugar))].sort();
+            
+            const textoFiltro = tipo === 'arg' ? "Todas las Ciudades" : "Todos los Países";
+            document.getElementById('select-ranking-ciudad').innerHTML = `<option value="Todas">${textoFiltro}</option>` + lugares.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
         };
 
         window.cofiFiltrarRanking = function() {
             if (!markerClusterRanking) return;
             const tipo = document.getElementById('select-ranking-tipo').value;
-            const ciudad = document.getElementById('select-ranking-ciudad').value;
+            const lugarSeleccionado = document.getElementById('select-ranking-ciudad').value;
             const data = rankingDatos[tipo] || [];
             
-            const filtrados = data.filter(c => ciudad === 'Todas' || c.ciudad === ciudad);
+            const filtrados = data.filter(c => lugarSeleccionado === 'Todas' || c.lugar === lugarSeleccionado);
             
             const markers = filtrados.map(c => {
                 const color = getRankingColor(c.rank);
@@ -454,7 +458,7 @@
                 const icon = L.divIcon({ html: markerHtml, className: 'custom-ranking-icon', iconSize: [28, 28], iconAnchor: [14, 14] });
                 
                 return L.marker([c.lat, c.lon], { icon })
-                .bindPopup(`<div style="text-align:center; font-family:'Inter', sans-serif;"><span class="rank-badge" style="background:${color};">#${c.rank}</span><br><b>${esc(c.nombre)}</b><br><small>${esc(c.ubicacion)} • ${esc(c.ciudad)}</small><br><a href="${esc(c.ig)}" target="_blank" style="display:inline-block; margin-top:5px; background:#8b4513; color:white; padding:5px 10px; border-radius:5px; font-size:0.8rem; text-decoration:none;">Instagram</a></div>`);
+                .bindPopup(`<div style="text-align:center; font-family:'Inter', sans-serif;"><span class="rank-badge" style="background:${color};">#${c.rank}</span><br><b>${esc(c.nombre)}</b><br><small>${esc(c.ubicacion)} • ${esc(c.lugar)}</small><br><a href="${esc(c.ig)}" target="_blank" style="display:inline-block; margin-top:5px; background:#8b4513; color:white; padding:5px 10px; border-radius:5px; font-size:0.8rem; text-decoration:none;">Instagram</a></div>`);
             });
 
             markerClusterRanking.clearLayers();
@@ -463,7 +467,16 @@
             if (filtrados.length > 0) {
                 let lat = 0, lon = 0;
                 filtrados.forEach(c => { lat += c.lat; lon += c.lon; });
-                mapaRanking.setView([lat / filtrados.length, lon / filtrados.length], ciudad === "Todas" ? (tipo === 'mun' ? 2 : 4) : 12);
+                
+                // Zoom dinámico: si se filtra por país (y no es Argentina) damos un zoom más alejado (5)
+                let zoomNivel = 12; 
+                if (lugarSeleccionado === "Todas") {
+                    zoomNivel = tipo === 'mun' ? 2 : 4;
+                } else if (tipo !== 'arg') {
+                    zoomNivel = 5; 
+                }
+
+                mapaRanking.setView([lat / filtrados.length, lon / filtrados.length], zoomNivel);
             }
 
             // Renderizar grilla
@@ -476,7 +489,7 @@
                 div.innerHTML = `
                     <div>
                         <h3><span class="rank-badge" style="background:${color};">#${c.rank}</span> ${esc(c.nombre)}</h3>
-                        <p>${esc(c.ubicacion)} • <b>${esc(c.ciudad)}</b></p>
+                        <p>${esc(c.ubicacion)} • <b>${esc(c.lugar)}</b></p>
                     </div>
                     <a href="${esc(c.ig)}" target="_blank" rel="noopener noreferrer">Ver Instagram</a>
                 `;
@@ -715,7 +728,7 @@
             }
         }
 
-        function parseRankingData(rawData) {
+        function parseRankingData(rawData, tipo) {
             let currentRank = 999;
             return rawData.map(f => {
                 const rawRank = (f.RANKING || f.RANK || "").toString().trim();
@@ -724,12 +737,17 @@
                 const lat = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
                 const lon = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
                 
+                // Priorizar País para Sudamérica/Mundial, Ciudad para Argentina
+                const lugar = tipo === 'arg' 
+                    ? (f.CUIDAD || f.CIUDAD || 'Desconocida').trim() 
+                    : (f.PAIS || f.CUIDAD || f.CIUDAD || 'Desconocido').trim();
+                
                 return {
                     rank: currentRank,
                     nombre: (f.CAFETERIA || f.CAFE || '').trim(),
                     ubicacion: f.UBICACION || f.DIRECCION || "-",
                     ig: asegurarProtocolo(f.IG || f.INSTAGRAM || "#"),
-                    ciudad: (f.CUIDAD || f.CIUDAD || 'Desconocida').trim(),
+                    lugar: lugar, 
                     lat: lat,
                     lon: lon
                 };
@@ -817,9 +835,9 @@
                 })).filter(t => t.nombre);
 
                 rankingDatos = {
-                    arg: parseRankingData(rankArgRaw),
-                    sud: parseRankingData(rankSudRaw),
-                    mun: parseRankingData(rankMunRaw)
+                    arg: parseRankingData(rankArgRaw, 'arg'),
+                    sud: parseRankingData(rankSudRaw, 'sud'),
+                    mun: parseRankingData(rankMunRaw, 'mun')
                 };
 
                 if (tempData.length > 0) {
