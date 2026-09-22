@@ -50,7 +50,6 @@
     .buscador-ui { padding: 1.5rem 2rem 2rem; flex-grow: 1; display: flex; flex-direction: column; }
     @media (max-width: 768px) { .data-header { padding: 1.5rem 1rem; } .buscador-ui { padding: 1.5rem 1rem; } }
     
-    /* Controles de Búsqueda Mejorados para Móvil */
     .search-controls { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 1rem; margin-bottom: 1rem; }
     .search-controls.cols-2 { grid-template-columns: 1fr 1fr; }
     .search-controls.cols-1 { grid-template-columns: 1fr; margin-bottom: 2rem; }
@@ -262,45 +261,58 @@
         window.cofiActualizarMetricas = function() {
             const isRanking = document.getElementById('btn-tab-ranking').classList.contains('active');
             const cajaTost = document.getElementById('caja-tostadores');
+            const cajaProv = document.getElementById('caja-provincias');
+            const cajaCiu = document.getElementById('caja-ciudades');
             const lblProv = document.getElementById('label-provincias');
             const lblCiu = document.getElementById('label-ciudades');
 
+            let cafesCount = 0, tostCount = 0, provCount = 0, ciuCount = 0;
+
             if (isRanking) {
-                cajaTost.style.display = 'none'; // Ocultamos tostadores en Ranking
                 const tipo = document.getElementById('select-ranking-tipo').value;
                 const data = rankingDatos[tipo] || [];
 
-                document.getElementById('stat-cafes').innerText = data.length > 0 ? data.length : 100;
+                cafesCount = data.length > 0 ? data.length : 100;
+                document.getElementById('stat-cafes').innerText = cafesCount;
 
                 if (tipo === 'arg') {
                     lblProv.innerText = "Provincias";
-                    const provs = new Set(data.map(d => d.provincia).filter(p => p !== 'Desconocida'));
-                    document.getElementById('stat-provincias').innerText = provs.size > 0 ? provs.size : "-";
+                    const provs = new Set(data.map(d => d.provincia).filter(p => p !== 'Desconocida' && p !== ''));
+                    provCount = provs.size;
 
                     lblCiu.innerText = "Ciudades";
-                    const cius = new Set(data.map(d => d.ciudad).filter(c => c !== 'Desconocida'));
-                    document.getElementById('stat-ciudades').innerText = cius.size > 0 ? cius.size : "-";
+                    const cius = new Set(data.map(d => d.ciudad).filter(c => c !== 'Desconocida' && c !== ''));
+                    ciuCount = cius.size;
                 } else {
                     lblProv.innerText = "Países";
-                    const paises = new Set(data.map(d => d.pais).filter(p => p !== 'Desconocido'));
-                    document.getElementById('stat-provincias').innerText = paises.size > 0 ? paises.size : "-";
+                    const paises = new Set(data.map(d => d.pais).filter(p => p !== 'Desconocido' && p !== ''));
+                    provCount = paises.size;
 
                     lblCiu.innerText = "Ciudades";
-                    const cius = new Set(data.map(d => d.ciudad).filter(c => c !== 'Desconocida'));
-                    document.getElementById('stat-ciudades').innerText = cius.size > 0 ? cius.size : "-";
+                    const cius = new Set(data.map(d => d.ciudad).filter(c => c !== 'Desconocida' && c !== ''));
+                    ciuCount = cius.size;
                 }
             } else {
-                cajaTost.style.display = ''; // Volvemos a mostrar tostadores
                 lblProv.innerText = "Provincias";
                 lblCiu.innerText = "Ciudades";
 
-                document.getElementById('stat-cafes').innerText = baseDatos.length;
-                document.getElementById('stat-tostadores').innerText = tostadoresDatos.length;
-                document.getElementById('stat-provincias').innerText = 24; 
+                cafesCount = baseDatos.length;
+                tostCount = tostadoresDatos.length;
+                provCount = 24; 
                 
                 const cius = new Set(baseDatos.map(d => d.ciudad));
-                document.getElementById('stat-ciudades').innerText = cius.size > 0 ? cius.size : "-";
+                ciuCount = cius.size;
+
+                document.getElementById('stat-cafes').innerText = cafesCount;
+                document.getElementById('stat-tostadores').innerText = tostCount;
             }
+
+            document.getElementById('stat-provincias').innerText = provCount;
+            document.getElementById('stat-ciudades').innerText = ciuCount;
+
+            cajaProv.style.display = provCount > 0 ? '' : 'none';
+            cajaCiu.style.display = ciuCount > 0 ? '' : 'none';
+            cajaTost.style.display = (!isRanking && tostCount > 0) ? '' : 'none';
         };
 
         window.cofiSwitchTab = function(tab) {
