@@ -300,7 +300,8 @@
                 tostCount = tostadoresDatos.length;
                 provCount = 24; 
                 
-                const cius = new Set(baseDatos.map(d => d.ciudad));
+                // Acá usamos ciudad_real en vez de ciudad para que cuente las >100 ciudades
+                const cius = new Set(baseDatos.map(d => d.ciudad_real).filter(c => c !== ''));
                 ciuCount = cius.size;
 
                 document.getElementById('stat-cafes').innerText = cafesCount;
@@ -423,8 +424,10 @@
                 }
                 const div = document.createElement('div');
                 div.className = 'cafe-card';
+                // Mostramos la ciudad real en la tarjetita
+                const mostrarCiudad = c.ciudad_real !== '' ? c.ciudad_real : c.ciudad;
                 div.innerHTML = `
-                    <div><h3>${esc(c.nombre)}</h3><p>${esc(c.ubicacion)} • <b>${esc(c.ciudad)}</b>${txtDist}</p></div>
+                    <div><h3>${esc(c.nombre)}</h3><p>${esc(c.ubicacion)} • <b>${esc(mostrarCiudad)}</b>${txtDist}</p></div>
                     <a href="${esc(c.instagram)}" target="_blank" rel="noopener noreferrer">Ver Instagram</a>
                 `;
                 frag.appendChild(div);
@@ -780,7 +783,7 @@
         }
 
         async function cargarBaseDatos() {
-            const CACHE_KEY = 'cofi_data_cache_v5';
+            const CACHE_KEY = 'cofi_data_cache_v6'; // CACHÉ ACTUALIZADA
             const CACHE_TTL = 15 * 60 * 1000; 
             
             try {
@@ -841,8 +844,14 @@
                             const latClean = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
                             const lonClean = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
                             if (isNaN(latClean) || isNaN(lonClean)) return;
+                            
+                            // ACA ESTA LA CLAVE: Capturamos la ciudad real para la métrica
+                            const ciudadReal = (f.CUIDAD || f.CIUDAD || f.LOCALIDAD || '').trim();
+
                             tempData.push({
-                                nombre: f.CAFE.trim(), ciudad: r.value.ciu,
+                                nombre: f.CAFE.trim(), 
+                                ciudad: r.value.ciu, // La solapa, para el menú 
+                                ciudad_real: ciudadReal !== '' ? ciudadReal : r.value.ciu, // La ciudad real para contar
                                 zona: f.ZONA || f.BARRIO || "Sin Zona",
                                 ubicacion: f.UBICACION || "-", instagram: asegurarProtocolo(f.INSTAGRAM || "#"),
                                 lat: latClean, lon: lonClean
