@@ -51,9 +51,20 @@
     .buscador-ui { padding: 1.5rem 2rem 2rem; flex-grow: 1; display: flex; flex-direction: column; }
     @media (max-width: 768px) { .data-header { padding: 1.5rem 1rem; } .buscador-ui { padding: 1.5rem 1rem; } }
     
+    /* Controles de Búsqueda Mejorados para Móvil */
     .search-controls { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 1rem; margin-bottom: 1rem; }
-    @media (max-width: 900px) { .search-controls { grid-template-columns: 1fr 1fr; } .search-controls input { grid-column: 1 / -1; } }
-    @media (max-width: 576px) { .search-controls { grid-template-columns: 1fr; } }
+    .search-controls.cols-2 { grid-template-columns: 1fr 1fr; }
+    .search-controls.cols-1 { grid-template-columns: 1fr; margin-bottom: 2rem; }
+    
+    @media (max-width: 900px) { 
+        .search-controls:not(.cols-2):not(.cols-1) { grid-template-columns: 1fr 1fr; } 
+        .search-controls:not(.cols-2):not(.cols-1) input { grid-column: 1 / -1; } 
+    }
+    @media (max-width: 576px) { 
+        /* Forzamos 1 sola columna para que no se aplaste nada en móvil */
+        .search-controls, .search-controls.cols-2 { grid-template-columns: 1fr; } 
+        .view-tab-btn { flex: 1 1 100%; padding: 12px; font-size: 0.85rem; }
+    }
     
     .search-buttons { display: flex; gap: 10px; margin-bottom: 1.5rem; }
     @media (max-width: 576px) { .search-buttons { flex-direction: column; } }
@@ -63,8 +74,27 @@
     .btn-primary-mad { flex: 1; background: #8b4513; color: white; border: 2px solid #8b4513; padding: 12px 20px; border-radius: 10px; font-family: 'Inter', sans-serif; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.95rem; text-decoration: none; text-align: center; }
     .btn-primary-mad:hover { background: #5c3d2e; border-color: #5c3d2e; }
 
-    .input-moderno { width: 100%; padding: 14px 16px; border: 1px solid #c4a77d; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 0.95rem; background: rgba(255,255,255,0.9); color: #2A1F18; outline: none; transition: border-color 0.2s; }
+    /* Estilos del select truncados para no romper el diseño */
+    .input-moderno { 
+        width: 100%; 
+        padding: 14px 16px; 
+        border: 1px solid #c4a77d; 
+        border-radius: 12px; 
+        font-family: 'Inter', sans-serif; 
+        font-size: 0.95rem; 
+        background: rgba(255,255,255,0.9); 
+        color: #2A1F18; 
+        outline: none; 
+        transition: border-color 0.2s;
+        text-overflow: ellipsis; 
+        white-space: nowrap; 
+        overflow: hidden; 
+    }
     .input-moderno:focus { border-color: #8b4513; box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.15); }
+    
+    @media (max-width: 576px) {
+        .input-moderno { padding: 12px 10px; font-size: 0.9rem; }
+    }
     
     .map-wrapper { width: 100%; height: 500px; border-radius: 12px; overflow: hidden; border: 1px solid #c4a77d; margin-bottom: 2rem; position: relative; z-index: 1;}
     @media (max-width: 768px) { .map-wrapper { height: 400px; } }
@@ -167,7 +197,7 @@
 
       <!-- VISTA 2: RANKING INTERNACIONAL -->
       <div class="buscador-ui hidden" id="vista-ranking">
-        <div class="search-controls" style="grid-template-columns: 1fr 1fr;">
+        <div class="search-controls cols-2">
           <select id="select-ranking-tipo" class="input-moderno" onchange="cofiActualizarRankingCiudades(); cofiFiltrarRanking()">
             <option value="arg">🇦🇷 Top 100 Argentina</option>
             <option value="sud">🌎 Top 100 Sudamérica</option>
@@ -183,7 +213,7 @@
 
       <!-- VISTA 3: TOSTADORES -->
       <div class="buscador-ui hidden" id="vista-tostadores">
-        <div class="search-controls" style="grid-template-columns: 1fr; margin-bottom: 2rem;">
+        <div class="search-controls cols-1">
             <select id="select-ciudad-tostadores" class="input-moderno" onchange="cofiRenderizarTostadores()"><option value="Todas">Todas las Ciudades</option></select>
         </div>
         <div id="lista-tostadores" class="tostadores-grid">
@@ -437,7 +467,6 @@
             const tipo = document.getElementById('select-ranking-tipo').value;
             const data = rankingDatos[tipo] || [];
             
-            // Usamos 'lugar' que ahora contiene País o Ciudad dependiendo del ranking
             const lugares = [...new Set(data.map(c => c.lugar))].sort();
             
             const textoFiltro = tipo === 'arg' ? "Todas las Ciudades" : "Todos los Países";
@@ -468,7 +497,6 @@
                 let lat = 0, lon = 0;
                 filtrados.forEach(c => { lat += c.lat; lon += c.lon; });
                 
-                // Zoom dinámico: si se filtra por país (y no es Argentina) damos un zoom más alejado (5)
                 let zoomNivel = 12; 
                 if (lugarSeleccionado === "Todas") {
                     zoomNivel = tipo === 'mun' ? 2 : 4;
@@ -479,7 +507,6 @@
                 mapaRanking.setView([lat / filtrados.length, lon / filtrados.length], zoomNivel);
             }
 
-            // Renderizar grilla
             const contenedor = document.getElementById('ranking-resultados');
             const frag = document.createDocumentFragment();
             filtrados.forEach(c => {
@@ -737,7 +764,6 @@
                 const lat = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
                 const lon = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
                 
-                // Priorizar País para Sudamérica/Mundial, Ciudad para Argentina
                 const lugar = tipo === 'arg' 
                     ? (f.CUIDAD || f.CIUDAD || 'Desconocida').trim() 
                     : (f.PAIS || f.CUIDAD || f.CIUDAD || 'Desconocido').trim();
