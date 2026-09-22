@@ -34,10 +34,9 @@
     .metrics-sidebar { padding: 2rem; display: flex; flex-direction: column; justify-content: flex-start; gap: 2.5rem; background: rgba(255,255,255, 0.6); border-radius: 16px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); }
     @media (max-width: 1024px) { .metrics-sidebar { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 1.5rem; } }
     
-    .metric-item { text-align: center; }
+    .metric-item { text-align: center; transition: all 0.3s ease; }
     @media (max-width: 768px) { .metric-item { flex: 1 1 40%; min-width: 120px; } }
     .metric-number { font-size: 3rem; font-weight: 700; color: #1a0f0a; line-height: 1; display: inline-block; font-family: 'Georgia', serif; }
-    .metric-symbol { font-size: 2rem; font-weight: 700; color: #c4a77d; font-family: 'Georgia', serif; }
     .metric-label { display: block; font-size: 0.85rem; color: #5c3d2e; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; font-weight: 700; }
 
     .buscador-main-panel { display: flex; flex-direction: column; background: rgba(255,255,255, 0.6); border-radius: 16px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); overflow: hidden; }
@@ -61,7 +60,6 @@
         .search-controls:not(.cols-2):not(.cols-1) input { grid-column: 1 / -1; } 
     }
     @media (max-width: 576px) { 
-        /* Forzamos 1 sola columna para que no se aplaste nada en móvil */
         .search-controls, .search-controls.cols-2 { grid-template-columns: 1fr; } 
         .view-tab-btn { flex: 1 1 100%; padding: 12px; font-size: 0.85rem; }
     }
@@ -74,27 +72,9 @@
     .btn-primary-mad { flex: 1; background: #8b4513; color: white; border: 2px solid #8b4513; padding: 12px 20px; border-radius: 10px; font-family: 'Inter', sans-serif; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.95rem; text-decoration: none; text-align: center; }
     .btn-primary-mad:hover { background: #5c3d2e; border-color: #5c3d2e; }
 
-    /* Estilos del select truncados para no romper el diseño */
-    .input-moderno { 
-        width: 100%; 
-        padding: 14px 16px; 
-        border: 1px solid #c4a77d; 
-        border-radius: 12px; 
-        font-family: 'Inter', sans-serif; 
-        font-size: 0.95rem; 
-        background: rgba(255,255,255,0.9); 
-        color: #2A1F18; 
-        outline: none; 
-        transition: border-color 0.2s;
-        text-overflow: ellipsis; 
-        white-space: nowrap; 
-        overflow: hidden; 
-    }
+    .input-moderno { width: 100%; padding: 14px 16px; border: 1px solid #c4a77d; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 0.95rem; background: rgba(255,255,255,0.9); color: #2A1F18; outline: none; transition: border-color 0.2s; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
     .input-moderno:focus { border-color: #8b4513; box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.15); }
-    
-    @media (max-width: 576px) {
-        .input-moderno { padding: 12px 10px; font-size: 0.9rem; }
-    }
+    @media (max-width: 576px) { .input-moderno { padding: 12px 10px; font-size: 0.9rem; } }
     
     .map-wrapper { width: 100%; height: 500px; border-radius: 12px; overflow: hidden; border: 1px solid #c4a77d; margin-bottom: 2rem; position: relative; z-index: 1;}
     @media (max-width: 768px) { .map-wrapper { height: 400px; } }
@@ -150,31 +130,31 @@
 
   <div class="data-real-container">
     <div class="metrics-sidebar">
-      <div class="metric-item">
-        <span class="metric-number" data-target="0" id="stat-cafes">0</span>
-        <span class="metric-label">Cafeterías Auditadas</span>
+      <div class="metric-item" id="caja-cafes">
+        <span class="metric-number" id="stat-cafes">-</span>
+        <span class="metric-label" id="label-cafes">Cafeterías</span>
       </div>
-      <div class="metric-item">
-        <span class="metric-number" data-target="0" id="stat-tostadores">0</span>
-        <span class="metric-label">Tostadores Mapeados</span>
+      <div class="metric-item" id="caja-tostadores">
+        <span class="metric-number" id="stat-tostadores">-</span>
+        <span class="metric-label" id="label-tostadores">Tostadores</span>
       </div>
-      <div class="metric-item">
-        <span class="metric-number" data-target="0" id="stat-provincias">0</span>
-        <span class="metric-label">Provincias Mapeadas</span>
+      <div class="metric-item" id="caja-provincias">
+        <span class="metric-number" id="stat-provincias">-</span>
+        <span class="metric-label" id="label-provincias">Provincias</span>
       </div>
-      <div class="metric-item">
-        <span class="metric-number" data-target="0" id="stat-ciudades">0</span>
-        <span class="metric-label">Ciudades Relevadas</span>
+      <div class="metric-item" id="caja-ciudades">
+        <span class="metric-number" id="stat-ciudades">-</span>
+        <span class="metric-label" id="label-ciudades">Ciudades</span>
       </div>
     </div>
 
     <div class="buscador-main-panel">
       <div class="data-header">
-        <p style="font-size: 1.25rem; font-weight: 800; margin: 0; color: #1a0f0a; font-family: 'Georgia', serif;">Base de Datos Nacional</p>
-        <p id="cofi-status" style="font-size: 0.9rem; color: #8b4513; margin: 5px 0 0 0; font-weight: bold;">Sincronizando con el servidor...</p>
+        <p style="font-size: 1.25rem; font-weight: 800; margin: 0; color: #1a0f0a; font-family: 'Georgia', serif;">Mapa Cofiteca</p>
+        <p id="cofi-status" style="display: none;"></p>
         
         <div class="view-tabs">
-            <button class="view-tab-btn active" onclick="cofiSwitchTab('mapa')" id="btn-tab-mapa">📍 Mapa General</button>
+            <button class="view-tab-btn active" onclick="cofiSwitchTab('mapa')" id="btn-tab-mapa">📍 Mapa Argentina</button>
             <button class="view-tab-btn" onclick="cofiSwitchTab('ranking')" id="btn-tab-ranking">🏆 The Best Coffee Shops</button>
             <button class="view-tab-btn" onclick="cofiSwitchTab('tostadores')" id="btn-tab-tostadores">☕ Tostadores</button>
         </div>
@@ -198,7 +178,7 @@
       <!-- VISTA 2: RANKING INTERNACIONAL -->
       <div class="buscador-ui hidden" id="vista-ranking">
         <div class="search-controls cols-2">
-          <select id="select-ranking-tipo" class="input-moderno" onchange="cofiActualizarRankingCiudades(); cofiFiltrarRanking()">
+          <select id="select-ranking-tipo" class="input-moderno" onchange="cofiActualizarRankingCiudades(); cofiFiltrarRanking(); cofiActualizarMetricas();">
             <option value="arg">🇦🇷 Top 100 Argentina</option>
             <option value="sud">🌎 Top 100 Sudamérica</option>
             <option value="mun">🌍 Top 100 Mundial</option>
@@ -277,8 +257,52 @@
         let rankingIniciado = false;
 
         // ==========================================
-        // FUNCIONES GENERALES
+        // FUNCIONES GENERALES Y MÉTRICAS DINÁMICAS
         // ==========================================
+        window.cofiActualizarMetricas = function() {
+            const isRanking = document.getElementById('btn-tab-ranking').classList.contains('active');
+            const cajaTost = document.getElementById('caja-tostadores');
+            const lblProv = document.getElementById('label-provincias');
+            const lblCiu = document.getElementById('label-ciudades');
+
+            if (isRanking) {
+                cajaTost.style.display = 'none'; // Ocultamos tostadores en Ranking
+                const tipo = document.getElementById('select-ranking-tipo').value;
+                const data = rankingDatos[tipo] || [];
+
+                document.getElementById('stat-cafes').innerText = data.length > 0 ? data.length : 100;
+
+                if (tipo === 'arg') {
+                    lblProv.innerText = "Provincias";
+                    const provs = new Set(data.map(d => d.provincia).filter(p => p !== 'Desconocida'));
+                    document.getElementById('stat-provincias').innerText = provs.size > 0 ? provs.size : "-";
+
+                    lblCiu.innerText = "Ciudades";
+                    const cius = new Set(data.map(d => d.ciudad).filter(c => c !== 'Desconocida'));
+                    document.getElementById('stat-ciudades').innerText = cius.size > 0 ? cius.size : "-";
+                } else {
+                    lblProv.innerText = "Países";
+                    const paises = new Set(data.map(d => d.pais).filter(p => p !== 'Desconocido'));
+                    document.getElementById('stat-provincias').innerText = paises.size > 0 ? paises.size : "-";
+
+                    lblCiu.innerText = "Ciudades";
+                    const cius = new Set(data.map(d => d.ciudad).filter(c => c !== 'Desconocida'));
+                    document.getElementById('stat-ciudades').innerText = cius.size > 0 ? cius.size : "-";
+                }
+            } else {
+                cajaTost.style.display = ''; // Volvemos a mostrar tostadores
+                lblProv.innerText = "Provincias";
+                lblCiu.innerText = "Ciudades";
+
+                document.getElementById('stat-cafes').innerText = baseDatos.length;
+                document.getElementById('stat-tostadores').innerText = tostadoresDatos.length;
+                document.getElementById('stat-provincias').innerText = 24; 
+                
+                const cius = new Set(baseDatos.map(d => d.ciudad));
+                document.getElementById('stat-ciudades').innerText = cius.size > 0 ? cius.size : "-";
+            }
+        };
+
         window.cofiSwitchTab = function(tab) {
             document.getElementById('vista-mapa').classList.toggle('hidden', tab !== 'mapa');
             document.getElementById('vista-tostadores').classList.toggle('hidden', tab !== 'tostadores');
@@ -288,6 +312,8 @@
             document.getElementById('btn-tab-tostadores').classList.toggle('active', tab === 'tostadores');
             document.getElementById('btn-tab-ranking').classList.toggle('active', tab === 'ranking');
             
+            cofiActualizarMetricas();
+
             if (tab === 'mapa' && mapaCofiteca) {
                 setTimeout(() => mapaCofiteca.invalidateSize(), 200);
             }
@@ -420,7 +446,6 @@
                 if (markerOrigen) {
                     mapaCofiteca.removeLayer(markerOrigen);
                     markerOrigen = null;
-                    document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas.`;
                 }
                 const ciu = document.getElementById('select-ciudad').value;
                 const zon = document.getElementById('select-zona').value;
@@ -576,14 +601,11 @@
 
         window.cofiUsarMiGPS = function() {
             if (!navigator.geolocation) return Swal.fire("Error", "Tu navegador no soporta GPS.", "error");
-            document.getElementById('cofi-status').innerText = "Conectando con GPS...";
             navigator.geolocation.getCurrentPosition(
                 p => { 
-                    document.getElementById('cofi-status').innerText = "Mostrando cafés cerca de tu ubicación actual."; 
                     cofiProcesarOrigen(p.coords.latitude, p.coords.longitude, "📍 Estás acá"); 
                 },
                 () => { 
-                    document.getElementById('cofi-status').innerText = `${baseDatos.length} cafeterías mapeadas.`;
                     Swal.fire("Aviso", "No pudimos obtener tu ubicación. Revisá los permisos.", "warning"); 
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
@@ -629,7 +651,6 @@
                                     btn.onmouseout = () => btn.style.borderColor = '#c4a77d';
                                     btn.onclick = () => { 
                                         Swal.close(); 
-                                        document.getElementById('cofi-status').innerText = `Lugares cerca de ${nombreStr}`; 
                                         cofiProcesarOrigen(parseFloat(item.lat), parseFloat(item.lon), nombreStr); 
                                     };
                                     resultsContainer.appendChild(btn);
@@ -700,52 +721,13 @@
         // ==========================================
         // CARGA Y CACHÉ
         // ==========================================
-        function animarContadores(cafesTotal, tostadoresTotal) {
-            const cCafes = document.getElementById('stat-cafes');
-            const cTostadores = document.getElementById('stat-tostadores');
-            const cProvincias = document.getElementById('stat-provincias');
-            const cCiudades = document.getElementById('stat-ciudades');
-            
-            if(cCafes) cCafes.setAttribute('data-target', cafesTotal);
-            if(cTostadores) cTostadores.setAttribute('data-target', tostadoresTotal);
-            if(cProvincias) cProvincias.setAttribute('data-target', 24);
-            if(cCiudades) cCiudades.setAttribute('data-target', 102);
-
-            const counters = document.querySelectorAll('.metric-number');
-            const counterObserver = new IntersectionObserver((entries) => {
-              entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                  const target = +entry.target.getAttribute('data-target');
-                  let current = 0;
-                  const updateCounter = () => {
-                    current += target / 30;
-                    if (current < target) {
-                      entry.target.innerText = Math.ceil(current);
-                      requestAnimationFrame(updateCounter);
-                    } else {
-                      entry.target.innerText = target;
-                    }
-                  };
-                  updateCounter();
-                  counterObserver.unobserve(entry.target);
-                }
-              });
-            }, { threshold: 0.3 });
-            counters.forEach(c => counterObserver.observe(c));
-        }
-
         function encenderInterfaz(datosMap, tostadoresMap) {
-            const totalCafes = datosMap.length;
-            const totalTostadores = tostadoresMap ? tostadoresMap.length : 0;
-            document.getElementById('cofi-status').innerText = `${totalCafes} cafeterías y tostadores mapeados.`;
-            
-            animarContadores(totalCafes, totalTostadores);
-
             const ciudades = [...new Set(datosMap.map(c => c.ciudad))].sort();
             document.getElementById('select-ciudad').innerHTML = `<option value="Todas">Región / Ciudad</option>` + 
                 ciudades.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
             
             window.cofiActualizarZonas();
+            cofiActualizarMetricas();
             initMapa();
             cofiFiltrar();
             
@@ -764,16 +746,21 @@
                 const lat = parseFloat((f.LAT || f.LATITUD || '').toString().replace(',', '.'));
                 const lon = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
                 
-                const lugar = tipo === 'arg' 
-                    ? (f.CUIDAD || f.CIUDAD || 'Desconocida').trim() 
-                    : (f.PAIS || f.CUIDAD || f.CIUDAD || 'Desconocido').trim();
+                const lugar_ciudad = (f.CUIDAD || f.CIUDAD || f.CITY || 'Desconocida').trim();
+                const lugar_pais = (f.PAIS || f.COUNTRY || 'Desconocido').trim();
+                const lugar_prov = (f.PROVINCIA || f.PROVINCE || f.REGION || 'Desconocida').trim();
+
+                const lugar_principal = tipo === 'arg' ? lugar_ciudad : lugar_pais;
                 
                 return {
                     rank: currentRank,
                     nombre: (f.CAFETERIA || f.CAFE || '').trim(),
                     ubicacion: f.UBICACION || f.DIRECCION || "-",
                     ig: asegurarProtocolo(f.IG || f.INSTAGRAM || "#"),
-                    lugar: lugar, 
+                    lugar: lugar_principal,
+                    ciudad: lugar_ciudad,
+                    pais: lugar_pais,
+                    provincia: lugar_prov,
                     lat: lat,
                     lon: lon
                 };
@@ -781,7 +768,7 @@
         }
 
         async function cargarBaseDatos() {
-            const CACHE_KEY = 'cofi_data_cache_v4';
+            const CACHE_KEY = 'cofi_data_cache_v5';
             const CACHE_TTL = 15 * 60 * 1000; 
             
             try {
@@ -875,12 +862,9 @@
                     } catch(e) { console.warn("No se pudo guardar la caché"); }
 
                     encenderInterfaz(baseDatos, tostadoresDatos);
-                } else {
-                    document.getElementById('cofi-status').innerText = 'Hubo un error al procesar las cafeterías.';
                 }
             } catch (err) {
                 console.error("Error global de carga:", err);
-                document.getElementById('cofi-status').innerText = 'Error al cargar los datos. Revisá la conexión.';
             }
         }
 
