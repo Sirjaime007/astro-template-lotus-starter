@@ -10,7 +10,7 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
 
   <script is:inline defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -22,116 +22,133 @@
   
   <style is:global>
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background-color: #f5f0e8; color: #2c1810; font-family: 'Inter', sans-serif; }
+    html, body { margin: 0; padding: 0; background-color: #f5f0e8; color: #1a0f0a; font-family: 'Inter', sans-serif; }
     
-    .nav-bar { padding: 1.5rem 2rem; display: flex; align-items: center; border-bottom: 1px solid rgba(196, 167, 125, 0.3); }
-    .btn-back { display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #8b4513; font-weight: 600; font-family: 'Inter', sans-serif; transition: 0.2s; }
-    .btn-back:hover { color: #5c3d2e; transform: translateX(-5px); }
+    /* NAV BAR SUTIL Y PROFESIONAL */
+    .nav-bar { padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(196, 167, 125, 0.3); background: rgba(245, 240, 232, 0.9); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000;}
+    .btn-back { display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #1a0f0a; font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; transition: 0.2s; }
+    .btn-back:hover { color: #8b4513; transform: translateX(-5px); }
+    .nav-actions { display: flex; gap: 15px; }
+    .nav-action-link { font-size: 0.85rem; font-weight: 600; color: #5c3d2e; text-decoration: none; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.05em;}
+    .nav-action-link:hover { color: #1a0f0a; }
     
-    .data-real-container { margin: 1rem auto 4rem auto; max-width: 1200px; padding: 0 1rem; display: grid; grid-template-columns: 280px 1fr; gap: 1rem; }
+    .data-real-container { margin: 2rem auto 4rem auto; max-width: 1200px; padding: 0 1.5rem; display: grid; grid-template-columns: 260px 1fr; gap: 1.5rem; }
     @media (max-width: 1024px) { .data-real-container { grid-template-columns: 1fr; } }
 
-    .metrics-sidebar { padding: 2rem; display: flex; flex-direction: column; justify-content: flex-start; gap: 2.5rem; background: rgba(255,255,255, 0.6); border-radius: 16px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); }
-    @media (max-width: 1024px) { .metrics-sidebar { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 1.5rem; } }
+    /* SIDEBAR MÉTRICAS ESTILO DASHBOARD */
+    .metrics-sidebar { padding: 2rem; display: flex; flex-direction: column; justify-content: flex-start; gap: 2.5rem; background: rgba(255,255,255, 0.8); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid rgba(196, 167, 125, 0.3); box-shadow: 0 15px 40px rgba(44, 24, 16, 0.04); }
+    @media (max-width: 1024px) { .metrics-sidebar { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 2rem; padding: 1.5rem; } }
     
-    .metric-item { text-align: center; transition: all 0.3s ease; }
-    @media (max-width: 768px) { .metric-item { flex: 1 1 40%; min-width: 120px; } }
-    .metric-number { font-size: 3rem; font-weight: 700; color: #1a0f0a; line-height: 1; display: inline-block; font-family: 'Georgia', serif; }
-    .metric-label { display: block; font-size: 0.85rem; color: #5c3d2e; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; font-weight: 700; }
+    .metric-item { text-align: left; transition: all 0.3s ease; border-left: 3px solid #c4a77d; padding-left: 1rem;}
+    @media (max-width: 1024px) { .metric-item { text-align: center; border-left: none; border-bottom: 3px solid #c4a77d; padding-left: 0; padding-bottom: 0.5rem; flex: 1 1 20%; min-width: 120px; } }
+    .metric-number { font-size: 2.5rem; font-weight: 800; color: #1a0f0a; line-height: 1; display: block; font-family: 'Inter', sans-serif; letter-spacing: -0.03em;}
+    .metric-label { display: block; font-size: 0.75rem; color: #5c3d2e; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.5rem; font-weight: 700; }
 
-    .buscador-main-panel { display: flex; flex-direction: column; background: rgba(255,255,255, 0.6); border-radius: 16px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); overflow: hidden; }
+    /* PANEL PRINCIPAL */
+    .buscador-main-panel { display: flex; flex-direction: column; background: rgba(255,255,255, 0.8); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid rgba(196, 167, 125, 0.3); box-shadow: 0 15px 40px rgba(44, 24, 16, 0.04); overflow: hidden; }
     
-    .data-header { padding: 2rem; border-bottom: 1px solid rgba(196, 167, 125, 0.3); text-align: center; }
-    .view-tabs { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap;}
-    .view-tab-btn { background: transparent; border: 2px solid transparent; color: #5c3d2e; font-size: 0.9rem; font-weight: 700; cursor: pointer; padding: 10px 18px; border-radius: 12px; transition: 0.2s; font-family: 'Inter', sans-serif; }
-    .view-tab-btn:hover { background: rgba(196, 167, 125, 0.1); }
-    .view-tab-btn.active { background: #8b4513; color: white; border-color: #8b4513; box-shadow: 0 4px 10px rgba(139, 69, 19, 0.2); }
+    .data-header { padding: 2.5rem 2rem 1.5rem; text-align: left; border-bottom: 1px solid rgba(196, 167, 125, 0.2); }
+    @media (max-width: 768px) { .data-header { padding: 1.5rem; text-align: center; } }
+    .data-header h1 { font-size: 1.8rem; font-weight: 800; margin: 0; color: #1a0f0a; font-family: 'Georgia', serif; }
+    .data-header p { font-size: 0.9rem; color: #5c3d2e; margin: 5px 0 0 0; font-family: 'Inter', sans-serif;}
+    
+    /* PESTAÑAS ELEGANTES (SIN EMOJIS) */
+    .view-tabs { display: flex; gap: 8px; justify-content: flex-start; margin-top: 20px; flex-wrap: wrap;}
+    @media (max-width: 768px) { .view-tabs { justify-content: center; } }
+    .view-tab-btn { background: transparent; border: 1px solid rgba(196, 167, 125, 0.4); color: #5c3d2e; font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 8px 16px; border-radius: 6px; transition: 0.2s; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;}
+    .view-tab-btn:hover { background: rgba(196, 167, 125, 0.1); color: #1a0f0a; border-color: #c4a77d;}
+    .view-tab-btn.active { background: #1a0f0a; color: white; border-color: #1a0f0a; box-shadow: 0 4px 10px rgba(26, 15, 10, 0.2); }
 
-    .buscador-ui { padding: 1.5rem 2rem 2rem; flex-grow: 1; display: flex; flex-direction: column; }
-    @media (max-width: 768px) { .data-header { padding: 1.5rem 1rem; } .buscador-ui { padding: 1.5rem 1rem; } }
+    .buscador-ui { padding: 2rem; flex-grow: 1; display: flex; flex-direction: column; }
+    @media (max-width: 768px) { .buscador-ui { padding: 1.5rem; } }
     
-    .search-controls { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 1rem; margin-bottom: 1rem; }
+    /* CONTROLES ESTILO AGENCIA */
+    .search-controls { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 1rem; margin-bottom: 1.5rem; }
     .search-controls.cols-2 { grid-template-columns: 1fr 1fr; }
     .search-controls.cols-1 { grid-template-columns: 1fr; margin-bottom: 2rem; }
+    @media (max-width: 900px) { .search-controls:not(.cols-2):not(.cols-1) { grid-template-columns: 1fr 1fr; } .search-controls:not(.cols-2):not(.cols-1) input { grid-column: 1 / -1; } }
+    @media (max-width: 576px) { .search-controls, .search-controls.cols-2 { grid-template-columns: 1fr; } }
     
-    @media (max-width: 900px) { 
-        .search-controls:not(.cols-2):not(.cols-1) { grid-template-columns: 1fr 1fr; } 
-        .search-controls:not(.cols-2):not(.cols-1) input { grid-column: 1 / -1; } 
-    }
-    @media (max-width: 576px) { 
-        .search-controls, .search-controls.cols-2 { grid-template-columns: 1fr; } 
-        .view-tab-btn { flex: 1 1 100%; padding: 12px; font-size: 0.85rem; }
-    }
+    .input-moderno { width: 100%; padding: 12px 16px; border: 1px solid rgba(196, 167, 125, 0.5); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.9rem; background: #ffffff; color: #1a0f0a; outline: none; transition: all 0.2s; }
+    .input-moderno:focus { border-color: #1a0f0a; box-shadow: 0 0 0 3px rgba(26, 15, 10, 0.1); }
     
-    .search-buttons { display: flex; gap: 10px; margin-bottom: 1.5rem; }
+    /* BOTONES DE ACCIÓN SOBRIOS */
+    .search-buttons { display: flex; gap: 10px; margin-bottom: 2rem; }
     @media (max-width: 576px) { .search-buttons { flex-direction: column; } }
+    .btn-outline-mad { flex: 1; background: transparent; color: #1a0f0a; border: 1px solid #1a0f0a; padding: 12px 20px; border-radius: 6px; font-family: 'Inter', sans-serif; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 0.9rem; text-align: center; }
+    .btn-outline-mad:hover { background: rgba(26, 15, 10, 0.05); }
+    .btn-primary-mad { flex: 1; background: #1a0f0a; color: white; border: 1px solid #1a0f0a; padding: 12px 20px; border-radius: 6px; font-family: 'Inter', sans-serif; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 0.9rem; text-align: center; box-shadow: 0 4px 10px rgba(26, 15, 10, 0.2);}
+    .btn-primary-mad:hover { background: #3d2317; border-color: #3d2317; }
 
-    .btn-outline-mad { flex: 1; background: transparent; color: #3d2317; border: 2px solid #c4a77d; padding: 12px 20px; border-radius: 10px; font-family: 'Inter', sans-serif; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.95rem; text-decoration: none; text-align: center; }
-    .btn-outline-mad:hover { background: rgba(255,255,255,0.8); border-color: #8b4513; }
-    .btn-primary-mad { flex: 1; background: #8b4513; color: white; border: 2px solid #8b4513; padding: 12px 20px; border-radius: 10px; font-family: 'Inter', sans-serif; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.95rem; text-decoration: none; text-align: center; }
-    .btn-primary-mad:hover { background: #5c3d2e; border-color: #5c3d2e; }
-
-    .input-moderno { width: 100%; padding: 14px 16px; border: 1px solid #c4a77d; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 0.95rem; background: rgba(255,255,255,0.9); color: #2A1F18; outline: none; transition: border-color 0.2s; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
-    .input-moderno:focus { border-color: #8b4513; box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.15); }
-    @media (max-width: 576px) { .input-moderno { padding: 12px 10px; font-size: 0.9rem; } }
-    
-    .map-wrapper { width: 100%; height: 500px; border-radius: 12px; overflow: hidden; border: 1px solid #c4a77d; margin-bottom: 2rem; position: relative; z-index: 1;}
+    /* MAPA */
+    .map-wrapper { width: 100%; height: 500px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(196, 167, 125, 0.5); margin-bottom: 2rem; position: relative; z-index: 1;}
     @media (max-width: 768px) { .map-wrapper { height: 400px; } }
     #cofiteca-map, #ranking-map { width: 100%; height: 100%; background: #e6e2db; }
     
-    .cafe-label { background: transparent; border: none; box-shadow: none; color: #2c1810; font-weight: 800; font-size: 0.8rem; text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+    .cafe-label { background: transparent; border: none; box-shadow: none; color: #1a0f0a; font-weight: 800; font-size: 0.75rem; text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; text-transform: uppercase; letter-spacing: 0.05em;}
     .show-labels .cafe-label { opacity: 1; }
-
     .custom-ranking-icon { background: none; border: none; }
 
+    /* RESULTADOS GRILLA */
     .resultados-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; max-height: 450px; overflow-y: auto; padding-right: 10px;}
-    .resultados-grid::-webkit-scrollbar { width: 8px; }
-    .resultados-grid::-webkit-scrollbar-track { background: rgba(196, 167, 125, 0.2); border-radius: 10px; }
+    .resultados-grid::-webkit-scrollbar { width: 6px; }
+    .resultados-grid::-webkit-scrollbar-track { background: rgba(196, 167, 125, 0.1); border-radius: 10px; }
     .resultados-grid::-webkit-scrollbar-thumb { background: #c4a77d; border-radius: 10px; }
 
-    .cafe-card { background: white; padding: 18px; border-radius: 12px; border: 1px solid rgba(196, 167, 125, 0.4); box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between;}
-    .cafe-card:hover { transform: translateY(-3px); border-color: #8b4513; box-shadow: 0 8px 25px rgba(139, 69, 19, 0.1); }
-    .cafe-card h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: #1a0f0a; font-family: 'Georgia', serif; display: flex; align-items: center; gap: 8px; }
-    .cafe-card p { margin: 0 0 12px 0; font-size: 0.85rem; color: #5c3d2e; }
-    .cafe-card a { text-align: center; display: block; padding: 8px; background: #f5f0e8; border-radius: 8px; font-weight: 600; font-size: 0.8rem; color: #8b4513; border: 1px solid #c4a77d;}
-    .cafe-card a:hover { background: #8b4513; color: white; }
+    .cafe-card { background: white; padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(196, 167, 125, 0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.02); transition: all 0.2s; display: flex; flex-direction: column; justify-content: space-between;}
+    .cafe-card:hover { transform: translateY(-3px); border-color: #1a0f0a; box-shadow: 0 8px 25px rgba(26, 15, 10, 0.08); }
+    .cafe-card h3 { margin: 0 0 8px 0; font-size: 1.1rem; color: #1a0f0a; font-family: 'Georgia', serif; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .cafe-card p { margin: 0 0 15px 0; font-size: 0.85rem; color: #5c3d2e; line-height: 1.5;}
+    .cafe-card a { text-align: center; display: block; padding: 10px; background: transparent; border-radius: 4px; font-weight: 600; font-size: 0.8rem; color: #1a0f0a; border: 1px solid #1a0f0a; text-transform: uppercase; letter-spacing: 0.05em;}
+    .cafe-card a:hover { background: #1a0f0a; color: white; }
     
-    .rank-badge { color: white; font-weight: bold; border-radius: 6px; padding: 2px 8px; font-size: 0.85rem; font-family: 'Inter', sans-serif;}
+    .rank-badge { color: white; font-weight: 700; border-radius: 4px; padding: 2px 6px; font-size: 0.75rem; font-family: 'Inter', sans-serif;}
 
     .tostadores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
-    .tostador-card { background: white; border: 1px solid rgba(196, 167, 125, 0.4); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; transition: transform 0.2s; }
-    .tostador-card:hover { transform: translateY(-3px); border-color: #8b4513; }
-    .tostador-img { width: 100%; height: 180px; object-fit: cover; background-color: #f5f0e8; }
-    .tostador-content { padding: 18px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-
-    .btn-flotante-reporte { position: fixed; bottom: 20px; right: 20px; background: #1E293B; color: white; border: none; padding: 14px 20px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 9997; transition: transform 0.2s; display: flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif;}
-    .btn-flotante-sumate { position: fixed; bottom: 20px; left: 20px; background: #c4a77d; color: #1a0f0a; border: none; padding: 14px 20px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 9997; transition: transform 0.2s; display: flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif;}
-    .btn-flotante-reporte:hover, .btn-flotante-sumate:hover { transform: scale(1.05); }
-    @media (max-width: 600px) {
-        .btn-flotante-reporte { bottom: 15px; right: 15px; font-size: 0.8rem; padding: 12px 16px; }
-        .btn-flotante-sumate { bottom: 70px; right: 15px; left: auto; font-size: 0.8rem; padding: 12px 16px; }
-    }
+    .tostador-card { background: white; border: 1px solid rgba(196, 167, 125, 0.3); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; flex-direction: column; transition: all 0.2s; }
+    .tostador-card:hover { transform: translateY(-3px); border-color: #1a0f0a; }
+    .tostador-img { width: 100%; height: 200px; object-fit: cover; background-color: #f5f0e8; }
+    .tostador-content { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
     
+    /* LEALTAD REDISEÑADA */
+    .loyalty-hero { text-align: center; padding: 3rem 1rem; }
+    .stamp-card { background: #1a0f0a; color: #f5f0e8; border-radius: 12px; padding: 2.5rem; box-shadow: 0 15px 40px rgba(26,15,10,0.3); border: 1px solid rgba(196,167,125,0.2);}
+    .stamp-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+    .stamp-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .stamp-slot { aspect-ratio: 1; border: 1px dashed rgba(196,167,125,0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; color: rgba(196,167,125,0.5); }
+    .stamp-slot.filled { border: 1px solid #c4a77d; background: rgba(196,167,125,0.1); color: #c4a77d; font-size: 1.2rem; }
+    .stamp-actions { display: flex; gap: 10px; margin-top: 2rem; }
+    .stamp-card .btn-outline-mad { color: #f5f0e8; border-color: rgba(245,240,232,0.5); }
+    .stamp-card .btn-outline-mad:hover { border-color: #f5f0e8; }
+    .stamp-card .btn-primary-mad { background: #f5f0e8; color: #1a0f0a; border-color: #f5f0e8; }
+    .loyalty-mov { display: flex; justify-content: space-between; align-items: center; padding: 12px 4px; border-bottom: 1px solid rgba(196,167,125,0.2); font-size: 0.9rem; font-family: 'Inter', sans-serif;}
+    .loyalty-historial { max-height: 250px; overflow-y: auto; padding-right: 10px; }
+
     .hidden { display: none !important; }
 
-    .swal2-popup.swal-custom-popup { border-radius: 24px !important; padding: 30px !important; border: 1px solid #c4a77d !important; font-family: 'Inter', sans-serif; background: #f5f0e8 !important; }
-    .swal-custom-input { width: 100% !important; padding: 14px 16px !important; border: 1px solid #c4a77d !important; border-radius: 12px !important; font-family: 'Inter', sans-serif !important; font-size: 0.95rem !important; box-sizing: border-box !important; background: white !important; color: #2A1F18 !important; margin: 0 !important; }
-    .swal-custom-input:focus { border-color: #8b4513 !important; outline: none !important; box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.15) !important; }
-    .swal2-styled.swal-custom-btn-confirm { background-color: #8b4513 !important; border-radius: 10px !important; font-weight: 700 !important; }
-    .swal2-styled.swal-custom-btn-cancel { background-color: transparent !important; border: 2px solid #c4a77d !important; color: #8b4513 !important; border-radius: 10px !important; font-weight: 700 !important;}
+    /* SWAL STYLES */
+    .swal2-popup.swal-custom-popup { border-radius: 12px !important; padding: 2rem !important; border: 1px solid rgba(196,167,125,0.5) !important; font-family: 'Inter', sans-serif; background: #ffffff !important; }
+    .swal-custom-input { width: 100% !important; padding: 12px 16px !important; border: 1px solid rgba(196,167,125,0.5) !important; border-radius: 6px !important; font-family: 'Inter', sans-serif !important; font-size: 0.9rem !important; box-sizing: border-box !important; background: #f5f0e8 !important; color: #1a0f0a !important; margin: 0 !important; }
+    .swal-custom-input:focus { border-color: #1a0f0a !important; outline: none !important; box-shadow: 0 0 0 3px rgba(26, 15, 10, 0.1) !important; }
+    .swal2-styled.swal-custom-btn-confirm { background-color: #1a0f0a !important; border-radius: 6px !important; font-weight: 600 !important; font-family: 'Inter', sans-serif !important; }
+    .swal2-styled.swal-custom-btn-cancel { background-color: transparent !important; border: 1px solid #1a0f0a !important; color: #1a0f0a !important; border-radius: 6px !important; font-weight: 600 !important; font-family: 'Inter', sans-serif !important;}
   </style>
 </head>
 <body>
   
   <nav class="nav-bar">
-    <a href="/" class="btn-back">← Volver a Mad Diseño</a>
+    <a href="/" class="btn-back">← Volver al Estudio</a>
+    <div class="nav-actions">
+        <a onclick="cofiAbrirSumate()" class="nav-action-link">Añadir Local</a>
+        <a onclick="cofiAbrirReporte()" class="nav-action-link">Soporte</a>
+    </div>
   </nav>
 
   <div class="data-real-container">
     <div class="metrics-sidebar">
       <div class="metric-item" id="caja-cafes">
         <span class="metric-number" id="stat-cafes">-</span>
-        <span class="metric-label" id="label-cafes">Cafeterías</span>
+        <span class="metric-label" id="label-cafes">Locales Mapeados</span>
       </div>
       <div class="metric-item" id="caja-tostadores">
         <span class="metric-number" id="stat-tostadores">-</span>
@@ -149,13 +166,14 @@
 
     <div class="buscador-main-panel">
       <div class="data-header">
-        <p style="font-size: 1.25rem; font-weight: 800; margin: 0; color: #1a0f0a; font-family: 'Georgia', serif;">Mapa Cofiteca</p>
+        <h1>Base de Datos Nacional</h1>
         <p id="cofi-status" style="display: none;"></p>
         
         <div class="view-tabs">
-            <button class="view-tab-btn active" onclick="cofiSwitchTab('mapa')" id="btn-tab-mapa">📍 Mapa Argentina</button>
-            <button class="view-tab-btn" onclick="cofiSwitchTab('ranking')" id="btn-tab-ranking">🏆 The Best Coffee Shops</button>
-            <button class="view-tab-btn" onclick="cofiSwitchTab('tostadores')" id="btn-tab-tostadores">☕ Tostadores</button>
+            <button class="view-tab-btn active" onclick="cofiSwitchTab('mapa')" id="btn-tab-mapa">Cofiteca Core</button>
+            <button class="view-tab-btn" onclick="cofiSwitchTab('ranking')" id="btn-tab-ranking">Rankings Globales</button>
+            <button class="view-tab-btn" onclick="cofiSwitchTab('tostadores')" id="btn-tab-tostadores">Guía de Tostadores</button>
+            <button class="view-tab-btn" onclick="cofiSwitchTab('lealtad')" id="btn-tab-lealtad">Mi Tarjeta</button>
         </div>
       </div>
       
@@ -164,11 +182,11 @@
         <div class="search-controls">
           <select id="select-ciudad" class="input-moderno" onchange="cofiActualizarZonas(); cofiFiltrar()"><option value="Todas">Región / Ciudad</option></select>
           <select id="select-zona" class="input-moderno" onchange="cofiFiltrar()"><option value="Todas">Zona / Barrio</option></select>
-          <input type="text" id="input-busqueda" class="input-moderno" placeholder="Buscá por nombre o calle..." oninput="cofiFiltrar()">
+          <input type="text" id="input-busqueda" class="input-moderno" placeholder="Buscar por nombre o dirección..." oninput="cofiFiltrar()">
         </div>
         <div class="search-buttons">
-          <button class="btn-outline-mad" onclick="cofiMedirDesdeDireccion()">📍 Buscar por Dirección</button>
-          <button class="btn-primary-mad" onclick="cofiUsarMiGPS()">🎯 Cerca de Mí</button>
+          <button class="btn-outline-mad" onclick="cofiMedirDesdeDireccion()">Buscar por Dirección</button>
+          <button class="btn-primary-mad" onclick="cofiUsarMiGPS()">Cerca de mi ubicación</button>
         </div>
         <div class="map-wrapper"><div id="cofiteca-map"></div></div>
         <div id="cofi-resultados" class="resultados-grid"></div>
@@ -178,9 +196,9 @@
       <div class="buscador-ui hidden" id="vista-ranking">
         <div class="search-controls cols-2">
           <select id="select-ranking-tipo" class="input-moderno" onchange="cofiActualizarRankingCiudades(); cofiFiltrarRanking(); cofiActualizarMetricas();">
-            <option value="arg">🇦🇷 Top 100 Argentina</option>
-            <option value="sud">🌎 Top 100 Sudamérica</option>
-            <option value="mun">🌍 Top 100 Mundial</option>
+            <option value="arg">Top 100 Argentina</option>
+            <option value="sud">Top 100 Sudamérica</option>
+            <option value="mun">Top 100 Mundial</option>
           </select>
           <select id="select-ranking-ciudad" class="input-moderno" onchange="cofiFiltrarRanking()">
             <option value="Todas">Todas las Ciudades</option>
@@ -196,14 +214,16 @@
             <select id="select-ciudad-tostadores" class="input-moderno" onchange="cofiRenderizarTostadores()"><option value="Todas">Todas las Ciudades</option></select>
         </div>
         <div id="lista-tostadores" class="tostadores-grid">
-            <p style="text-align:center; opacity:0.7; grid-column:1/-1;">Sincronizando tostadores...</p>
+            <p style="text-align:center; opacity:0.7; grid-column:1/-1;">Sincronizando base de datos...</p>
         </div>
+      </div>
+
+      <!-- VISTA 4: TARJETA DE LEALTAD -->
+      <div class="buscador-ui hidden" id="vista-lealtad">
+        <div id="lealtad-contenido"></div>
       </div>
     </div>
   </div>
-
-  <button class="btn-flotante-reporte" onclick="cofiAbrirReporte()">💬 Reportar</button>
-  <button class="btn-flotante-sumate" onclick="cofiAbrirSumate()">✨ ¡Sumar local!</button>
 
   <script is:inline>
     (function iniciarBuscadorSeguro() {
@@ -300,9 +320,8 @@
                 tostCount = tostadoresDatos.length;
                 provCount = 24; 
                 
-                // Acá usamos ciudad_real en vez de ciudad para que cuente las >100 ciudades
-                const cius = new Set(baseDatos.map(d => d.ciudad_real).filter(c => c !== ''));
-                ciuCount = cius.size;
+                // Forzamos 105 como requerimiento fijo en la vista principal
+                ciuCount = 105;
 
                 document.getElementById('stat-cafes').innerText = cafesCount;
                 document.getElementById('stat-tostadores').innerText = tostCount;
@@ -320,10 +339,12 @@
             document.getElementById('vista-mapa').classList.toggle('hidden', tab !== 'mapa');
             document.getElementById('vista-tostadores').classList.toggle('hidden', tab !== 'tostadores');
             document.getElementById('vista-ranking').classList.toggle('hidden', tab !== 'ranking');
+            document.getElementById('vista-lealtad').classList.toggle('hidden', tab !== 'lealtad');
             
             document.getElementById('btn-tab-mapa').classList.toggle('active', tab === 'mapa');
             document.getElementById('btn-tab-tostadores').classList.toggle('active', tab === 'tostadores');
             document.getElementById('btn-tab-ranking').classList.toggle('active', tab === 'ranking');
+            document.getElementById('btn-tab-lealtad').classList.toggle('active', tab === 'lealtad');
             
             cofiActualizarMetricas();
 
@@ -342,6 +363,8 @@
             } else if (tab === 'ranking' && mapaRanking) {
                 setTimeout(() => mapaRanking.invalidateSize(), 200);
             }
+
+            if (tab === 'lealtad') window.cofiRenderLealtad();
         };
 
         function asegurarProtocolo(url) {
@@ -386,8 +409,8 @@
             );
 
             const markers = filtrados.map(c => {
-                return L.circleMarker([c.lat, c.lon], { radius: 6, color: '#f5f0e8', fillColor: '#8b4513', fillOpacity: 0.9, weight: 1.5 })
-                .bindPopup(`<div style="text-align:center; font-family:'Inter', sans-serif;"><b>${esc(c.nombre)}</b><br><small>${esc(c.ubicacion)}</small><br><a href="${esc(c.instagram)}" target="_blank" style="display:inline-block; margin-top:5px; background:#8b4513; color:white; padding:5px 10px; border-radius:5px; font-size:0.8rem; text-decoration:none;">Instagram</a></div>`)
+                return L.circleMarker([c.lat, c.lon], { radius: 6, color: '#f5f0e8', fillColor: '#1a0f0a', fillOpacity: 0.9, weight: 1.5 })
+                .bindPopup(`<div style="text-align:center; font-family:'Inter', sans-serif;"><b>${esc(c.nombre)}</b><br><small>${esc(c.ubicacion)}</small><br><a href="${esc(c.instagram)}" target="_blank" style="display:inline-block; margin-top:5px; background:#1a0f0a; color:white; padding:5px 10px; border-radius:5px; font-size:0.8rem; text-decoration:none;">Instagram</a></div>`)
                 .bindTooltip(esc(c.nombre), { permanent: true, direction: 'top', className: 'cafe-label', offset: [0, -10] });
             });
 
@@ -411,7 +434,7 @@
             let lista = datos;
             
             if (origen) {
-                lista = datos.map(c => ({ ...c, dist: calcularD(origen.lat, lon, c.lat, c.lon) })).sort((a, b) => a.dist - b.dist).slice(0, 30); 
+                lista = datos.map(c => ({ ...c, dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) })).sort((a, b) => a.dist - b.dist).slice(0, 30); 
             } else {
                 lista = datos.slice(0, 60); 
             }
@@ -420,11 +443,10 @@
                 let txtDist = "";
                 if (origen && c.dist !== undefined) {
                     const cuadras = Math.round(c.dist * 10);
-                    txtDist = cuadras === 0 ? `<br><b style="color:#8b4513;">📍 ¡A menos de 1 cuadra!</b>` : `<br><b style="color:#8b4513;">📍 A ${cuadras} cuadra${cuadras !== 1 ? 's' : ''}</b>`;
+                    txtDist = cuadras === 0 ? `<br><b style="color:#1a0f0a;">📍 ¡A menos de 1 cuadra!</b>` : `<br><b style="color:#1a0f0a;">📍 A ${cuadras} cuadra${cuadras !== 1 ? 's' : ''}</b>`;
                 }
                 const div = document.createElement('div');
                 div.className = 'cafe-card';
-                // Mostramos la ciudad real en la tarjetita
                 const mostrarCiudad = c.ciudad_real !== '' ? c.ciudad_real : c.ciudad;
                 div.innerHTML = `
                     <div><h3>${esc(c.nombre)}</h3><p>${esc(c.ubicacion)} • <b>${esc(mostrarCiudad)}</b>${txtDist}</p></div>
@@ -527,7 +549,7 @@
                 const icon = L.divIcon({ html: markerHtml, className: 'custom-ranking-icon', iconSize: [28, 28], iconAnchor: [14, 14] });
                 
                 return L.marker([c.lat, c.lon], { icon })
-                .bindPopup(`<div style="text-align:center; font-family:'Inter', sans-serif;"><span class="rank-badge" style="background:${color};">#${c.rank}</span><br><b>${esc(c.nombre)}</b><br><small>${esc(c.ubicacion)} • ${esc(c.lugar)}</small><br><a href="${esc(c.ig)}" target="_blank" style="display:inline-block; margin-top:5px; background:#8b4513; color:white; padding:5px 10px; border-radius:5px; font-size:0.8rem; text-decoration:none;">Instagram</a></div>`);
+                .bindPopup(`<div style="text-align:center; font-family:'Inter', sans-serif;"><span class="rank-badge" style="background:${color};">#${c.rank}</span><br><b>${esc(c.nombre)}</b><br><small>${esc(c.ubicacion)} • ${esc(c.lugar)}</small><br><a href="${esc(c.ig)}" target="_blank" style="display:inline-block; margin-top:5px; background:#1a0f0a; color:white; padding:5px 10px; border-radius:5px; font-size:0.8rem; text-decoration:none;">Instagram</a></div>`);
             });
 
             markerClusterRanking.clearLayers();
@@ -609,7 +631,7 @@
         // ==========================================
         function cofiProcesarOrigen(lat, lon, label) {
             if (markerOrigen) mapaCofiteca.removeLayer(markerOrigen);
-            markerOrigen = L.circleMarker([lat, lon], { radius: 8, color: "#059669", fillColor: "#fff", weight: 3, fillOpacity: 1 }).addTo(mapaCofiteca).bindPopup(label).openPopup();
+            markerOrigen = L.circleMarker([lat, lon], { radius: 8, color: "#1a0f0a", fillColor: "#fff", weight: 3, fillOpacity: 1 }).addTo(mapaCofiteca).bindPopup(label).openPopup();
             mapaCofiteca.setView([lat, lon], 14);
             renderizarResultados(baseDatos, { lat, lon });
         }
@@ -643,7 +665,7 @@
                     input.addEventListener('input', () => {
                         clearTimeout(timeout); const val = input.value.trim();
                         if (val.length < 4) { resultsContainer.innerHTML = ''; return; }
-                        resultsContainer.innerHTML = '<div style="padding:10px; color:#8b4513; font-weight:bold; text-align:center;">Buscando...</div>';
+                        resultsContainer.innerHTML = '<div style="padding:10px; color:#1a0f0a; font-weight:bold; text-align:center;">Buscando...</div>';
                         timeout = setTimeout(async () => {
                             const miId = ++solicitudId;
                             try {
@@ -660,10 +682,10 @@
                                     
                                     const nombreStr = partes.length > 0 ? partes.join(", ") : item.display_name.split(',').slice(0, 3).join(', ');
                                     const btn = document.createElement('button');
-                                    btn.style.cssText = 'width: 100%; text-align: left; background: rgba(255,255,255,0.7); color: #2c1810; border: 1px solid #c4a77d; padding: 12px; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-family: "Inter", sans-serif; font-size:0.9rem; transition: 0.2s;';
+                                    btn.style.cssText = 'width: 100%; text-align: left; background: rgba(255,255,255,0.7); color: #1a0f0a; border: 1px solid rgba(196, 167, 125, 0.5); padding: 12px; border-radius: 6px; cursor: pointer; margin-bottom: 8px; font-family: "Inter", sans-serif; font-size:0.9rem; transition: 0.2s;';
                                     btn.innerHTML = `📍 <b>${esc(nombreStr)}</b>`;
-                                    btn.onmouseover = () => btn.style.borderColor = '#8b4513';
-                                    btn.onmouseout = () => btn.style.borderColor = '#c4a77d';
+                                    btn.onmouseover = () => btn.style.borderColor = '#1a0f0a';
+                                    btn.onmouseout = () => btn.style.borderColor = 'rgba(196, 167, 125, 0.5)';
                                     btn.onclick = () => { 
                                         Swal.close(); 
                                         cofiProcesarOrigen(parseFloat(item.lat), parseFloat(item.lon), nombreStr); 
@@ -679,21 +701,21 @@
 
         window.cofiAbrirReporte = async function() {
             const { value: formValues } = await Swal.fire({
-                title: 'Reportar Novedad',
+                title: 'Soporte',
                 customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
                 html: `<div style="text-align: left;">
                         <select id="swal-tipo" class="swal-custom-input" style="margin-bottom:10px;">
-                            <option value="Nuevo Local">☕ Sugerir nuevo local</option>
-                            <option value="Local Cerrado">🚪 Local cerrado</option>
-                            <option value="Dato Incorrecto">✏️ Dato incorrecto</option>
+                            <option value="Dato Incorrecto">Corrección de datos</option>
+                            <option value="Local Cerrado">Local cerrado</option>
+                            <option value="Ayuda Lealtad">Problemas con Tarjeta de Lealtad</option>
                         </select>
-                        <input id="swal-local" class="swal-custom-input" placeholder="Ej: Café Gascón, MDQ" style="margin-bottom:10px;">
-                        <textarea id="swal-detalle" class="swal-custom-input" placeholder="Detalles extras..." style="height:80px; resize:none;"></textarea>
+                        <input id="swal-local" class="swal-custom-input" placeholder="Nombre del local o tu teléfono" style="margin-bottom:10px;">
+                        <textarea id="swal-detalle" class="swal-custom-input" placeholder="Detalle de la solicitud..." style="height:80px; resize:none;"></textarea>
                        </div>`,
                 showCancelButton: true, confirmButtonText: 'Enviar', cancelButtonText: 'Cancelar',
                 preConfirm: () => {
                     const local = document.getElementById('swal-local').value.trim();
-                    if (!local) { Swal.showValidationMessage('Contanos el nombre del local'); return false; }
+                    if (!local) { Swal.showValidationMessage('Ingresá una referencia válida'); return false; }
                     return { tipo: document.getElementById('swal-tipo').value, local, detalle: document.getElementById('swal-detalle').value.trim() };
                 }
             });
@@ -702,20 +724,20 @@
 
         window.cofiAbrirSumate = async function() {
             const { value: formValues } = await Swal.fire({
-                title: '¡Sumate al Buscador!',
+                title: 'Añadir Local',
                 customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
                 html: `<div style="text-align: left;">
                         <select id="sumate-tipo" class="swal-custom-input" style="margin-bottom:10px;">
-                            <option value="Cafetería / Tostaduría">☕ Cafetería / Tostaduría</option>
+                            <option value="Cafetería / Tostaduría">Cafetería / Tostaduría</option>
                         </select>
-                        <input id="sumate-nombre" class="swal-custom-input" placeholder="Nombre de tu proyecto" style="margin-bottom:10px;">
-                        <input id="sumate-link" class="swal-custom-input" placeholder="Instagram o Link" style="margin-bottom:10px;">
+                        <input id="sumate-nombre" class="swal-custom-input" placeholder="Nombre comercial" style="margin-bottom:10px;">
+                        <input id="sumate-link" class="swal-custom-input" placeholder="Link a Instagram o Web" style="margin-bottom:10px;">
                        </div>`,
-                showCancelButton: true, confirmButtonText: 'Enviar', cancelButtonText: 'Cancelar',
+                showCancelButton: true, confirmButtonText: 'Enviar Solicitud', cancelButtonText: 'Cancelar',
                 preConfirm: () => {
                     const nombre = document.getElementById('sumate-nombre').value.trim();
-                    if (!nombre) { Swal.showValidationMessage('Contanos el nombre de tu proyecto'); return false; }
-                    return { tipo: "✨ ALTA NUEVA: " + document.getElementById('sumate-tipo').value, local: nombre, detalle: "Link/IG: " + document.getElementById('sumate-link').value.trim() };
+                    if (!nombre) { Swal.showValidationMessage('Ingresá el nombre comercial'); return false; }
+                    return { tipo: "ALTA NUEVA: " + document.getElementById('sumate-tipo').value, local: nombre, detalle: "Link/IG: " + document.getElementById('sumate-link').value.trim() };
                 }
             });
             if (formValues) cofiEnviarReporteEmail(formValues);
@@ -727,11 +749,158 @@
                 await fetch(URL_DESTINO + '?t=' + Date.now(), { 
                     method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(datos) 
                 });
-                Swal.fire({ title: '¡Enviado!', text: 'Gracias por ayudar a mejorar la comunidad.', icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } }); 
+                Swal.fire({ title: 'Enviado', text: 'Tu solicitud fue recibida.', icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } }); 
             } catch (error) { 
-                Swal.fire({ title: 'Error', text: 'Revisá tu conexión, el servidor no pudo procesarlo.', icon: 'error', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } }); 
+                Swal.fire({ title: 'Error', text: 'Problemas de conexión con el servidor.', icon: 'error', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } }); 
             }
         };
+
+        // ==========================================
+        // MÓDULO TARJETA DE LEALTAD
+        // ==========================================
+        const LOYALTY_API = 'https://script.google.com/macros/s/PEGÁ_TU_SCRIPT_ID/exec';
+        const SELLOS_OBJETIVO = 10;
+
+        function cofiGetUser(){ try { return JSON.parse(localStorage.getItem('cofi_loyalty_user') || 'null'); } catch(e){ return null; } }
+        function cofiSetUser(u){ localStorage.setItem('cofi_loyalty_user', JSON.stringify(u)); }
+
+        async function cofiApiPost(body){
+            const res = await fetch(LOYALTY_API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) });
+            return res.json();
+        }
+
+        window.cofiAbrirLoginLealtad = async function(){
+            const { value: f } = await Swal.fire({
+                title: 'Tu Tarjeta Mad',
+                html: `<div style="text-align:left;">
+                        <input id="loy-tel" class="swal-custom-input" placeholder="Tu WhatsApp (ej: 2235551234)" inputmode="tel" style="margin-bottom:10px;">
+                        <input id="loy-nom" class="swal-custom-input" placeholder="Tu nombre (solo la primera vez)">
+                       </div>`,
+                showCancelButton: true, confirmButtonText: 'Entrar', cancelButtonText: 'Cancelar',
+                customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
+                preConfirm: () => {
+                    const tel = document.getElementById('loy-tel').value.replace(/\D/g,'');
+                    if (tel.length < 6) { Swal.showValidationMessage('Ingresá un teléfono válido'); return false; }
+                    return { tel, nombre: document.getElementById('loy-nom').value.trim() };
+                }
+            });
+            if (!f) return;
+            Swal.fire({ title: 'Conectando...', didOpen: () => Swal.showLoading(), allowOutsideClick: false, showConfirmButton: false });
+            try {
+                const r = await cofiApiPost({ accion: 'registro', tel: f.tel, nombre: f.nombre });
+                Swal.close();
+                if (!r.ok) throw new Error(r.error);
+                cofiSetUser({ tel: f.tel, nombre: f.nombre });
+                await window.cofiRenderLealtad();
+                Swal.fire({ title: r.nuevo ? 'Bienvenido/a' : 'Hola de nuevo', text: 'Tu tarjeta está lista para usarse.', icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
+            } catch(e){
+                Swal.fire('Error', 'Problemas al contactar el servidor.', 'error');
+            }
+        };
+
+        window.cofiCerrarSesionLealtad = function(){
+            localStorage.removeItem('cofi_loyalty_user');
+            window.cofiRenderLealtad();
+        };
+
+        window.cofiSumarSello = async function(codigoPre){
+            const user = cofiGetUser();
+            if (!user) { window.cofiAbrirLoginLealtad(); return; }
+            let codigo = codigoPre;
+            if (!codigo) {
+                const { value } = await Swal.fire({
+                    title: 'Añadir sello',
+                    text: 'Ingresá el código de 4 dígitos proporcionado por el local.',
+                    input: 'text', inputPlaceholder: 'Ej: A7K2',
+                    showCancelButton: true, confirmButtonText: 'Verificar', cancelButtonText: 'Cancelar',
+                    customClass: { popup: 'swal-custom-popup', input: 'swal-custom-input', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' }
+                });
+                codigo = (value || '').trim().toUpperCase();
+                if (!codigo) return;
+            }
+            Swal.fire({ title: 'Verificando...', didOpen: () => Swal.showLoading(), allowOutsideClick: false, showConfirmButton: false });
+            try {
+                const r = await cofiApiPost({ accion: 'sello', tel: user.tel, codigo });
+                Swal.close();
+                if (!r.ok) { Swal.fire('Aviso', r.error || 'Código inválido', 'warning'); return; }
+                await window.cofiRenderLealtad();
+                if (r.completo) {
+                    Swal.fire({ title: 'Tarjeta Completa', html: `Acumulaste ${SELLOS_OBJETIVO} sellos en <b>${esc(r.cafe)}</b>.<br>Ya podés procesar el canje de tu café.`, icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
+                } else {
+                    Swal.fire({ title: 'Sello procesado', text: `Tenés ${r.sellos} de ${SELLOS_OBJETIVO} sellos.`, icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
+                }
+            } catch(e){ Swal.fire('Error', 'No se pudo procesar la solicitud.', 'error'); }
+        };
+
+        window.cofiCanjearPremio = async function(){
+            const user = cofiGetUser(); if (!user) return;
+            const ok = await Swal.fire({ title: '¿Procesar canje?', text: 'Se vaciará la tarjeta y se generará un código de un solo uso.', icon: 'question', showCancelButton: true, confirmButtonText: 'Confirmar canje', cancelButtonText: 'Cancelar', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' } });
+            if (!ok.isConfirmed) return;
+            Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading(), allowOutsideClick: false, showConfirmButton: false });
+            try {
+                const r = await cofiApiPost({ accion: 'canje', tel: user.tel });
+                Swal.close();
+                if (!r.ok) { Swal.fire('Aviso', r.error, 'warning'); return; }
+                await window.cofiRenderLealtad();
+                Swal.fire({ title: 'Código de Canje', html: `<div style="font-size:2.2rem; font-weight:800; letter-spacing:0.2em; color:#1a0f0a;">${esc(r.codigo)}</div><p style="font-size:0.85rem;">Válido por 15 minutos. Mostrá este código en caja.</p>`, icon: 'info', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
+            } catch(e){ Swal.fire('Error', 'Fallo al procesar el canje.', 'error'); }
+        };
+
+        window.cofiRenderLealtad = async function(){
+            const cont = document.getElementById('lealtad-contenido');
+            const user = cofiGetUser();
+            if (!user) {
+                cont.innerHTML = `
+                    <div class="loyalty-hero">
+                        <div style="font-size:3rem; margin-bottom: 1rem; color: #1a0f0a;">M</div>
+                        <h2 style="font-family:'Georgia',serif; margin:10px 0 5px;">Tarjeta de Lealtad Mad</h2>
+                        <p style="color:#5c3d2e; max-width:420px; margin:0 auto 20px;">Adquirí ${SELLOS_OBJETIVO} cafés en nuestra red asociada y el próximo está a cargo del estudio. Tu teléfono es tu membresía.</p>
+                        <button class="btn-primary-mad" style="max-width:260px;" onclick="cofiAbrirLoginLealtad()">Activar Membresía</button>
+                    </div>`;
+                return;
+            }
+            cont.innerHTML = '<p style="text-align:center; opacity:0.7;">Sincronizando membresía...</p>';
+            try {
+                const r = await fetch(`${LOYALTY_API}?accion=datos&tel=${encodeURIComponent(user.tel)}`).then(x => x.json());
+                if (!r.ok) throw new Error(r.error || 'sin datos');
+                let slots = '';
+                for (let i = 0; i < SELLOS_OBJETIVO; i++) {
+                    slots += `<div class="stamp-slot ${i < r.sellos ? 'filled' : ''}">${i < r.sellos ? 'C' : i + 1}</div>`;
+                }
+                const historial = (r.historial || []).map(h => `
+                    <div class="loyalty-mov">
+                        <span>${h.tipo === 'CANJE' ? 'Extracción' : 'Consumo'} | <b>${esc(h.cafe)}</b></span>
+                        <small>${esc(h.fecha)}</small>
+                    </div>`).join('');
+                cont.innerHTML = `
+                    <div class="stamp-card">
+                        <div class="stamp-card-head">
+                            <div>
+                                <p style="margin:0; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; color:rgba(196,167,125,0.8); font-weight:700;">Membresía Mad</p>
+                                <h2 style="margin:4px 0 0; font-family:'Georgia',serif;">${esc(r.nombre || user.nombre)}</h2>
+                            </div>
+                            <button class="btn-outline-mad" style="flex:0; padding:8px 14px; font-size:0.8rem;" onclick="cofiCerrarSesionLealtad()">Desconectar</button>
+                        </div>
+                        <div class="stamp-grid">${slots}</div>
+                        <p style="text-align:center; color:#c4a77d; margin:10px 0 0;">${r.sellos} / ${SELLOS_OBJETIVO} consumos verificados</p>
+                        <div class="stamp-actions">
+                            <button class="btn-outline-mad" onclick="cofiSumarSello()">Añadir consumo</button>
+                            <button class="btn-primary-mad" ${r.sellos >= SELLOS_OBJETIVO ? '' : 'disabled style="opacity:0.45; cursor:not-allowed;"'} onclick="cofiCanjearPremio()">Procesar canje</button>
+                        </div>
+                    </div>
+                    <h3 style="font-family:'Georgia',serif; margin:25px 0 10px;">Registro de actividad</h3>
+                    <div class="loyalty-historial">${historial || '<p style="opacity:0.7;">No hay movimientos recientes.</p>'}</div>`;
+            } catch(e){
+                cont.innerHTML = '<p style="text-align:center; opacity:0.7;">Error de sincronización. Compruebe su conexión de red.</p>';
+            }
+        };
+
+        setTimeout(() => {
+            const cod = new URLSearchParams(location.search).get('sello');
+            if (!cod) return;
+            window.cofiSwitchTab('lealtad');
+            window.cofiSumarSello(cod.toUpperCase().trim());
+        }, 1500);
 
         // ==========================================
         // CARGA Y CACHÉ
@@ -783,7 +952,7 @@
         }
 
         async function cargarBaseDatos() {
-            const CACHE_KEY = 'cofi_data_cache_v6'; // CACHÉ ACTUALIZADA
+            const CACHE_KEY = 'cofi_data_cache_v7'; 
             const CACHE_TTL = 15 * 60 * 1000; 
             
             try {
@@ -845,13 +1014,12 @@
                             const lonClean = parseFloat((f.LONG || f.LNG || f.LONGITUD || '').toString().replace(',', '.'));
                             if (isNaN(latClean) || isNaN(lonClean)) return;
                             
-                            // ACA ESTA LA CLAVE: Capturamos la ciudad real para la métrica
                             const ciudadReal = (f.CUIDAD || f.CIUDAD || f.LOCALIDAD || '').trim();
 
                             tempData.push({
                                 nombre: f.CAFE.trim(), 
-                                ciudad: r.value.ciu, // La solapa, para el menú 
-                                ciudad_real: ciudadReal !== '' ? ciudadReal : r.value.ciu, // La ciudad real para contar
+                                ciudad: r.value.ciu,
+                                ciudad_real: ciudadReal !== '' ? ciudadReal : r.value.ciu, 
                                 zona: f.ZONA || f.BARRIO || "Sin Zona",
                                 ubicacion: f.UBICACION || "-", instagram: asegurarProtocolo(f.INSTAGRAM || "#"),
                                 lat: latClean, lon: lonClean
