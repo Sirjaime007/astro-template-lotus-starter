@@ -6,7 +6,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Base de Datos | Cofiteca x Mad</title>
+  <title>Mapa Cofiteca | Base de Datos x Mad</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,7 +52,7 @@
     .data-header h1 { font-size: 1.8rem; font-weight: 800; margin: 0; color: #1a0f0a; font-family: 'Georgia', serif; }
     .data-header p { font-size: 0.9rem; color: #5c3d2e; margin: 5px 0 0 0; font-family: 'Inter', sans-serif;}
     
-    /* PESTAÑAS ELEGANTES (SIN EMOJIS) */
+    /* PESTAÑAS ELEGANTES */
     .view-tabs { display: flex; gap: 8px; justify-content: flex-start; margin-top: 20px; flex-wrap: wrap;}
     @media (max-width: 768px) { .view-tabs { justify-content: center; } }
     .view-tab-btn { background: transparent; border: 1px solid rgba(196, 167, 125, 0.4); color: #5c3d2e; font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 8px 16px; border-radius: 6px; transition: 0.2s; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;}
@@ -110,20 +110,6 @@
     .tostador-img { width: 100%; height: 200px; object-fit: cover; background-color: #f5f0e8; }
     .tostador-content { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
     
-    /* LEALTAD REDISEÑADA */
-    .loyalty-hero { text-align: center; padding: 3rem 1rem; }
-    .stamp-card { background: #1a0f0a; color: #f5f0e8; border-radius: 12px; padding: 2.5rem; box-shadow: 0 15px 40px rgba(26,15,10,0.3); border: 1px solid rgba(196,167,125,0.2);}
-    .stamp-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
-    .stamp-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-    .stamp-slot { aspect-ratio: 1; border: 1px dashed rgba(196,167,125,0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; color: rgba(196,167,125,0.5); }
-    .stamp-slot.filled { border: 1px solid #c4a77d; background: rgba(196,167,125,0.1); color: #c4a77d; font-size: 1.2rem; }
-    .stamp-actions { display: flex; gap: 10px; margin-top: 2rem; }
-    .stamp-card .btn-outline-mad { color: #f5f0e8; border-color: rgba(245,240,232,0.5); }
-    .stamp-card .btn-outline-mad:hover { border-color: #f5f0e8; }
-    .stamp-card .btn-primary-mad { background: #f5f0e8; color: #1a0f0a; border-color: #f5f0e8; }
-    .loyalty-mov { display: flex; justify-content: space-between; align-items: center; padding: 12px 4px; border-bottom: 1px solid rgba(196,167,125,0.2); font-size: 0.9rem; font-family: 'Inter', sans-serif;}
-    .loyalty-historial { max-height: 250px; overflow-y: auto; padding-right: 10px; }
-
     .hidden { display: none !important; }
 
     /* SWAL STYLES */
@@ -166,14 +152,13 @@
 
     <div class="buscador-main-panel">
       <div class="data-header">
-        <h1>Base de Datos Nacional</h1>
+        <h1>Mapa Cofiteca</h1>
         <p id="cofi-status" style="display: none;"></p>
         
         <div class="view-tabs">
-            <button class="view-tab-btn active" onclick="cofiSwitchTab('mapa')" id="btn-tab-mapa">Cofiteca Core</button>
+            <button class="view-tab-btn active" onclick="cofiSwitchTab('mapa')" id="btn-tab-mapa">Mapa Argentina</button>
             <button class="view-tab-btn" onclick="cofiSwitchTab('ranking')" id="btn-tab-ranking">Rankings Globales</button>
             <button class="view-tab-btn" onclick="cofiSwitchTab('tostadores')" id="btn-tab-tostadores">Guía de Tostadores</button>
-            <button class="view-tab-btn" onclick="cofiSwitchTab('lealtad')" id="btn-tab-lealtad">Mi Tarjeta</button>
         </div>
       </div>
       
@@ -216,11 +201,6 @@
         <div id="lista-tostadores" class="tostadores-grid">
             <p style="text-align:center; opacity:0.7; grid-column:1/-1;">Sincronizando base de datos...</p>
         </div>
-      </div>
-
-      <!-- VISTA 4: TARJETA DE LEALTAD -->
-      <div class="buscador-ui hidden" id="vista-lealtad">
-        <div id="lealtad-contenido"></div>
       </div>
     </div>
   </div>
@@ -339,12 +319,10 @@
             document.getElementById('vista-mapa').classList.toggle('hidden', tab !== 'mapa');
             document.getElementById('vista-tostadores').classList.toggle('hidden', tab !== 'tostadores');
             document.getElementById('vista-ranking').classList.toggle('hidden', tab !== 'ranking');
-            document.getElementById('vista-lealtad').classList.toggle('hidden', tab !== 'lealtad');
             
             document.getElementById('btn-tab-mapa').classList.toggle('active', tab === 'mapa');
             document.getElementById('btn-tab-tostadores').classList.toggle('active', tab === 'tostadores');
             document.getElementById('btn-tab-ranking').classList.toggle('active', tab === 'ranking');
-            document.getElementById('btn-tab-lealtad').classList.toggle('active', tab === 'lealtad');
             
             cofiActualizarMetricas();
 
@@ -363,8 +341,6 @@
             } else if (tab === 'ranking' && mapaRanking) {
                 setTimeout(() => mapaRanking.invalidateSize(), 200);
             }
-
-            if (tab === 'lealtad') window.cofiRenderLealtad();
         };
 
         function asegurarProtocolo(url) {
@@ -707,7 +683,6 @@
                         <select id="swal-tipo" class="swal-custom-input" style="margin-bottom:10px;">
                             <option value="Dato Incorrecto">Corrección de datos</option>
                             <option value="Local Cerrado">Local cerrado</option>
-                            <option value="Ayuda Lealtad">Problemas con Tarjeta de Lealtad</option>
                         </select>
                         <input id="swal-local" class="swal-custom-input" placeholder="Nombre del local o tu teléfono" style="margin-bottom:10px;">
                         <textarea id="swal-detalle" class="swal-custom-input" placeholder="Detalle de la solicitud..." style="height:80px; resize:none;"></textarea>
@@ -754,153 +729,6 @@
                 Swal.fire({ title: 'Error', text: 'Problemas de conexión con el servidor.', icon: 'error', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } }); 
             }
         };
-
-        // ==========================================
-        // MÓDULO TARJETA DE LEALTAD
-        // ==========================================
-        const LOYALTY_API = 'https://script.google.com/macros/s/PEGÁ_TU_SCRIPT_ID/exec';
-        const SELLOS_OBJETIVO = 10;
-
-        function cofiGetUser(){ try { return JSON.parse(localStorage.getItem('cofi_loyalty_user') || 'null'); } catch(e){ return null; } }
-        function cofiSetUser(u){ localStorage.setItem('cofi_loyalty_user', JSON.stringify(u)); }
-
-        async function cofiApiPost(body){
-            const res = await fetch(LOYALTY_API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) });
-            return res.json();
-        }
-
-        window.cofiAbrirLoginLealtad = async function(){
-            const { value: f } = await Swal.fire({
-                title: 'Tu Tarjeta Mad',
-                html: `<div style="text-align:left;">
-                        <input id="loy-tel" class="swal-custom-input" placeholder="Tu WhatsApp (ej: 2235551234)" inputmode="tel" style="margin-bottom:10px;">
-                        <input id="loy-nom" class="swal-custom-input" placeholder="Tu nombre (solo la primera vez)">
-                       </div>`,
-                showCancelButton: true, confirmButtonText: 'Entrar', cancelButtonText: 'Cancelar',
-                customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
-                preConfirm: () => {
-                    const tel = document.getElementById('loy-tel').value.replace(/\D/g,'');
-                    if (tel.length < 6) { Swal.showValidationMessage('Ingresá un teléfono válido'); return false; }
-                    return { tel, nombre: document.getElementById('loy-nom').value.trim() };
-                }
-            });
-            if (!f) return;
-            Swal.fire({ title: 'Conectando...', didOpen: () => Swal.showLoading(), allowOutsideClick: false, showConfirmButton: false });
-            try {
-                const r = await cofiApiPost({ accion: 'registro', tel: f.tel, nombre: f.nombre });
-                Swal.close();
-                if (!r.ok) throw new Error(r.error);
-                cofiSetUser({ tel: f.tel, nombre: f.nombre });
-                await window.cofiRenderLealtad();
-                Swal.fire({ title: r.nuevo ? 'Bienvenido/a' : 'Hola de nuevo', text: 'Tu tarjeta está lista para usarse.', icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
-            } catch(e){
-                Swal.fire('Error', 'Problemas al contactar el servidor.', 'error');
-            }
-        };
-
-        window.cofiCerrarSesionLealtad = function(){
-            localStorage.removeItem('cofi_loyalty_user');
-            window.cofiRenderLealtad();
-        };
-
-        window.cofiSumarSello = async function(codigoPre){
-            const user = cofiGetUser();
-            if (!user) { window.cofiAbrirLoginLealtad(); return; }
-            let codigo = codigoPre;
-            if (!codigo) {
-                const { value } = await Swal.fire({
-                    title: 'Añadir sello',
-                    text: 'Ingresá el código de 4 dígitos proporcionado por el local.',
-                    input: 'text', inputPlaceholder: 'Ej: A7K2',
-                    showCancelButton: true, confirmButtonText: 'Verificar', cancelButtonText: 'Cancelar',
-                    customClass: { popup: 'swal-custom-popup', input: 'swal-custom-input', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' }
-                });
-                codigo = (value || '').trim().toUpperCase();
-                if (!codigo) return;
-            }
-            Swal.fire({ title: 'Verificando...', didOpen: () => Swal.showLoading(), allowOutsideClick: false, showConfirmButton: false });
-            try {
-                const r = await cofiApiPost({ accion: 'sello', tel: user.tel, codigo });
-                Swal.close();
-                if (!r.ok) { Swal.fire('Aviso', r.error || 'Código inválido', 'warning'); return; }
-                await window.cofiRenderLealtad();
-                if (r.completo) {
-                    Swal.fire({ title: 'Tarjeta Completa', html: `Acumulaste ${SELLOS_OBJETIVO} sellos en <b>${esc(r.cafe)}</b>.<br>Ya podés procesar el canje de tu café.`, icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
-                } else {
-                    Swal.fire({ title: 'Sello procesado', text: `Tenés ${r.sellos} de ${SELLOS_OBJETIVO} sellos.`, icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
-                }
-            } catch(e){ Swal.fire('Error', 'No se pudo procesar la solicitud.', 'error'); }
-        };
-
-        window.cofiCanjearPremio = async function(){
-            const user = cofiGetUser(); if (!user) return;
-            const ok = await Swal.fire({ title: '¿Procesar canje?', text: 'Se vaciará la tarjeta y se generará un código de un solo uso.', icon: 'question', showCancelButton: true, confirmButtonText: 'Confirmar canje', cancelButtonText: 'Cancelar', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' } });
-            if (!ok.isConfirmed) return;
-            Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading(), allowOutsideClick: false, showConfirmButton: false });
-            try {
-                const r = await cofiApiPost({ accion: 'canje', tel: user.tel });
-                Swal.close();
-                if (!r.ok) { Swal.fire('Aviso', r.error, 'warning'); return; }
-                await window.cofiRenderLealtad();
-                Swal.fire({ title: 'Código de Canje', html: `<div style="font-size:2.2rem; font-weight:800; letter-spacing:0.2em; color:#1a0f0a;">${esc(r.codigo)}</div><p style="font-size:0.85rem;">Válido por 15 minutos. Mostrá este código en caja.</p>`, icon: 'info', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
-            } catch(e){ Swal.fire('Error', 'Fallo al procesar el canje.', 'error'); }
-        };
-
-        window.cofiRenderLealtad = async function(){
-            const cont = document.getElementById('lealtad-contenido');
-            const user = cofiGetUser();
-            if (!user) {
-                cont.innerHTML = `
-                    <div class="loyalty-hero">
-                        <div style="font-size:3rem; margin-bottom: 1rem; color: #1a0f0a;">M</div>
-                        <h2 style="font-family:'Georgia',serif; margin:10px 0 5px;">Tarjeta de Lealtad Mad</h2>
-                        <p style="color:#5c3d2e; max-width:420px; margin:0 auto 20px;">Adquirí ${SELLOS_OBJETIVO} cafés en nuestra red asociada y el próximo está a cargo del estudio. Tu teléfono es tu membresía.</p>
-                        <button class="btn-primary-mad" style="max-width:260px;" onclick="cofiAbrirLoginLealtad()">Activar Membresía</button>
-                    </div>`;
-                return;
-            }
-            cont.innerHTML = '<p style="text-align:center; opacity:0.7;">Sincronizando membresía...</p>';
-            try {
-                const r = await fetch(`${LOYALTY_API}?accion=datos&tel=${encodeURIComponent(user.tel)}`).then(x => x.json());
-                if (!r.ok) throw new Error(r.error || 'sin datos');
-                let slots = '';
-                for (let i = 0; i < SELLOS_OBJETIVO; i++) {
-                    slots += `<div class="stamp-slot ${i < r.sellos ? 'filled' : ''}">${i < r.sellos ? 'C' : i + 1}</div>`;
-                }
-                const historial = (r.historial || []).map(h => `
-                    <div class="loyalty-mov">
-                        <span>${h.tipo === 'CANJE' ? 'Extracción' : 'Consumo'} | <b>${esc(h.cafe)}</b></span>
-                        <small>${esc(h.fecha)}</small>
-                    </div>`).join('');
-                cont.innerHTML = `
-                    <div class="stamp-card">
-                        <div class="stamp-card-head">
-                            <div>
-                                <p style="margin:0; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; color:rgba(196,167,125,0.8); font-weight:700;">Membresía Mad</p>
-                                <h2 style="margin:4px 0 0; font-family:'Georgia',serif;">${esc(r.nombre || user.nombre)}</h2>
-                            </div>
-                            <button class="btn-outline-mad" style="flex:0; padding:8px 14px; font-size:0.8rem;" onclick="cofiCerrarSesionLealtad()">Desconectar</button>
-                        </div>
-                        <div class="stamp-grid">${slots}</div>
-                        <p style="text-align:center; color:#c4a77d; margin:10px 0 0;">${r.sellos} / ${SELLOS_OBJETIVO} consumos verificados</p>
-                        <div class="stamp-actions">
-                            <button class="btn-outline-mad" onclick="cofiSumarSello()">Añadir consumo</button>
-                            <button class="btn-primary-mad" ${r.sellos >= SELLOS_OBJETIVO ? '' : 'disabled style="opacity:0.45; cursor:not-allowed;"'} onclick="cofiCanjearPremio()">Procesar canje</button>
-                        </div>
-                    </div>
-                    <h3 style="font-family:'Georgia',serif; margin:25px 0 10px;">Registro de actividad</h3>
-                    <div class="loyalty-historial">${historial || '<p style="opacity:0.7;">No hay movimientos recientes.</p>'}</div>`;
-            } catch(e){
-                cont.innerHTML = '<p style="text-align:center; opacity:0.7;">Error de sincronización. Compruebe su conexión de red.</p>';
-            }
-        };
-
-        setTimeout(() => {
-            const cod = new URLSearchParams(location.search).get('sello');
-            if (!cod) return;
-            window.cofiSwitchTab('lealtad');
-            window.cofiSumarSello(cod.toUpperCase().trim());
-        }, 1500);
 
         // ==========================================
         // CARGA Y CACHÉ
@@ -952,7 +780,7 @@
         }
 
         async function cargarBaseDatos() {
-            const CACHE_KEY = 'cofi_data_cache_v7'; 
+            const CACHE_KEY = 'cofi_data_cache_v8'; 
             const CACHE_TTL = 15 * 60 * 1000; 
             
             try {
