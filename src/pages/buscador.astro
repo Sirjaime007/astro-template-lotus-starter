@@ -32,20 +32,27 @@
     .nav-action-link { font-size: 0.85rem; font-weight: 600; color: #5c3d2e; text-decoration: none; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.05em;}
     .nav-action-link:hover { color: #1a0f0a; }
     
-    .data-real-container { margin: 2rem auto 4rem auto; max-width: 1200px; padding: 0 1.5rem; display: grid; grid-template-columns: 260px 1fr; gap: 1.5rem; }
-    @media (max-width: 1024px) { .data-real-container { grid-template-columns: 1fr; } }
+    /* CONTENEDOR PRINCIPAL */
+    .data-real-container { margin: 2rem auto 4rem auto; max-width: 1200px; padding: 0 1.5rem; display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; align-items: stretch;}
+    @media (max-width: 1024px) { .data-real-container { grid-template-columns: 1fr; gap: 1rem; } }
 
     /* SIDEBAR MÉTRICAS ESTILO DASHBOARD */
-    .metrics-sidebar { padding: 2rem; display: flex; flex-direction: column; justify-content: flex-start; gap: 2.5rem; background: rgba(255,255,255, 0.8); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid rgba(196, 167, 125, 0.3); box-shadow: 0 15px 40px rgba(44, 24, 16, 0.04); }
-    @media (max-width: 1024px) { .metrics-sidebar { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 2rem; padding: 1.5rem; } }
+    .metrics-sidebar { padding: 2.5rem 2rem; display: flex; flex-direction: column; justify-content: space-evenly; gap: 2rem; background: rgba(255,255,255, 0.8); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid rgba(196, 167, 125, 0.3); box-shadow: 0 15px 40px rgba(44, 24, 16, 0.04); height: 100%; }
+    @media (max-width: 1024px) { .metrics-sidebar { display: grid; grid-template-columns: repeat(4, 1fr); padding: 1.5rem; height: auto; gap: 1rem; } }
+    @media (max-width: 768px) { .metrics-sidebar { grid-template-columns: repeat(2, 1fr); padding: 1.2rem; } }
     
-    .metric-item { text-align: left; transition: all 0.3s ease; border-left: 3px solid #c4a77d; padding-left: 1rem;}
-    @media (max-width: 1024px) { .metric-item { text-align: center; border-left: none; border-bottom: 3px solid #c4a77d; padding-left: 0; padding-bottom: 0.5rem; flex: 1 1 20%; min-width: 120px; } }
-    .metric-number { font-size: 2.5rem; font-weight: 800; color: #1a0f0a; line-height: 1; display: block; font-family: 'Inter', sans-serif; letter-spacing: -0.03em;}
-    .metric-label { display: block; font-size: 0.75rem; color: #5c3d2e; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.5rem; font-weight: 700; }
+    .metric-item { text-align: left; transition: all 0.3s ease; border-left: 4px solid #c4a77d; padding-left: 1.2rem; display: flex; flex-direction: column; justify-content: center;}
+    @media (max-width: 1024px) { .metric-item { text-align: center; border-left: none; border-top: 4px solid #c4a77d; padding-left: 0; padding-top: 1rem; } }
+    
+    .metric-number { font-size: 3rem; font-weight: 800; color: #1a0f0a; line-height: 1; display: block; font-family: 'Inter', sans-serif; letter-spacing: -0.03em;}
+    @media (max-width: 1024px) { .metric-number { font-size: 2.5rem; } }
+    @media (max-width: 768px) { .metric-number { font-size: 2.2rem; } }
+    
+    .metric-label { display: block; font-size: 0.8rem; color: #5c3d2e; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.5rem; font-weight: 700; }
+    @media (max-width: 768px) { .metric-label { font-size: 0.7rem; letter-spacing: 0.05em; } }
 
     /* PANEL PRINCIPAL */
-    .buscador-main-panel { display: flex; flex-direction: column; background: rgba(255,255,255, 0.8); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid rgba(196, 167, 125, 0.3); box-shadow: 0 15px 40px rgba(44, 24, 16, 0.04); overflow: hidden; }
+    .buscador-main-panel { display: flex; flex-direction: column; background: rgba(255,255,255, 0.8); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid rgba(196, 167, 125, 0.3); box-shadow: 0 15px 40px rgba(44, 24, 16, 0.04); overflow: hidden; height: 100%; }
     
     .data-header { padding: 2.5rem 2rem 1.5rem; text-align: left; border-bottom: 1px solid rgba(196, 167, 125, 0.2); }
     @media (max-width: 768px) { .data-header { padding: 1.5rem; text-align: center; } }
