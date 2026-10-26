@@ -32,33 +32,22 @@ const datosJSON = JSON.stringify({
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <script is:inline defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <!-- SweetAlert2 NO se carga acá: se inyecta on-demand en el primer modal -->
 
   <style is:global>
     :root {
-      --coffee-900: #1a0f0a;
-      --coffee-700: #3d2317;
-      --coffee-500: #5c3d2e;
-      --tan-500: #c4a77d;
-      --tan-300: #dfc9a8;
-      --cream-100: #f5f0e8;
-      --cream-50: #faf7f2;
-      --accent: #e86a33;
-      --accent-hover: #c85520;
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 16px;
+      --coffee-900: #1a0f0a; --coffee-700: #3d2317; --coffee-500: #5c3d2e;
+      --tan-500: #c4a77d; --tan-300: #dfc9a8; --cream-100: #f5f0e8; --cream-50: #faf7f2;
+      --accent: #e86a33; --accent-hover: #c85520;
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
       --shadow-sm: 0 1px 3px rgba(26,15,10,.06);
       --shadow-md: 0 4px 15px rgba(26,15,10,.08);
       --shadow-lg: 0 15px 40px rgba(26,15,10,.10);
-      --font-display: 'Fraunces', Georgia, serif;
-      --font-body: 'Inter', system-ui, sans-serif;
+      --font-display: 'Fraunces', Georgia, serif; --font-body: 'Inter', system-ui, sans-serif;
       --transition: 0.2s cubic-bezier(.4,0,.2,1);
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; background: var(--cream-100); color: var(--coffee-900); font-family: var(--font-body); }
 
-    /* NAV */
     .nav-bar { padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid rgba(196,167,125,.3); background: rgba(245,240,232,.85); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; }
     .btn-back { display: inline-flex; align-items: center; gap: .5rem; text-decoration: none; color: var(--coffee-900); font-weight: 600; font-size: .9rem; text-transform: uppercase; letter-spacing: .05em; transition: var(--transition); }
     .btn-back:hover { color: var(--accent); transform: translateX(-4px); }
@@ -66,11 +55,9 @@ const datosJSON = JSON.stringify({
     .nav-action-link { font-size: .8rem; font-weight: 600; color: var(--coffee-500); text-decoration: none; cursor: pointer; transition: var(--transition); text-transform: uppercase; letter-spacing: .05em; }
     .nav-action-link:hover { color: var(--coffee-900); }
 
-    /* LAYOUT */
     .data-real-container { margin: 2rem auto 4rem; max-width: 1200px; padding: 0 1.5rem; display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; align-items: start; }
     @media (max-width: 1024px) { .data-real-container { grid-template-columns: 1fr; gap: 1rem; } }
 
-    /* MÉTRICAS */
     .metrics-sidebar { padding: 2rem 1.8rem; display: flex; flex-direction: column; gap: 1.6rem; position: sticky; top: 100px; background: rgba(255,255,255,.8); backdrop-filter: blur(10px); border-radius: var(--radius-md); border: 1px solid rgba(196,167,125,.3); box-shadow: var(--shadow-md); }
     @media (max-width: 1024px) { .metrics-sidebar { display: grid; grid-template-columns: repeat(4,1fr); padding: 1.2rem; gap: 1rem; position: static; } }
     @media (max-width: 768px) { .metrics-sidebar { grid-template-columns: repeat(2,1fr); } }
@@ -80,7 +67,6 @@ const datosJSON = JSON.stringify({
     @media (max-width: 1024px) { .metric-number { font-size: 2.2rem; } }
     .metric-label { display: block; font-size: .72rem; color: var(--coffee-500); text-transform: uppercase; letter-spacing: .1em; margin-top: .4rem; font-weight: 700; }
 
-    /* PANEL PRINCIPAL */
     .buscador-main-panel { background: rgba(255,255,255,.8); backdrop-filter: blur(10px); border-radius: var(--radius-md); border: 1px solid rgba(196,167,125,.3); box-shadow: var(--shadow-lg); overflow: hidden; }
     .data-header { padding: 2rem 2rem 1.2rem; border-bottom: 1px solid rgba(196,167,125,.2); }
     @media (max-width: 768px) { .data-header { padding: 1.5rem; text-align: center; } }
@@ -95,19 +81,15 @@ const datosJSON = JSON.stringify({
     .buscador-ui { padding: 1.5rem 2rem 2rem; }
     @media (max-width: 768px) { .buscador-ui { padding: 1rem 1.2rem 1.5rem; } }
 
-    /* RECIENTES */
     .recientes-wrap { margin-bottom: 1.2rem; }
     .recientes-label { font-size: .7rem; font-weight: 700; color: var(--coffee-500); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .5rem; }
     .recientes-list { display: flex; gap: .6rem; overflow-x: auto; padding-bottom: .4rem; -webkit-overflow-scrolling: touch; }
     .reciente-chip { flex-shrink: 0; display: inline-flex; align-items: center; gap: .4rem; padding: 8px 14px; border: 1px solid rgba(196,167,125,.4); border-radius: 999px; background: var(--cream-50); font-size: .8rem; font-weight: 600; color: var(--coffee-700); cursor: pointer; transition: var(--transition); white-space: nowrap; }
     .reciente-chip:hover { border-color: var(--accent); color: var(--accent); background: white; }
 
-    /* CONTROLES */
-    .search-controls { display: grid; grid-template-columns: 1fr 1fr 2fr auto; gap: .8rem; margin-bottom: 1rem; }
-    .search-controls.cols-2 { grid-template-columns: 1fr 1fr; }
-    .search-controls.cols-1 { grid-template-columns: 1fr; margin-bottom: 2rem; }
-    @media (max-width: 900px) { .search-controls:not(.cols-2):not(.cols-1) { grid-template-columns: 1fr 1fr; } .search-controls:not(.cols-2):not(.cols-1) input { grid-column: 1 / -1; } }
-    @media (max-width: 576px) { .search-controls, .search-controls.cols-2 { grid-template-columns: 1fr; } }
+    .search-controls { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: .8rem; margin-bottom: 1rem; }
+    @media (max-width: 900px) { .search-controls { grid-template-columns: 1fr 1fr; } .search-controls input { grid-column: 1 / -1; } }
+    @media (max-width: 576px) { .search-controls { grid-template-columns: 1fr; } }
 
     .input-moderno { width: 100%; padding: 11px 14px; border: 1px solid rgba(196,167,125,.5); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: .9rem; background: white; color: var(--coffee-900); outline: none; transition: var(--transition); }
     .input-moderno:focus { border-color: var(--coffee-900); box-shadow: 0 0 0 3px rgba(26,15,10,.08); }
@@ -134,7 +116,6 @@ const datosJSON = JSON.stringify({
 
     .results-count { font-size: .8rem; color: var(--coffee-500); margin: 0 0 .8rem; font-weight: 500; }
 
-    /* MAPA */
     .map-wrapper { width: 100%; height: 500px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid rgba(196,167,125,.4); margin-bottom: 1.5rem; position: relative; z-index: 1; }
     @media (max-width: 768px) { .map-wrapper { height: 380px; } }
     #cofiteca-map, #ranking-map { width: 100%; height: 100%; background: #e6e2db; }
@@ -149,7 +130,6 @@ const datosJSON = JSON.stringify({
     .popup-btn { display: inline-block; background: var(--coffee-900); color: white !important; padding: 5px 12px; border-radius: 5px; font-size: .78rem; text-decoration: none; }
     .popup-link { font-size: .78rem; color: var(--coffee-500); font-weight: 600; text-decoration: underline; }
 
-    /* CARDS */
     .resultados-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
     .cafe-card { position: relative; background: var(--cream-50); padding: 1.2rem 1.3rem; border-radius: var(--radius-md); border: 1px solid rgba(196,167,125,.25); box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
     .cafe-card:hover { transform: translateY(-3px); border-color: var(--tan-500); box-shadow: var(--shadow-md); }
@@ -178,13 +158,11 @@ const datosJSON = JSON.stringify({
     .msg-vacio button { padding: 10px 20px; border-radius: var(--radius-sm); border: 1px solid var(--coffee-900); background: transparent; font-family: var(--font-body); font-weight: 600; font-size: .85rem; cursor: pointer; color: var(--coffee-900); }
     .msg-vacio button:hover { background: var(--coffee-900); color: white; }
 
-    /* SKELETON */
     .skeleton-card { height: 130px; background: linear-gradient(90deg, #ece4d6 25%, #f5f0e8 37%, #ece4d6 63%); background-size: 400% 100%; animation: skeleton 1.4s ease infinite; border-radius: var(--radius-md); }
     @keyframes skeleton { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 
     .rank-badge { color: white; font-weight: 700; border-radius: 3px; padding: 2px 6px; font-size: .72rem; font-family: var(--font-body); }
 
-    /* TOSTADORES */
     .tostadores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
     .tostador-card { background: var(--cream-50); border: 1px solid rgba(196,167,125,.3); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; transition: var(--transition); }
     .tostador-card:hover { transform: translateY(-3px); border-color: var(--coffee-900); }
@@ -195,7 +173,6 @@ const datosJSON = JSON.stringify({
 
     .hidden { display: none !important; }
 
-    /* SWAL */
     .swal2-popup.swal-custom-popup { border-radius: var(--radius-md) !important; padding: 2rem !important; border: 1px solid rgba(196,167,125,.5) !important; font-family: var(--font-body) !important; background: white !important; }
     .swal-custom-input { width: 100% !important; padding: 11px 14px !important; border: 1px solid rgba(196,167,125,.5) !important; border-radius: var(--radius-sm) !important; font-family: var(--font-body) !important; font-size: .9rem !important; box-sizing: border-box !important; background: var(--cream-100) !important; color: var(--coffee-900) !important; margin: 0 !important; }
     .swal-custom-input:focus { border-color: var(--coffee-900) !important; outline: none !important; box-shadow: 0 0 0 3px rgba(26,15,10,.1) !important; }
@@ -208,7 +185,7 @@ const datosJSON = JSON.stringify({
   <nav class="nav-bar">
     <a href="/" class="btn-back">← Volver</a>
     <div class="nav-actions">
-      <a onclick="cofiSorprendeme()" class="nav-action-link">🎲 Sorprendeme</a>
+      <!-- ELIMINADO BOTÓN SORPRENDEME -->
       <a onclick="cofiAbrirSumate()" class="nav-action-link">Añadir Local</a>
       <a onclick="cofiAbrirReporte()" class="nav-action-link">Soporte</a>
     </div>
@@ -232,7 +209,6 @@ const datosJSON = JSON.stringify({
         </div>
       </div>
 
-      <!-- VISTA 1: MAPA -->
       <div class="buscador-ui" id="vista-mapa">
         <div class="quick-chips" id="quick-chips"></div>
         <div class="recientes-wrap hidden" id="recientes-wrap">
@@ -243,11 +219,7 @@ const datosJSON = JSON.stringify({
           <select id="select-ciudad" class="input-moderno" onchange="cofiActualizarZonas(); cofiFiltrar(true)"><option value="Todas">Región / Ciudad</option></select>
           <select id="select-zona" class="input-moderno" onchange="cofiFiltrar(true)"><option value="Todas">Zona / Barrio</option></select>
           <input type="text" id="input-busqueda" class="input-moderno" placeholder="Buscar por nombre, zona o dirección..." oninput="cofiFiltrar(false)">
-          <select id="select-orden" class="input-moderno" onchange="cofiCambiarOrden(this.value)" title="Ordenar">
-            <option value="nombre">A-Z</option>
-            <option value="ranking">Ranking</option>
-            <option value="distancia" id="opt-distancia" disabled>Distancia</option>
-          </select>
+          <!-- ELIMINADO SELECTOR DE ORDEN -->
         </div>
         <div class="search-buttons">
           <button class="btn-outline-mad" onclick="cofiMedirDesdeDireccion()">📍 Buscar por Dirección</button>
@@ -266,7 +238,6 @@ const datosJSON = JSON.stringify({
         </div>
       </div>
 
-      <!-- VISTA 2: RANKING -->
       <div class="buscador-ui hidden" id="vista-ranking">
         <div class="search-controls cols-2">
           <select id="select-ranking-tipo" class="input-moderno" onchange="cofiActualizarRankingCiudades(); cofiFiltrarRanking(); cofiActualizarMetricas();">
@@ -280,7 +251,6 @@ const datosJSON = JSON.stringify({
         <div id="ranking-resultados" class="resultados-grid"></div>
       </div>
 
-      <!-- VISTA 3: TOSTADORES -->
       <div class="buscador-ui hidden" id="vista-tostadores">
         <div class="search-controls cols-1">
           <select id="select-ciudad-tostadores" class="input-moderno" onchange="cofiRenderizarTostadores()"><option value="Todas">Todas las Ciudades</option></select>
@@ -308,21 +278,10 @@ const datosJSON = JSON.stringify({
       const norm = s => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 
-      // ==========================================
-      // DATOS (expandir compacto → formato legible)
-      // ==========================================
       const datos = JSON.parse(dataEl.textContent);
       const baseDatos = datos.cafes.map(c => ({
-        id: c.id,
-        nombre: c.n,
-        ubicacion: c.u,
-        instagram: c.s,
-        lat: c.a,
-        lon: c.o,
-        ciudad: datos.regiones[c.r],
-        zona: c.z >= 0 ? datos.zonas[c.z] : '',
-        ciudadReal: c.c >= 0 ? datos.ciudadesReales[c.c] : '',
-        slug: c.slug
+        id: c.id, nombre: c.n, ubicacion: c.u, instagram: c.s, lat: c.a, lon: c.o,
+        ciudad: datos.regiones[c.r], zona: c.z >= 0 ? datos.zonas[c.z] : '', ciudadReal: c.c >= 0 ? datos.ciudadesReales[c.c] : '', slug: c.slug
       }));
       baseDatos.forEach(c => { c._q = norm([c.nombre, c.ubicacion, c.zona, c.ciudadReal, c.ciudad].join(' ')); });
 
@@ -330,7 +289,6 @@ const datosJSON = JSON.stringify({
       const rankingDatos = datos.ranking;
       const meta = datos.meta;
 
-      // Mapa nombre→mejor rank para el orden "Ranking"
       const rankMap = new Map();
       (function () {
         const nombres = new Map();
@@ -347,7 +305,6 @@ const datosJSON = JSON.stringify({
         });
       })();
 
-      // Favoritos
       const FAV_KEY = 'cofi-favs';
       let favoritos = new Set();
       try { favoritos = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch {}
@@ -375,9 +332,8 @@ const datosJSON = JSON.stringify({
       let origen = null, markerOrigen = null;
       let markerActivoId = null, haloActivo = null;
       let listaActual = [], idsEnLista = new Set(), mostrados = PAGINA, idDestacado = null;
-      let soloFavoritos = false, ordenActual = 'nombre';
+      let soloFavoritos = false;
 
-      // SWAL lazy
       let swalPromise = null;
       function ensureSwal() {
         if (window.Swal) return Promise.resolve();
@@ -405,9 +361,6 @@ const datosJSON = JSON.stringify({
       }
       const urlComoLlegar = c => 'https://www.google.com/maps/search/?api=1&query=' + c.lat + ',' + c.lon;
 
-      // ==========================================
-      // FAVORITOS
-      // ==========================================
       function persistirFavs() {
         try { localStorage.setItem(FAV_KEY, JSON.stringify([...favoritos])); } catch {}
         const cnt = $('fav-count');
@@ -428,9 +381,6 @@ const datosJSON = JSON.stringify({
         window.cofiFiltrar(true);
       };
 
-      // ==========================================
-      // RECIENTES
-      // ==========================================
       function registrarVisto(id) {
         recientes = [id, ...recientes.filter(x => x !== id)].slice(0, 8);
         try { localStorage.setItem(RECIENTES_KEY, JSON.stringify(recientes)); } catch {}
@@ -452,9 +402,6 @@ const datosJSON = JSON.stringify({
         cont.replaceChildren(frag);
       }
 
-      // ==========================================
-      // MÉTRICAS
-      // ==========================================
       window.cofiActualizarMetricas = function () {
         const esRanking = $('btn-tab-ranking').classList.contains('active');
         let cafes = 0, tost = 0, prov = 0, ciu = 0;
@@ -485,22 +432,29 @@ const datosJSON = JSON.stringify({
           $('btn-tab-' + t).classList.toggle('active', t === tab);
         });
         window.cofiActualizarMetricas();
-        if (tab === 'mapa' && mapaCofiteca) setTimeout(() => mapaCofiteca.invalidateSize(), 200);
+        
+        // ARREGLO DEL MAPA TRABADO AL VOLVER
+        if (tab === 'mapa' && mapaCofiteca) {
+          setTimeout(() => {
+            mapaCofiteca.invalidateSize();
+            // Forzamos un redibujado por si acaso
+            aplicarFiltros(false);
+          }, 100);
+        }
         if (tab === 'tostadores' && !tostadoresRenderizados) { window.cofiRenderizarTostadores(); tostadoresRenderizados = true; }
-        if (tab === 'ranking' && !rankingIniciado) {
-          initMapaRanking();
-          window.cofiActualizarRankingCiudades();
-          window.cofiFiltrarRanking();
-          rankingIniciado = true;
-        } else if (tab === 'ranking' && mapaRanking) {
-          setTimeout(() => mapaRanking.invalidateSize(), 200);
+        if (tab === 'ranking') {
+          if (!rankingIniciado) {
+            initMapaRanking();
+            window.cofiActualizarRankingCiudades();
+            window.cofiFiltrarRanking();
+            rankingIniciado = true;
+          } else if (mapaRanking) {
+            setTimeout(() => mapaRanking.invalidateSize(), 100);
+          }
         }
         sincronizarURL();
       };
 
-      // ==========================================
-      // MAPA GENERAL
-      // ==========================================
       function initMapa() {
         mapaCofiteca = L.map('cofiteca-map', { minZoom: 4 }).setView(VISTA_ARGENTINA, 4);
         L.tileLayer(TILES, { attribution: 'Tiles &copy; Esri', maxZoom: 16 }).addTo(mapaCofiteca);
@@ -560,7 +514,6 @@ const datosJSON = JSON.stringify({
         });
       }
 
-      // Diff en vez de clear+add
       function dibujarMapa(lista, recentrar) {
         quitarResaltadoMarker();
         marcadoresConEtiqueta.forEach(m => { m.unbindTooltip(); m._tt = false; });
@@ -584,9 +537,6 @@ const datosJSON = JSON.stringify({
         actualizarEtiquetas();
       }
 
-      // ==========================================
-      // LISTA
-      // ==========================================
       function setLista(lista) {
         listaActual = lista;
         idsEnLista = new Set(lista.map(c => c.id));
@@ -691,19 +641,11 @@ const datosJSON = JSON.stringify({
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       };
 
-      // ==========================================
-      // FILTROS
-      // ==========================================
       window.cofiActualizarZonas = function () {
         const ciu = $('select-ciudad').value;
         const base = ciu === 'Todas' ? baseDatos : baseDatos.filter(c => c.ciudad === ciu);
         const zonas = [...new Set(base.map(c => c.zona))].filter(z => z && z !== '-' && z !== 'Sin Zona').sort((a, b) => a.localeCompare(b, 'es'));
         $('select-zona').innerHTML = '<option value="Todas">Zona / Barrio</option>' + zonas.map(z => '<option value="' + esc(z) + '">' + esc(z) + '</option>').join('');
-      };
-
-      window.cofiCambiarOrden = function (orden) {
-        ordenActual = orden;
-        window.cofiFiltrar(false);
       };
 
       function filtrarDatos() {
@@ -718,13 +660,8 @@ const datosJSON = JSON.stringify({
           tokens.every(t => c._q.includes(t))
         );
 
-        if (ordenActual === 'ranking') {
-          filtrados = filtrados.slice().sort((a, b) => {
-            const ra = rankMap.get(a.id) ?? Infinity;
-            const rb = rankMap.get(b.id) ?? Infinity;
-            return ra - rb;
-          });
-        } else if (ordenActual === 'distancia' && origen) {
+        // SI HAY ORIGEN, ORDENA POR DISTANCIA. SI NO, SE MANTIENE ALFABÉTICO.
+        if (origen) {
           filtrados = filtrados.slice().sort((a, b) => {
             const da = calcularD(origen.lat, origen.lon, a.lat, a.lon);
             const db = calcularD(origen.lat, origen.lon, b.lat, b.lon);
@@ -738,8 +675,6 @@ const datosJSON = JSON.stringify({
         if (markerOrigen) { mapaCofiteca.removeLayer(markerOrigen); markerOrigen = null; }
         origen = null;
         $('cofi-status').classList.add('hidden');
-        $('opt-distancia').disabled = true;
-        if (ordenActual === 'distancia') { ordenActual = 'nombre'; $('select-orden').value = 'nombre'; }
       }
 
       function aplicarFiltros(recentrar) {
@@ -760,9 +695,6 @@ const datosJSON = JSON.stringify({
 
       window.cofiQuitarOrigen = function () { limpiarOrigen(); aplicarFiltros(true); };
 
-      // ==========================================
-      // URL STATE
-      // ==========================================
       function sincronizarURL() {
         const p = new URLSearchParams(location.search);
         const c = $('select-ciudad').value;
@@ -790,9 +722,6 @@ const datosJSON = JSON.stringify({
         }
       }
 
-      // ==========================================
-      // RANKING
-      // ==========================================
       function getRankingColor(rank) {
         if (!rank || isNaN(rank)) return '#34495e';
         if (rank <= 3) return '#D4AF37';
@@ -867,9 +796,6 @@ const datosJSON = JSON.stringify({
         $('ranking-resultados').replaceChildren(frag);
       };
 
-      // ==========================================
-      // TOSTADORES
-      // ==========================================
       window.cofiRenderizarTostadores = function () {
         const ciudad = $('select-ciudad-tostadores').value;
         const filtrados = tostadoresDatos.filter(t => ciudad === 'Todas' || t.ciudad === ciudad);
@@ -898,9 +824,6 @@ const datosJSON = JSON.stringify({
         cont.replaceChildren(frag);
       };
 
-      // ==========================================
-      // UBICACIÓN (GPS / DIRECCIÓN) + radio
-      // ==========================================
       function cofiProcesarOrigen(lat, lon, label) {
         $('select-ciudad').value = 'Todas';
         window.cofiActualizarZonas();
@@ -911,16 +834,13 @@ const datosJSON = JSON.stringify({
         markerOrigen = L.circleMarker([lat, lon], { radius: 8, color: '#1a0f0a', fillColor: '#fff', weight: 3, fillOpacity: 1 })
           .addTo(mapaCofiteca).bindPopup(esc(label)).openPopup();
 
-        // Lista: todos los cafés con dist, ordenados
         const conDist = baseDatos.map(c => ({ ...c, dist: calcularD(lat, lon, c.lat, c.lon) }))
           .sort((a, b) => a.dist - b.dist);
         setLista(conDist);
 
-        // El mapa sigue mostrando todo para que el origen no quede aislado
         dibujarMapa(baseDatos, false);
         mapaCofiteca.setView([lat, lon], 15);
 
-        $('opt-distancia').disabled = false;
         const st = $('cofi-status');
         st.innerHTML = '📍 Mostrando los locales más cercanos a <b>' + esc(label) + '</b>' +
           ' · <a href="#" onclick="cofiFiltrarRadio(1);return false;">1 km</a>' +
@@ -1000,20 +920,6 @@ const datosJSON = JSON.stringify({
         });
       };
 
-      // ==========================================
-      // SORPRENDEME
-      // ==========================================
-      window.cofiSorprendeme = function () {
-        window.cofiSwitchTab('mapa');
-        const conIg = baseDatos.filter(c => c.instagram);
-        const pool = conIg.length ? conIg : baseDatos;
-        const c = pool[Math.floor(Math.random() * pool.length)];
-        setTimeout(() => verEnMapa(c.id), 150);
-      };
-
-      // ==========================================
-      // REPORTES / ALTAS
-      // ==========================================
       window.cofiAbrirReporte = async function () {
         await ensureSwal();
         const { value: formValues } = await Swal.fire({
@@ -1065,9 +971,6 @@ const datosJSON = JSON.stringify({
         }
       };
 
-      // ==========================================
-      // KEYBOARD SHORTCUTS
-      // ==========================================
       document.addEventListener('keydown', e => {
         if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
           e.preventDefault();
@@ -1079,16 +982,12 @@ const datosJSON = JSON.stringify({
         }
       });
 
-      // ==========================================
-      // ARRANQUE
-      // ==========================================
       const ciudades = [...new Set(baseDatos.map(c => c.ciudad))].sort((a, b) => a.localeCompare(b, 'es'));
       $('select-ciudad').innerHTML = '<option value="Todas">Región / Ciudad</option>' + ciudades.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
 
       const ciudadesTost = [...new Set(tostadoresDatos.map(t => t.ciudad))].sort((a, b) => a.localeCompare(b, 'es'));
       $('select-ciudad-tostadores').innerHTML = '<option value="Todas">Todas las Ciudades</option>' + ciudadesTost.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
 
-      // Quick chips (regiones más grandes)
       const GRANDES = ['CABA y Gran Buenos Aires', 'Córdoba', 'Mar del Plata', 'Mendoza', 'La Plata'];
       $('quick-chips').innerHTML = GRANDES
         .filter(r => ciudades.includes(r))
