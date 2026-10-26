@@ -1,0 +1,146 @@
+---
+// src/pages/cafe/[slug].astro
+import { cafesExpanded, cafesCercanos, type CafeExpanded } from '../../lib/cafes';
+
+export function getStaticPaths() {
+  return cafesExpanded.map(c => ({
+    params: { slug: c.slug },
+    props: { cafe: c }
+  }));
+}
+
+const { cafe } = Astro.props as { cafe: CafeExpanded };
+const cercanos = cafesCercanos(cafe);
+const ciudadDisplay = cafe.ciudadReal || cafe.ciudad;
+
+const esquema: Record<string, any> = {
+  "@context": "https://schema.org",
+  "@type": "CafeOrCoffeeShop",
+  "name": cafe.nombre,
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": cafe.ubicacion || '',
+    "addressLocality": ciudadDisplay,
+    "addressRegion": cafe.ciudad,
+    "addressCountry": "AR"
+  },
+  "geo": { "@type": "GeoCoordinates", "latitude": cafe.lat, "longitude": cafe.lon }
+};
+if (cafe.instagram) esquema.sameAs = [cafe.instagram];
+---
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{cafe.nombre} · {ciudadDisplay} | Cofiteca</title>
+  <meta name="description" content={`${cafe.nombre}, cafetería de especialidad en ${ciudadDisplay}. ${cafe.ubicacion}. Dirección, ubicación y contacto.`} />
+
+  <meta property="og:title" content={`${cafe.nombre} · Cofiteca`} />
+  <meta property="og:description" content={`Cafetería de especialidad en ${ciudadDisplay}.`} />
+  <meta property="og:type" content="place" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <script type="application/ld+json" set:html={JSON.stringify(esquema)}></script>
+
+  <style is:global>
+    :root {
+      --coffee-900: #1a0f0a; --coffee-700: #3d2317; --coffee-500: #5c3d2e;
+      --tan-500: #c4a77d; --cream-100: #f5f0e8; --cream-50: #faf7f2;
+      --accent: #e86a33;
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(26,15,10,.06);
+      --shadow-md: 0 4px 15px rgba(26,15,10,.08);
+      --shadow-lg: 0 15px 40px rgba(26,15,10,.10);
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--cream-100); color: var(--coffee-900); font-family: var(--font-body); }
+
+    .nav-bar { padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid rgba(196,167,125,.3); background: rgba(245,240,232,.85); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
+    .btn-back { display: inline-flex; align-items: center; gap: .5rem; text-decoration: none; color: var(--coffee-900); font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; }
+    .btn-back:hover { color: var(--accent); }
+    .nav-cta { background: var(--coffee-900); color: white; padding: 9px 18px; border-radius: var(--radius-sm); text-decoration: none; font-weight: 600; font-size: .82rem; letter-spacing: .05em; text-transform: uppercase; }
+    .nav-cta:hover { background: var(--coffee-700); }
+
+    .container { max-width: 900px; margin: 3rem auto 4rem; padding: 0 1.5rem; }
+
+    .hero { margin-bottom: 2.5rem; }
+    .hero .crumbs { font-size: .78rem; color: var(--coffee-500); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; margin-bottom: .6rem; }
+    .hero .crumbs a { color: inherit; text-decoration: none; }
+    .hero .crumbs a:hover { color: var(--accent); }
+    .hero h1 { font-family: var(--font-display); font-variation-settings: 'opsz' 100; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; letter-spacing: -.025em; margin: 0 0 1rem; line-height: 1.1; }
+    .hero .address { font-size: 1.05rem; color: var(--coffee-700); margin-bottom: 1.2rem; }
+    .hero .address b { color: var(--coffee-900); }
+    .hero .actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+    .hero .actions a, .hero .actions button { display: inline-flex; align-items: center; gap: .4rem; padding: 11px 20px; border-radius: var(--radius-sm); font-family: var(--font-body); font-weight: 600; font-size: .85rem; text-decoration: none; cursor: pointer; transition: .2s; border: 1px solid; }
+    .btn-primary { background: var(--coffee-900); color: white; border-color: var(--coffee-900); }
+    .btn-primary:hover { background: var(--coffee-700); border-color: var(--coffee-700); }
+    .btn-outline { background: transparent; color: var(--coffee-900); border-color: var(--coffee-900); }
+    .btn-outline:hover { background: var(--coffee-900); color: white; }
+
+    .map-frame { width: 100%; aspect-ratio: 16/9; border-radius: var(--radius-md); overflow: hidden; border: 1px solid rgba(196,167,125,.4); box-shadow: var(--shadow-md); margin-bottom: 3rem; }
+    .map-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+    .cercanos-title { font-family: var(--font-display); font-variation-settings: 'opsz' 40; font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; margin: 0 0 1.2rem; }
+    .cercanos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+    .cercano-card { background: var(--cream-50); padding: 1.2rem; border-radius: var(--radius-md); border: 1px solid rgba(196,167,125,.25); box-shadow: var(--shadow-sm); text-decoration: none; color: inherit; display: block; transition: .2s; }
+    .cercano-card:hover { transform: translateY(-3px); border-color: var(--tan-500); box-shadow: var(--shadow-md); }
+    .cercano-card h3 { font-family: var(--font-display); font-size: 1.05rem; margin: 0 0 .4rem; color: var(--coffee-900); font-weight: 800; }
+    .cercano-card p { margin: 0; font-size: .8rem; color: var(--coffee-500); }
+  </style>
+</head>
+<body>
+  <nav class="nav-bar">
+    <a href="/buscador" class="btn-back">← Volver al mapa</a>
+    <a href={`/buscador?c=${encodeURIComponent(cafe.ciudad)}&q=${encodeURIComponent(cafe.nombre)}`} class="nav-cta">Ver en el mapa</a>
+  </nav>
+
+  <main class="container">
+    <header class="hero">
+      <div class="crumbs">
+        <a href="/buscador">Cofiteca</a> · {cafe.ciudad}
+      </div>
+      <h1>{cafe.nombre}</h1>
+      <p class="address">
+        📍 <b>{cafe.ubicacion || 'Dirección no informada'}</b>
+        {ciudadDisplay && cafe.ubicacion ? `, ${ciudadDisplay}` : ciudadDisplay}
+      </p>
+      <div class="actions">
+        {cafe.instagram && (
+          <a href={cafe.instagram} target="_blank" rel="noopener noreferrer" class="btn-primary">Instagram</a>
+        )}
+        <a href={`https://www.google.com/maps/search/?api=1&query=${cafe.lat},${cafe.lon}`} target="_blank" rel="noopener noreferrer" class="btn-outline">Cómo llegar</a>
+        <a href={`/buscador?c=${encodeURIComponent(cafe.ciudad)}&q=${encodeURIComponent(cafe.nombre)}`} class="btn-outline">Ver en el mapa interactivo</a>
+      </div>
+    </header>
+
+    <div class="map-frame">
+      <iframe
+        src={`https://maps.google.com/maps?q=${cafe.lat},${cafe.lon}&z=16&output=embed`}
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        title={`Mapa de ${cafe.nombre}`}>
+      </iframe>
+    </div>
+
+    {cercanos.length > 0 && (
+      <section>
+        <h2 class="cercanos-title">Cerca de {cafe.nombre}</h2>
+        <div class="cercanos-grid">
+          {cercanos.map(c => (
+            <a href={`/cafe/${c.slug}`} class="cercano-card">
+              <h3>{c.nombre}</h3>
+              <p>📍 {c.ubicacion || 'Sin dirección'} · {c.ciudadReal || c.ciudad}</p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </main>
+</body>
+</html>
