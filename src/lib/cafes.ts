@@ -294,7 +294,9 @@ export const meta = {
   cafes: cafesCompact.length,
   tostadores: tostadores.length,
   provincias: PROVINCIAS_ARGENTINA,
-  ciudades: ciudadesRealesDict.length || regiones.length
+  // Usamos Math.max para que el contador muestre el número más alto entre:
+  // las ciudades reales de la planilla, las zonas/barrios, o las regiones.
+  ciudades: Math.max(ciudadesRealesDict.length, zonasDict.length, regiones.length)
 };
 
 // ---------- Helper para página de detalle ----------
