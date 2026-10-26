@@ -1,10 +1,4 @@
 // src/lib/cafes.ts
-//
-// Carga TODOS los datos desde Google Sheets + geocodifica (una sola vez por build,
-// gracias al cache de módulos de Vite/Astro) y los expone optimizados:
-//   - cafesCompact: formato mínimo para serializar en el HTML (diccionarios + coords 5 dec)
-//   - cafesExpanded: formato completo para generar las páginas /cafe/[slug]
-//   - tostadores, ranking, meta
 import fs from 'node:fs';
 
 const SHEET_ID = '10vUOhRr7IAXlRrkBphxEP4ApXYBgrnuxJq6G83GnfHI';
@@ -117,11 +111,10 @@ for (const { ciudad, filas } of hojasCafes) {
 }
 
 if (cafesRaw.length === 0) throw new Error('[cafes] No se cargó ningún local: se cancela el build.');
-if (descartados.length) console.warn(`[cafes] Descartados por coords fuera de AR:\n - ${descartados.join('\n - ')}`);
 
 cafesRaw.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
 
-// ---------- Geocodificación inversa (Georef) con caché en disco ----------
+// ---------- Geocodificación inversa (Georef) con caché ----------
 const GEO_PATH = 'src/data/geo-cache.json';
 const geoCache: Record<string, string> = fs.existsSync(GEO_PATH)
   ? JSON.parse(fs.readFileSync(GEO_PATH, 'utf8'))
@@ -156,108 +149,50 @@ try {
   console.warn('[cafes] No se pudo guardar geo-cache:', e);
 }
 
-// ---------- Diccionarios (para compactar el JSON) ----------
+// ---------- Diccionarios ----------
 export const regiones = [...new Set(cafesRaw.map(c => c.ciudad))].sort((a, b) => a.localeCompare(b, 'es'));
 export const zonasDict = [...new Set(cafesRaw.map(c => c.zona).filter(z => z && z !== '-' && z !== 'Sin Zona'))].sort((a, b) => a.localeCompare(b, 'es'));
 export const ciudadesRealesDict = [...new Set(cafesRaw.map(c => c.ciudadReal).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
 
 // ---------- Tipos ----------
 export interface CafeCompact {
-  id: number;
-  n: string;   // nombre
-  r: number;   // índice en regiones
-  z: number;   // índice en zonasDict (-1 si no)
-  c: number;   // índice en ciudadesRealesDict (-1 si no)
-  u: string;   // ubicación
-  s: string;   // instagram URL o ''
-  a: number;   // lat
-  o: number;   // lon
-  slug: string;
+  id: number; n: string; r: number; z: number; c: number; u: string; s: string; a: number; o: number; slug: string;
 }
-
 export interface CafeExpanded {
-  id: number;
-  nombre: string;
-  ubicacion: string;
-  instagram: string;
-  lat: number;
-  lon: number;
-  ciudad: string;
-  zona: string;
-  ciudadReal: string;
-  slug: string;
+  id: number; nombre: string; ubicacion: string; instagram: string; lat: number; lon: number; ciudad: string; zona: string; ciudadReal: string; slug: string;
 }
-
 export interface Tostador {
-  nombre: string;
-  ig: string;
-  tienda: string;
-  ciudad: string;
-  foto: string;
+  nombre: string; ig: string; tienda: string; ciudad: string; foto: string;
 }
-
 export interface RankingItem {
-  rank: number;
-  nombre: string;
-  ubicacion: string;
-  ig: string;
-  lugar: string;
-  ciudad: string;
-  pais: string;
-  provincia: string;
-  lat: number;
-  lon: number;
+  rank: number; nombre: string; ubicacion: string; ig: string; lugar: string; ciudad: string; pais: string; provincia: string; lat: number; lon: number;
 }
 
-// ---------- cafés compactos ----------
 const slugUsados = new Map<string, number>();
-
 export const cafesCompact: CafeCompact[] = cafesRaw.map((c, id) => {
   let slug = slugify(c.nombre + '-' + c.ciudad);
   const count = (slugUsados.get(slug) || 0) + 1;
   slugUsados.set(slug, count);
   if (count > 1) slug = `${slug}-${id}`;
   return {
-    id,
-    n: c.nombre,
-    r: regiones.indexOf(c.ciudad),
-    z: zonasDict.indexOf(c.zona),
-    c: ciudadesRealesDict.indexOf(c.ciudadReal),
-    u: c.ubicacion,
-    s: c.instagram,
-    a: +c.lat.toFixed(5),
-    o: +c.lon.toFixed(5),
-    slug
+    id, n: c.nombre, r: regiones.indexOf(c.ciudad), z: zonasDict.indexOf(c.zona), c: ciudadesRealesDict.indexOf(c.ciudadReal),
+    u: c.ubicacion, s: c.instagram, a: +c.lat.toFixed(5), o: +c.lon.toFixed(5), slug
   };
 });
 
-// ---------- cafés expandidos (para /cafe/[slug]) ----------
 export const cafesExpanded: CafeExpanded[] = cafesCompact.map(c => ({
-  id: c.id,
-  nombre: c.n,
-  ubicacion: c.u,
-  instagram: c.s,
-  lat: c.a,
-  lon: c.o,
-  ciudad: regiones[c.r],
-  zona: c.z >= 0 ? zonasDict[c.z] : '',
-  ciudadReal: c.c >= 0 ? ciudadesRealesDict[c.c] : '',
-  slug: c.slug
+  id: c.id, nombre: c.n, ubicacion: c.u, instagram: c.s, lat: c.a, lon: c.o,
+  ciudad: regiones[c.r], zona: c.z >= 0 ? zonasDict[c.z] : '', ciudadReal: c.c >= 0 ? ciudadesRealesDict[c.c] : '', slug: c.slug
 }));
 
-// ---------- Tostadores ----------
 const tostadoresRaw = await leerHoja(TOSTADORES_GID);
 export const tostadores: Tostador[] = tostadoresRaw
   .map(f => ({
-    nombre: f.TOSTADOR || f.TOSTADORES || f.NOMBRE || '',
-    ig: enlace(f.INSTAGRAM || f.IG),
-    tienda: enlace(f['TIENDA ONLINE'] || f.TIENDA || f.LINK),
-    ciudad: (f.CIUDAD || 'Varias').trim(),
+    nombre: f.TOSTADOR || f.TOSTADORES || f.NOMBRE || '', ig: enlace(f.INSTAGRAM || f.IG),
+    tienda: enlace(f['TIENDA ONLINE'] || f.TIENDA || f.LINK), ciudad: (f.CIUDAD || 'Varias').trim(),
     foto: enlace(f.IMAGENES || f.IMAGEN || f.FOTO || f.FOTOS)
-  }))
-  .filter(t => t.nombre);
+  })).filter(t => t.nombre);
 
-// ---------- Rankings ----------
 function parseRanking(filas: Fila[], tipo: 'arg' | 'sud' | 'mun'): RankingItem[] {
   let rankActual = 999;
   return filas.map(f => {
@@ -269,12 +204,8 @@ function parseRanking(filas: Fila[], tipo: 'arg' | 'sud' | 'mun'): RankingItem[]
     const pais = (f.PAIS || f.COUNTRY || 'Desconocido').trim();
     const provincia = (f.PROVINCIA || f.PROVINCE || f.REGION || 'Desconocida').trim();
     return {
-      rank: rankActual,
-      nombre: (f.CAFETERIA || f.CAFE || '').trim(),
-      ubicacion: f.UBICACION || f.DIRECCION || '-',
-      ig: enlace(f.IG || f.INSTAGRAM),
-      lugar: tipo === 'arg' ? ciudad : pais,
-      ciudad, pais, provincia,
+      rank: rankActual, nombre: (f.CAFETERIA || f.CAFE || '').trim(), ubicacion: f.UBICACION || f.DIRECCION || '-',
+      ig: enlace(f.IG || f.INSTAGRAM), lugar: tipo === 'arg' ? ciudad : pais, ciudad, pais, provincia,
       lat: lat ?? 0, lon: lon ?? 0
     } as RankingItem;
   }).filter(r => r.nombre && r.lat !== null && r.lon !== null && (r.lat !== 0 || r.lon !== 0));
@@ -283,28 +214,20 @@ function parseRanking(filas: Fila[], tipo: 'arg' | 'sud' | 'mun'): RankingItem[]
 const [rankArg, rankSud, rankMun] = await Promise.all([
   leerHoja(RANKING_GIDS.arg), leerHoja(RANKING_GIDS.sud), leerHoja(RANKING_GIDS.mun)
 ]);
+export const ranking = { arg: parseRanking(rankArg, 'arg'), sud: parseRanking(rankSud, 'sud'), mun: parseRanking(rankMun, 'mun') };
 
-export const ranking = {
-  arg: parseRanking(rankArg, 'arg'),
-  sud: parseRanking(rankSud, 'sud'),
-  mun: parseRanking(rankMun, 'mun')
-};
-
+// ---------- MÉTRICAS CORREGIDAS ----------
 export const meta = {
   cafes: cafesCompact.length,
   tostadores: tostadores.length,
   provincias: PROVINCIAS_ARGENTINA,
-  // Usamos Math.max para que el contador muestre el número más alto entre:
-  // las ciudades reales de la planilla, las zonas/barrios, o las regiones.
-  ciudades: Math.max(ciudadesRealesDict.length, zonasDict.length, regiones.length)
+  // Contamos las ciudades reales. Si por alguna razón falla, usamos las regiones (13), 
+  // pero NUNCA las zonas, para no mezclar barrios con ciudades.
+  ciudades: ciudadesRealesDict.length || regiones.length
 };
 
-// ---------- Helper para página de detalle ----------
 export function cafesCercanos(cafe: CafeExpanded, limit = 6): CafeExpanded[] {
   return cafesExpanded
-    .filter(c => c.id !== cafe.id && (
-      (c.ciudadReal && c.ciudadReal === cafe.ciudadReal) ||
-      (c.ciudad === cafe.ciudad)
-    ))
+    .filter(c => c.id !== cafe.id && ((c.ciudadReal && c.ciudadReal === cafe.ciudadReal) || (c.ciudad === cafe.ciudad)))
     .slice(0, limit);
 }
