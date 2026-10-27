@@ -27,8 +27,6 @@ function parseCSV(text: string): string[][] {
   let enComillas = false;
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
-    if (enComillas) {
-      if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else enComillas = false; }
       else cur += ch;
     } else if (ch === '"') enComillas = true;
     else if (ch === ',') { row.push(cur); cur = ''; }
@@ -45,25 +43,6 @@ function parseCSV(text: string): string[][] {
 }
 
 async function leerHoja(gid: string, intentos = 3): Promise<Fila[]> {
-  let ultimoError: unknown;
-  for (let i = 0; i < intentos; i++) {
-    try {
-      const res = await fetch(urlSheet(gid));
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const filas = parseCSV(await res.text());
-      if (filas.length < 2) return [];
-      const headers = filas[0].map(normHeader);
-      return filas.slice(1).map(r => {
-        const o: Fila = {};
-        headers.forEach((h, idx) => { if (h) o[h] = (r[idx] ?? '').trim(); });
-        return o;
-      });
-    } catch (e) {
-      ultimoError = e;
-      await new Promise(r => setTimeout(r, 800 * (i + 1)));
-    }
-  }
-  throw new Error(`No se pudo leer la hoja gid=${gid}: ${ultimoError}`);
 }
 
 function numero(v?: string): number | null {
@@ -133,20 +112,26 @@ for (let i = 0; i < pendientes.length; i += 200) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const { resultados } = await res.json();
     resultados.forEach((r: any, idx: number) => {
-      const u = r.ubicacion;
-      if (!u?.provincia_nombre) return;
-      const nombre = u.provincia_id === '02' ? 'CABA' : (u.municipio_nombre || u.departamento_nombre);
-      if (nombre) geoCache[claveGeo(lote[idx])] = `${u.provincia_nombre}|${nombre}`;
-    });
-  } catch (e) {
-    console.warn('[cafes] Georef falló en un lote:', e);
-  }
-}
-try {
-  fs.mkdirSync('src/data', { recursive: true });
-  fs.writeFileSync(GEO_PATH, JSON.stringify(geoCache));
-} catch (e) {
-  console.warn('[cafes] No se pudo guardar geo-cache:', e);
+// Si un nombre sale raro en el desplegable, agregalo acá (clave en minúsculas y sin tildes).
+const ALIAS: Record<string, string> = {
+  'general pueyrredon': 'Mar del Plata',
+  'mdp': 'Mar del Plata',
+  'mar del plata': 'Mar del Plata',
+  'capital federal': 'CABA',
+  'ciudad de buenos aires': 'CABA',
+  'ciudad autonoma de buenos aires': 'CABA',
+  'caba': 'CABA'
+};
+const limpiarCiudad = (s: string) => {
+  const t = (s || '').trim();
+  return t ? (ALIAS[normTexto(t)] ?? t) : '';
+};
+
+for (const c of cafesRaw) {
+  const g = geoCache[claveGeo(c)];
+  const muni = g ? g.split('|')[1] : '';
+  // Prioridad: columna del sheet -> municipio de Georef -> región de la hoja
+  c.ciudadReal = limpiarCiudad(c.ciudadReal) || limpiarCiudad(muni) || c.ciudad;
 }
 
 // ---------- Diccionarios ----------
@@ -202,9 +187,6 @@ function parseRanking(filas: Fila[], tipo: 'arg' | 'sud' | 'mun'): RankingItem[]
     const lon = numero(f.LONG || f.LNG || f.LONGITUD);
     const ciudad = (f.CUIDAD || f.CIUDAD || f.CITY || 'Desconocida').trim();
     const pais = (f.PAIS || f.COUNTRY || 'Desconocido').trim();
-    const provincia = (f.PROVINCIA || f.PROVINCE || f.REGION || 'Desconocida').trim();
-    return {
-      rank: rankActual, nombre: (f.CAFETERIA || f.CAFE || '').trim(), ubicacion: f.UBICACION || f.DIRECCION || '-',
       ig: enlace(f.IG || f.INSTAGRAM), lugar: tipo === 'arg' ? ciudad : pais, ciudad, pais, provincia,
       lat: lat ?? 0, lon: lon ?? 0
     } as RankingItem;
@@ -216,13 +198,12 @@ const [rankArg, rankSud, rankMun] = await Promise.all([
 ]);
 export const ranking = { arg: parseRanking(rankArg, 'arg'), sud: parseRanking(rankSud, 'sud'), mun: parseRanking(rankMun, 'mun') };
 
-// ---------- MÉTRICAS CORREGIDAS ----------
+// ---------- Métricas ----------
 export const meta = {
   cafes: cafesCompact.length,
   tostadores: tostadores.length,
   provincias: PROVINCIAS_ARGENTINA,
-  // Contamos las ciudades reales. Si por alguna razón falla, usamos las regiones (13), 
-  // pero NUNCA las zonas, para no mezclar barrios con ciudades.
+  // Ciudades reales (ya normalizadas). Si falla, caemos a las regiones, nunca a las zonas.
   ciudades: ciudadesRealesDict.length || regiones.length
 };
 
