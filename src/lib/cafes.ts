@@ -27,7 +27,11 @@ function parseCSV(text: string): string[][] {
   let enComillas = false;
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
-      else cur += ch;
+    if (enComillas) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { cur += '"'; i++; }
+        else enComillas = false;
+      } else cur += ch;
     } else if (ch === '"') enComillas = true;
     else if (ch === ',') { row.push(cur); cur = ''; }
     else if (ch === '\n' || ch === '\r') {
@@ -43,6 +47,27 @@ function parseCSV(text: string): string[][] {
 }
 
 async function leerHoja(gid: string, intentos = 3): Promise<Fila[]> {
+  for (let i = 0; i < intentos; i++) {
+    try {
+      const res = await fetch(urlSheet(gid));
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const rows = parseCSV(await res.text());
+      if (rows.length < 2) return [];
+      const headers = rows[0].map(normHeader);
+      return rows.slice(1).map(r => {
+        const o: Fila = {};
+        headers.forEach((h, idx) => { if (h) o[h] = (r[idx] ?? '').trim(); });
+        return o;
+      });
+    } catch (e) {
+      if (i === intentos - 1) {
+        console.warn(`[cafes] No se pudo leer la hoja ${gid}:`, e);
+        return [];
+      }
+      await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+    }
+  }
+  return [];
 }
 
 function numero(v?: string): number | null {
@@ -89,18 +114,21 @@ for (const { ciudad, filas } of hojasCafes) {
   }
 }
 
+if (descartados.length) console.warn(`[cafes] Descartados por coordenadas fuera de Argentina: ${descartados.join(' | ')}`);
 if (cafesRaw.length === 0) throw new Error('[cafes] No se cargó ningún local: se cancela el build.');
 
 cafesRaw.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
 
 // ---------- Geocodificación inversa (Georef) con caché ----------
 const GEO_PATH = 'src/data/geo-cache.json';
-const geoCache: Record<string, string> = fs.existsSync(GEO_PATH)
-  ? JSON.parse(fs.readFileSync(GEO_PATH, 'utf8'))
-  : {};
+let geoCache: Record<string, string> = {};
+try {
+  if (fs.existsSync(GEO_PATH)) geoCache = JSON.parse(fs.readFileSync(GEO_PATH, 'utf8'));
+} catch { geoCache = {}; }
 const claveGeo = (c: any) => `${c.lat},${c.lon}`;
 
 const pendientes = cafesRaw.filter(c => !(claveGeo(c) in geoCache));
+let cacheModificada = false;
 for (let i = 0; i < pendientes.length; i += 200) {
   const lote = pendientes.slice(i, i + 200);
   try {
@@ -112,6 +140,24 @@ for (let i = 0; i < pendientes.length; i += 200) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const { resultados } = await res.json();
     resultados.forEach((r: any, idx: number) => {
+      const u = r?.ubicacion ?? r ?? {};
+      const prov = u.provincia_nombre ?? u.provincia?.nombre ?? '';
+      const muni = u.municipio_nombre ?? u.municipio?.nombre ?? u.departamento_nombre ?? u.departamento?.nombre ?? '';
+      geoCache[claveGeo(lote[idx])] = `${prov}|${muni}`;
+      cacheModificada = true;
+    });
+  } catch (e) {
+    console.warn('[cafes] Georef no disponible, se usa la región de la hoja:', e);
+    break;
+  }
+}
+if (cacheModificada) {
+  try {
+    fs.mkdirSync('src/data', { recursive: true });
+    fs.writeFileSync(GEO_PATH, JSON.stringify(geoCache));
+  } catch {}
+}
+
 // Si un nombre sale raro en el desplegable, agregalo acá (clave en minúsculas y sin tildes).
 const ALIAS: Record<string, string> = {
   'general pueyrredon': 'Mar del Plata',
@@ -170,6 +216,7 @@ export const cafesExpanded: CafeExpanded[] = cafesCompact.map(c => ({
   ciudad: regiones[c.r], zona: c.z >= 0 ? zonasDict[c.z] : '', ciudadReal: c.c >= 0 ? ciudadesRealesDict[c.c] : '', slug: c.slug
 }));
 
+// ---------- Tostadores ----------
 const tostadoresRaw = await leerHoja(TOSTADORES_GID);
 export const tostadores: Tostador[] = tostadoresRaw
   .map(f => ({
@@ -178,15 +225,24 @@ export const tostadores: Tostador[] = tostadoresRaw
     foto: enlace(f.IMAGENES || f.IMAGEN || f.FOTO || f.FOTOS)
   })).filter(t => t.nombre);
 
+// ---------- Rankings ----------
 function parseRanking(filas: Fila[], tipo: 'arg' | 'sud' | 'mun'): RankingItem[] {
   let rankActual = 999;
   return filas.map(f => {
     const rawRank = (f.RANKING || f.RANK || '').trim();
-    if (rawRank !== '') rankActual = parseInt(rawRank, 10);
+    if (rawRank !== '') {
+      const n = parseInt(rawRank, 10);
+      if (!isNaN(n)) rankActual = n;
+    }
     const lat = numero(f.LAT || f.LATITUD);
     const lon = numero(f.LONG || f.LNG || f.LONGITUD);
     const ciudad = (f.CUIDAD || f.CIUDAD || f.CITY || 'Desconocida').trim();
     const pais = (f.PAIS || f.COUNTRY || 'Desconocido').trim();
+    const provincia = (f.PROVINCIA || f.PROVINCE || f.ESTADO || 'Desconocida').trim();
+    return {
+      rank: rankActual,
+      nombre: (f.NOMBRE || f.CAFE || f.LOCAL || f.CAFETERIA || '').trim(),
+      ubicacion: (f.UBICACION || f.DIRECCION || '-').trim(),
       ig: enlace(f.IG || f.INSTAGRAM), lugar: tipo === 'arg' ? ciudad : pais, ciudad, pais, provincia,
       lat: lat ?? 0, lon: lon ?? 0
     } as RankingItem;
