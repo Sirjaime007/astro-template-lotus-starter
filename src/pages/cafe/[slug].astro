@@ -12,6 +12,7 @@ export function getStaticPaths() {
 const { cafe } = Astro.props as { cafe: CafeExpanded };
 const cercanos = cafesCercanos(cafe);
 const ciudadDisplay = cafe.ciudadReal || cafe.ciudad;
+const urlMapa = `/?c=${encodeURIComponent(cafe.ciudad)}&q=${encodeURIComponent(cafe.nombre)}`;
 
 const esquema: Record<string, any> = {
   "@context": "https://schema.org",
@@ -33,6 +34,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f5f0e8" />
   <title>{cafe.nombre} · {ciudadDisplay} | Cofiteca</title>
   <meta name="description" content={`${cafe.nombre}, cafetería de especialidad en ${ciudadDisplay}. ${cafe.ubicacion}. Dirección, ubicación y contacto.`} />
 
@@ -51,59 +53,68 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
       --coffee-900: #1a0f0a; --coffee-700: #3d2317; --coffee-500: #5c3d2e;
       --tan-500: #c4a77d; --cream-100: #f5f0e8; --cream-50: #faf7f2;
       --accent: #e86a33;
-      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
+      --radius-sm: 6px; --radius-md: 10px;
       --shadow-sm: 0 1px 3px rgba(26,15,10,.06);
       --shadow-md: 0 4px 15px rgba(26,15,10,.08);
-      --shadow-lg: 0 15px 40px rgba(26,15,10,.10);
       --font-display: 'Fraunces', Georgia, serif;
       --font-body: 'Inter', system-ui, sans-serif;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background: var(--cream-100); color: var(--coffee-900); font-family: var(--font-body); }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    html, body { margin: 0; padding: 0; background: var(--cream-100); color: var(--coffee-900); font-family: var(--font-body); overflow-x: hidden; }
+    h1, h2, h3, p { overflow-wrap: anywhere; }
 
-    .nav-bar { padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid rgba(196,167,125,.3); background: rgba(245,240,232,.85); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
-    .btn-back { display: inline-flex; align-items: center; gap: .5rem; text-decoration: none; color: var(--coffee-900); font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; }
+    .nav-bar { padding: .9rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid rgba(196,167,125,.3); background: rgba(245,240,232,.92); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
+    .btn-back { display: inline-flex; align-items: center; min-height: 40px; text-decoration: none; color: var(--coffee-900); font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; }
     .btn-back:hover { color: var(--accent); }
-    .nav-cta { background: var(--coffee-900); color: white; padding: 9px 18px; border-radius: var(--radius-sm); text-decoration: none; font-weight: 600; font-size: .82rem; letter-spacing: .05em; text-transform: uppercase; }
+    .nav-cta { background: var(--coffee-900); color: white; padding: 10px 18px; border-radius: var(--radius-sm); text-decoration: none; font-weight: 600; font-size: .8rem; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
     .nav-cta:hover { background: var(--coffee-700); }
+    @media (max-width: 600px) {
+      .nav-bar { padding: .7rem 1rem; }
+      .btn-back { font-size: .75rem; }
+      .nav-cta { padding: 9px 12px; font-size: .72rem; }
+    }
 
-    .container { max-width: 900px; margin: 3rem auto 4rem; padding: 0 1.5rem; }
+    .container { max-width: 900px; margin: 2.5rem auto 4rem; padding: 0 1.5rem; }
+    @media (max-width: 600px) { .container { margin-top: 1.5rem; padding: 0 1rem; } }
 
-    .hero { margin-bottom: 2.5rem; }
-    .hero .crumbs { font-size: .78rem; color: var(--coffee-500); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; margin-bottom: .6rem; }
+    .hero { margin-bottom: 2rem; }
+    .hero .crumbs { font-size: .75rem; color: var(--coffee-500); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; margin-bottom: .6rem; }
     .hero .crumbs a { color: inherit; text-decoration: none; }
     .hero .crumbs a:hover { color: var(--accent); }
-    .hero h1 { font-family: var(--font-display); font-variation-settings: 'opsz' 100; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; letter-spacing: -.025em; margin: 0 0 1rem; line-height: 1.1; }
-    .hero .address { font-size: 1.05rem; color: var(--coffee-700); margin-bottom: 1.2rem; }
+    .hero h1 { font-family: var(--font-display); font-variation-settings: 'opsz' 100; font-size: clamp(1.9rem, 6vw, 3.2rem); font-weight: 800; letter-spacing: -.025em; margin: 0 0 1rem; line-height: 1.1; }
+    .hero .address { font-size: 1.05rem; color: var(--coffee-700); margin: 0 0 1.2rem; line-height: 1.5; }
     .hero .address b { color: var(--coffee-900); }
     .hero .actions { display: flex; gap: .6rem; flex-wrap: wrap; }
-    .hero .actions a, .hero .actions button { display: inline-flex; align-items: center; gap: .4rem; padding: 11px 20px; border-radius: var(--radius-sm); font-family: var(--font-body); font-weight: 600; font-size: .85rem; text-decoration: none; cursor: pointer; transition: .2s; border: 1px solid; }
+    .hero .actions a { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 44px; padding: 11px 20px; border-radius: var(--radius-sm); font-weight: 600; font-size: .85rem; text-decoration: none; cursor: pointer; transition: .2s; border: 1px solid; }
+    @media (max-width: 600px) { .hero .actions a { flex: 1 1 100%; } }
     .btn-primary { background: var(--coffee-900); color: white; border-color: var(--coffee-900); }
     .btn-primary:hover { background: var(--coffee-700); border-color: var(--coffee-700); }
     .btn-outline { background: transparent; color: var(--coffee-900); border-color: var(--coffee-900); }
     .btn-outline:hover { background: var(--coffee-900); color: white; }
 
-    .map-frame { width: 100%; aspect-ratio: 16/9; border-radius: var(--radius-md); overflow: hidden; border: 1px solid rgba(196,167,125,.4); box-shadow: var(--shadow-md); margin-bottom: 3rem; }
+    .map-frame { width: 100%; aspect-ratio: 16/9; border-radius: var(--radius-md); overflow: hidden; border: 1px solid rgba(196,167,125,.4); box-shadow: var(--shadow-md); margin-bottom: 2.5rem; }
+    @media (max-width: 600px) { .map-frame { aspect-ratio: 4/3; } }
     .map-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
 
     .cercanos-title { font-family: var(--font-display); font-variation-settings: 'opsz' 40; font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; margin: 0 0 1.2rem; }
-    .cercanos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+    .cercanos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px,100%), 1fr)); gap: 1rem; }
     .cercano-card { background: var(--cream-50); padding: 1.2rem; border-radius: var(--radius-md); border: 1px solid rgba(196,167,125,.25); box-shadow: var(--shadow-sm); text-decoration: none; color: inherit; display: block; transition: .2s; }
     .cercano-card:hover { transform: translateY(-3px); border-color: var(--tan-500); box-shadow: var(--shadow-md); }
     .cercano-card h3 { font-family: var(--font-display); font-size: 1.05rem; margin: 0 0 .4rem; color: var(--coffee-900); font-weight: 800; }
-    .cercano-card p { margin: 0; font-size: .8rem; color: var(--coffee-500); }
+    .cercano-card p { margin: 0; font-size: .85rem; color: var(--coffee-500); line-height: 1.5; }
   </style>
 </head>
 <body>
   <nav class="nav-bar">
-    <a href="/buscador" class="btn-back">← Volver al mapa</a>
-    <a href={`/buscador?c=${encodeURIComponent(cafe.ciudad)}&q=${encodeURIComponent(cafe.nombre)}`} class="nav-cta">Ver en el mapa</a>
+    <a href="/" class="btn-back">← Volver al mapa</a>
+    <a href={urlMapa} class="nav-cta">Ver en el mapa</a>
   </nav>
 
   <main class="container">
     <header class="hero">
       <div class="crumbs">
-        <a href="/buscador">Cofiteca</a> · {cafe.ciudad}
+        <a href="/">Cofiteca</a> · {cafe.ciudad}
       </div>
       <h1>{cafe.nombre}</h1>
       <p class="address">
@@ -115,7 +126,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
           <a href={cafe.instagram} target="_blank" rel="noopener noreferrer" class="btn-primary">Instagram</a>
         )}
         <a href={`https://www.google.com/maps/search/?api=1&query=${cafe.lat},${cafe.lon}`} target="_blank" rel="noopener noreferrer" class="btn-outline">Cómo llegar</a>
-        <a href={`/buscador?c=${encodeURIComponent(cafe.ciudad)}&q=${encodeURIComponent(cafe.nombre)}`} class="btn-outline">Ver en el mapa interactivo</a>
+        <a href={urlMapa} class="btn-outline">Ver en el mapa interactivo</a>
       </div>
     </header>
 
