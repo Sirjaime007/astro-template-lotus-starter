@@ -1,359 +1,1066 @@
 ---
 // src/pages/index.astro
+import {
+  cafesCompact, regiones, zonasDict, ciudadesRealesDict,
+  tostadores, ranking, meta
+} from '../lib/cafes';
+
+const datosJSON = JSON.stringify({
+  cafes: cafesCompact,
+  regiones, zonas: zonasDict, ciudadesReales: ciudadesRealesDict,
+  tostadores, ranking, meta
+}).replace(/</g, '\\u003c');
 ---
 <!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cofiteca | Estudio Creativo de Café de Especialidad</title>
-  <meta name="description" content="Datos reales. Diseño con propósito. Buen café. El primer estudio creativo exclusivo para el mundo del café de especialidad en Argentina, creadores del Mapa Nacional." />
-  
+  <meta name="theme-color" content="#f5f0e8" />
+  <title>Cofiteca | Mapa de cafeterías de especialidad de Argentina</title>
+  <meta name="description" content="Mapa y buscador de cafeterías de especialidad y tostadores de Argentina. Encontrá cafés por ciudad, zona o cerca tuyo." />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
+  <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <script is:inline defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script is:inline defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script is:inline defer src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"></script>
+  <script is:inline defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
   <style is:global>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; scroll-behavior: smooth; overflow-x: hidden; }
-    body { background-color: #f5f0e8; color: #2c1810; font-family: 'Georgia', 'Times New Roman', serif; line-height: 1.7; }
-    #video-fondo { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -998; opacity: 0.15; pointer-events: none; }
-    strong { color: #1a0f0a; }
-    a { color: #8b4513; text-decoration: none; transition: all 0.3s ease; }
-    main { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
-    
-    /* NAVEGACIÓN SUPERIOR SUTIL */
-    .top-nav { position: absolute; top: 0; left: 0; width: 100%; padding: 2rem; display: flex; justify-content: flex-end; gap: 2rem; z-index: 10; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95rem; }
-    .top-nav a { color: #3d2317; text-transform: uppercase; letter-spacing: 0.05em; }
-    .top-nav a:hover { color: #8b4513; }
-    @media (max-width: 768px) { .top-nav { justify-content: center; padding: 1.5rem; gap: 1.5rem; font-size: 0.85rem; } }
-
-    .section-title { text-align: center; font-size: 3.5rem; font-weight: 800; color: #1a0f0a; letter-spacing: -0.03em; margin: 4rem 0 2rem; line-height: 1.1; font-family: 'Georgia', 'Times New Roman', serif; }
-
-    /* HERO REDISEÑADO */
-    .brand-hero { text-align: center; padding: 9rem 1rem 6rem; position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; }
-    .brand-title { font-size: 5.5rem; font-weight: 800; color: #1a0f0a; letter-spacing: -0.04em; margin-bottom: 0.5rem; line-height: 1; text-shadow: 0 4px 30px rgba(255, 255, 255, 0.9); }
-    .brand-subtitle { display: block; font-size: 1.1rem; font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: 0.2em; color: #8b4513; text-transform: uppercase; margin-bottom: 2rem; }
-    .brand-tagline { font-size: 1.3rem; color: #2c1810; font-weight: 500; max-width: 700px; margin: 0 auto 3rem; background: rgba(255, 255, 255, 0.7); padding: 1.2rem 2.5rem; border-radius: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(196, 167, 125, 0.4); box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); line-height: 1.6; }
-    
-    .brand-actions { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; }
-    .btn-hero-primary, .btn-hero-secondary { padding: 1rem 2.5rem; border-radius: 8px; font-size: 1.05rem; font-weight: 700; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'Inter', sans-serif; cursor: pointer; }
-    .btn-hero-primary { background-color: #1a0f0a; color: #ffffff; border: 2px solid #1a0f0a; box-shadow: 0 8px 25px rgba(26, 15, 10, 0.2); }
-    .btn-hero-primary:hover { background-color: #3d2317; border-color: #3d2317; transform: translateY(-3px); color: white; }
-    .btn-hero-secondary { background-color: rgba(255, 255, 255, 0.9); color: #1a0f0a; border: 2px solid #c4a77d; backdrop-filter: blur(5px); }
-    .btn-hero-secondary:hover { transform: translateY(-3px); background-color: #ffffff; border-color: #8b4513; color: #1a0f0a; }
-
-    /* QUIÉNES SOMOS / MANIFIESTO */
-    .about-container { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(196, 167, 125, 0.3); border-radius: 16px; padding: 4rem; margin: 0 auto 5rem; box-shadow: 0 15px 40px rgba(44, 24, 16, 0.06); text-align: left; max-width: 900px; }
-    .about-manifesto-title { font-size: 2.2rem; font-family: 'Georgia', serif; font-weight: 800; color: #1a0f0a; text-align: center; margin-bottom: 3rem; line-height: 1.3; }
-    
-    .about-grid { display: grid; gap: 2rem; }
-    .about-block { border-left: 3px solid #c4a77d; padding-left: 1.5rem; }
-    .about-label { color: #8b4513; margin: 0 0 0.5rem 0; font-family: 'Inter', sans-serif; text-transform: uppercase; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.1em; }
-    .about-text { font-size: 1.15rem; color: #3d2317; line-height: 1.7; margin: 0; font-family: 'Inter', sans-serif; }
-    
-    @media (max-width: 768px) { 
-        .brand-title { font-size: 4rem; } 
-        .about-container { padding: 2.5rem 1.5rem; } 
-        .about-manifesto-title { font-size: 1.8rem; }
-        .about-text { font-size: 1.05rem; }
-        .btn-hero-primary, .btn-hero-secondary { width: 100%; justify-content: center; }
+    :root {
+      --coffee-900: #1a0f0a; --coffee-700: #3d2317; --coffee-500: #5c3d2e;
+      --tan-500: #c4a77d; --tan-300: #dfc9a8; --cream-100: #f5f0e8; --cream-50: #faf7f2;
+      --accent: #e86a33; --accent-hover: #c85520;
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(26,15,10,.06);
+      --shadow-md: 0 4px 15px rgba(26,15,10,.08);
+      --shadow-lg: 0 15px 40px rgba(26,15,10,.10);
+      --font-display: 'Fraunces', Georgia, serif; --font-body: 'Inter', system-ui, sans-serif;
+      --transition: 0.2s cubic-bezier(.4,0,.2,1);
     }
-    
-    /* SERVICIOS */
-    .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin: 3rem 0; }
-    @media (max-width: 768px) { .services-grid { grid-template-columns: 1fr; } }
-    .service-card { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 12px; padding: 1.5rem; min-height: 250px; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; position: relative; overflow: hidden; cursor: pointer; }
-    .service-thumb { width: 100%; height: 220px; border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem; }
-    .service-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
-    .service-card h3 { color: #1a0f0a; font-size: 1.6rem; margin: 0 0 1rem 0; text-align: center; font-weight: 700; transition: transform 0.4s ease; }
-    .service-card::after { content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.95)); transform: translateY(100%); transition: transform 0.4s ease; z-index: 1; pointer-events: none; }
-    .service-hover-text { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0; transition: all 0.4s ease; color: #c4a77d; font-size: 1.1rem; font-weight: bold; z-index: 2; font-family: 'Inter', sans-serif;}
-    .service-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(44, 24, 16, 0.15); border-color: #c4a77d; }
-    .service-card:hover::after { transform: translateY(0); }
-    .service-card:hover h3 { transform: translateY(-15px); color: #f5f0e8; z-index: 2; }
-    .service-card:hover .service-hover-text { transform: translateX(-50%) translateY(0); opacity: 1; }
-    .service-card:hover .service-thumb img { transform: scale(1.05); }
-    
-    /* PROCESO */
-    .process-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin: 3rem 0; }
-    @media (max-width: 992px) { .process-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 576px) { .process-grid { grid-template-columns: 1fr; } }
-    .process-step { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(196, 167, 125, 0.3); border-radius: 12px; padding: 2.5rem 2rem; position: relative; box-shadow: 0 10px 30px rgba(44, 24, 16, 0.05); text-align: left; overflow: hidden; }
-    .step-number { font-size: 8rem; font-weight: 900; color: rgba(196, 167, 125, 0.12); position: absolute; top: -25px; right: 5px; line-height: 1; z-index: 0; pointer-events: none; font-family: 'Inter', sans-serif;}
-    .process-step h4 { color: #1a0f0a; font-size: 1.3rem; margin-top: 0; margin-bottom: 1rem; position: relative; z-index: 2; }
-    .process-step p { color: #4a332a; font-size: 1.05rem; margin: 0; position: relative; z-index: 2; line-height: 1.6; font-family: 'Inter', sans-serif;}
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    html, body { margin: 0; padding: 0; background: var(--cream-100); color: var(--coffee-900); font-family: var(--font-body); overflow-x: hidden; }
+    button, input, select, textarea { font-family: inherit; }
+    h1, h2, h3, p { overflow-wrap: anywhere; }
 
-    /* PORTAFOLIO */
-    .portfolio-grid { column-count: 3; column-gap: 1.5rem; margin: 1.5rem 0 4rem; }
-    @media (max-width: 992px) { .portfolio-grid { column-count: 2; } }
-    @media (max-width: 768px) { .portfolio-grid { column-count: 1; } }
-    .portfolio-item { display: block; position: relative; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 15px rgba(44, 24, 16, 0.1); background: transparent; margin-bottom: 1.5rem; break-inside: avoid; transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer; border: 1px solid rgba(196, 167, 125, 0.2); }
-    .portfolio-item:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(44, 24, 16, 0.2); border-color: #c4a77d; }
-    .portfolio-item::after { content: attr(data-title); position: absolute; bottom: 0; left: 0; width: 100%; padding: 3rem 1.5rem 1.5rem; background: linear-gradient(to bottom, transparent, rgba(26, 15, 10, 0.95)); color: #f5f0e8; font-size: 1.3rem; font-weight: bold; text-align: left; transform: translateY(100%); transition: transform 0.4s ease; pointer-events: none; z-index: 10; font-family: 'Inter', sans-serif;}
-    .portfolio-item:hover::after { transform: translateY(0); }
-    .portfolio-item img, .thumbnail-video { width: 100%; height: auto; display: block; transition: transform 0.6s ease; }
-    .portfolio-item:hover img, .video-trigger:hover .thumbnail-video { transform: scale(1.08); }
-    .play-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: rgba(255,255,255,0.9); pointer-events: none; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-    
-    /* LIGHTBOX */
-    #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; }
-    #lightbox.active { display: flex; align-items: center; justify-content: center; }
-    .lightbox-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26, 15, 10, 0.95); display: flex; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(5px); }
-    .lightbox-content-wrapper { position: relative; display: flex; flex-direction: column; background: #f5f0e8; border-radius: 12px; overflow: hidden; width: 100%; max-width: 1000px; max-height: 90vh; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
-    @media (min-width: 768px) { .lightbox-content-wrapper { flex-direction: row; } }
-    #lightbox-media-container { flex: 1; background: #1a0f0a; display: flex; align-items: center; justify-content: center; min-height: 300px; }
-    .lightbox-media { max-width: 100%; max-height: 70vh; object-fit: contain; }
-    .lightbox-text-panel { padding: 3rem 2.5rem; flex-basis: 400px; overflow-y: auto; }
-    .lightbox-text-panel h3 { margin-top: 0; color: #1a0f0a; font-size: 1.8rem; border-bottom: 2px solid #c4a77d; padding-bottom: 0.5rem; display: inline-block; font-weight: 800; }
-    .lightbox-text-panel p { color: #3d2317; font-size: 1.1rem; font-family: 'Inter', sans-serif; line-height: 1.6; }
-    .lightbox-close { position: absolute; top: -3rem; right: 0; color: #e8dcc8; font-size: 3rem; cursor: pointer; line-height: 1; z-index: 10; font-family: 'Inter', sans-serif; transition: color 0.3s; }
-    .lightbox-close:hover { color: white; }
-    @media (min-width: 768px) { .lightbox-close { top: 1rem; right: 2rem; } }
-    .lightbox-content-wrapper.text-only-mode #lightbox-media-container { display: none; }
-    .lightbox-content-wrapper.text-only-mode .lightbox-text-panel { flex-basis: 100%; max-width: 700px; padding: 4rem 3rem; text-align: left; }
-    
-    /* CONTACTO */
-    .contact-info { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(196, 167, 125, 0.3); display: inline-block; border-radius: 12px; padding: 3rem 5rem; margin: 0 auto 5rem; box-shadow: 0 15px 40px rgba(44, 24, 16, 0.06); text-align: center; }
-    .contact-intro { font-size: 1.3rem; color: #1a0f0a; margin-bottom: 2.5rem; font-family: 'Georgia', serif; font-style: italic; }
-    .contact-text { margin: 1rem 0; font-size: 1.15rem; color: #3d2317; font-family: 'Inter', sans-serif;}
-    .contact-text a { font-weight: 600; }
-    
-    .fade-on-scroll { opacity: 0; transform: translateY(25px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
-    .fade-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
+    /* ===== Barra superior ===== */
+    .nav-bar { padding: .9rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid rgba(196,167,125,.3); background: rgba(245,240,232,.92); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; }
+    .nav-brand { font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; letter-spacing: -.02em; color: var(--coffee-900); margin: 0; line-height: 1; }
+    .nav-actions { display: flex; gap: 1.2rem; }
+    .nav-action-link { font-size: .8rem; font-weight: 600; color: var(--coffee-500); text-decoration: none; cursor: pointer; transition: var(--transition); text-transform: uppercase; letter-spacing: .05em; padding: 8px 0; background: none; border: none; }
+    .nav-action-link:hover { color: var(--coffee-900); }
+    @media (max-width: 600px) {
+      .nav-bar { padding: .7rem 1rem; }
+      .nav-brand { font-size: 1.3rem; }
+      .nav-actions { gap: .9rem; }
+      .nav-action-link { font-size: .72rem; }
+    }
+
+    /* ===== Layout ===== */
+    .data-real-container { margin: 1.5rem auto 3rem; max-width: 1600px; padding: 0 1.5rem; display: grid; grid-template-columns: 240px minmax(0,1fr); gap: 1.5rem; align-items: start; }
+    @media (max-width: 1024px) { .data-real-container { grid-template-columns: minmax(0,1fr); gap: 1rem; margin-top: 1rem; } }
+    @media (max-width: 600px) { .data-real-container { padding: 0 .75rem; margin-bottom: 2rem; } }
+
+    .metrics-sidebar { padding: 1.8rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; position: sticky; top: 90px; background: rgba(255,255,255,.8); backdrop-filter: blur(10px); border-radius: var(--radius-md); border: 1px solid rgba(196,167,125,.3); box-shadow: var(--shadow-md); }
+    @media (max-width: 1024px) { .metrics-sidebar { display: grid; grid-template-columns: repeat(4,1fr); padding: 1rem; gap: .8rem; position: static; } }
+    @media (max-width: 600px) { .metrics-sidebar { grid-template-columns: repeat(2,1fr); padding: .9rem; gap: .7rem; } }
+    .metric-item { text-align: left; border-left: 3px solid var(--tan-500); padding-left: 1rem; }
+    @media (max-width: 1024px) { .metric-item { text-align: center; border-left: none; border-top: 3px solid var(--tan-500); padding: .6rem 0 0; } }
+    .metric-number { font-size: 2.5rem; font-weight: 800; color: var(--coffee-900); line-height: 1; display: block; letter-spacing: -.03em; font-family: var(--font-display); }
+    @media (max-width: 1024px) { .metric-number { font-size: 2rem; } }
+    @media (max-width: 600px) { .metric-number { font-size: 1.7rem; } }
+    .metric-label { display: block; font-size: .7rem; color: var(--coffee-500); text-transform: uppercase; letter-spacing: .1em; margin-top: .4rem; font-weight: 700; }
+
+    .buscador-main-panel { min-width: 0; background: rgba(255,255,255,.8); backdrop-filter: blur(10px); border-radius: var(--radius-md); border: 1px solid rgba(196,167,125,.3); box-shadow: var(--shadow-lg); overflow: hidden; }
+    .data-header { padding: 1.5rem 1.8rem 1.1rem; border-bottom: 1px solid rgba(196,167,125,.2); }
+    @media (max-width: 600px) { .data-header { padding: 1rem; } }
+    .data-header h1 { font-size: 2rem; font-weight: 800; margin: 0; color: var(--coffee-900); font-family: var(--font-display); font-variation-settings: 'opsz' 100; letter-spacing: -.02em; line-height: 1.1; }
+    @media (max-width: 600px) { .data-header h1 { font-size: 1.5rem; } }
+
+    .view-tabs { display: flex; gap: 8px; margin-top: 1rem; flex-wrap: wrap; }
+    @media (max-width: 600px) { .view-tabs { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; } }
+    .view-tab-btn { background: transparent; border: 1px solid rgba(196,167,125,.4); color: var(--coffee-500); font-size: .78rem; font-weight: 600; cursor: pointer; padding: 10px 14px; min-height: 40px; border-radius: var(--radius-sm); transition: var(--transition); text-transform: uppercase; letter-spacing: .05em; }
+    @media (max-width: 600px) { .view-tab-btn { padding: 10px 4px; font-size: .7rem; letter-spacing: .03em; } }
+    .view-tab-btn:hover { background: rgba(196,167,125,.1); color: var(--coffee-900); border-color: var(--tan-500); }
+    .view-tab-btn.active { background: var(--coffee-900); color: white; border-color: var(--coffee-900); box-shadow: 0 4px 10px rgba(26,15,10,.2); }
+
+    .buscador-ui { padding: 1.3rem 1.8rem 1.8rem; }
+    @media (max-width: 600px) { .buscador-ui { padding: .9rem .8rem 1.2rem; } }
+
+    .recientes-wrap { margin-bottom: 1rem; }
+    .recientes-label { font-size: .7rem; font-weight: 700; color: var(--coffee-500); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .5rem; }
+    .recientes-list { display: flex; gap: .6rem; overflow-x: auto; padding-bottom: .4rem; -webkit-overflow-scrolling: touch; }
+    .reciente-chip { flex-shrink: 0; display: inline-flex; align-items: center; gap: .4rem; padding: 9px 14px; border: 1px solid rgba(196,167,125,.4); border-radius: 999px; background: var(--cream-50); font-size: .8rem; font-weight: 600; color: var(--coffee-700); cursor: pointer; transition: var(--transition); white-space: nowrap; }
+    .reciente-chip:hover { border-color: var(--accent); color: var(--accent); background: white; }
+
+    /* ===== Controles ===== */
+    .search-controls { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: .7rem; margin-bottom: .8rem; }
+    .search-controls.cols-2 { grid-template-columns: 1fr 1fr; }
+    .search-controls.cols-1 { grid-template-columns: 1fr; }
+    @media (max-width: 800px) { .search-controls, .search-controls.cols-2 { grid-template-columns: 1fr 1fr; } .search-controls input { grid-column: 1 / -1; } }
+    @media (max-width: 480px) { .search-controls, .search-controls.cols-2 { grid-template-columns: 1fr; } }
+
+    .input-moderno { width: 100%; min-width: 0; padding: 12px 14px; min-height: 44px; border: 1px solid rgba(196,167,125,.5); border-radius: var(--radius-sm); font-size: .9rem; background: white; color: var(--coffee-900); outline: none; transition: var(--transition); text-overflow: ellipsis; }
+    @media (max-width: 800px) { .input-moderno { font-size: 16px; } }
+    .input-moderno:focus { border-color: var(--coffee-900); box-shadow: 0 0 0 3px rgba(26,15,10,.08); }
+
+    .search-buttons { display: flex; gap: .6rem; margin-bottom: .8rem; }
+    @media (max-width: 480px) { .search-buttons { flex-direction: column; } }
+    .btn-outline-mad, .btn-primary-mad { flex: 1 1 0; min-width: 0; min-height: 44px; padding: 10px 16px; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: var(--transition); font-size: .85rem; text-align: center; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+    .btn-outline-mad { background: transparent; color: var(--coffee-900); border: 1px solid var(--coffee-900); }
+    .btn-outline-mad:hover { background: rgba(26,15,10,.05); }
+    .btn-primary-mad { background: var(--coffee-900); color: white; border: 1px solid var(--coffee-900); box-shadow: 0 4px 10px rgba(26,15,10,.15); }
+    .btn-primary-mad:hover { background: var(--coffee-700); border-color: var(--coffee-700); }
+
+    .quick-chips { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .9rem; }
+    .quick-chip, .filter-pill { padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(196,167,125,.5); background: var(--cream-50); font-size: .8rem; font-weight: 600; color: var(--coffee-700); cursor: pointer; transition: var(--transition); }
+    .quick-chip:hover, .filter-pill:hover { border-color: var(--accent); color: var(--accent); background: white; }
+    .filter-pill.active { background: var(--coffee-900); color: white; border-color: var(--coffee-900); }
+    .filter-row { display: flex; gap: .5rem; margin-bottom: .9rem; flex-wrap: wrap; align-items: center; }
+
+    .cofi-status { margin: 0 0 .9rem; padding: 10px 14px; background: rgba(196,167,125,.15); border-radius: var(--radius-sm); font-size: .85rem; color: var(--coffee-500); line-height: 1.7; }
+    .cofi-status a { color: var(--coffee-900); font-weight: 700; margin: 0 2px; cursor: pointer; text-decoration: underline; display: inline-block; padding: 2px 0; }
+
+    .results-count { font-size: .8rem; color: var(--coffee-500); margin: 0 0 .8rem; font-weight: 500; }
+
+    /* ===== Mapa (grande) ===== */
+    .map-wrapper { width: 100%; height: 78vh; height: 78dvh; min-height: 560px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid rgba(196,167,125,.4); margin-bottom: 1.5rem; position: relative; z-index: 1; }
+    @media (max-width: 800px) { .map-wrapper { height: 62vh; height: 62dvh; min-height: 400px; margin-bottom: 1.1rem; } }
+    #cofiteca-map, #ranking-map { width: 100%; height: 100%; background: #e6e2db; }
+
+    .cafe-label { background: transparent; border: none; box-shadow: none; color: var(--coffee-900); font-weight: 800; font-size: .72rem; text-shadow: 2px 2px 0 white, -2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white; pointer-events: none; text-transform: uppercase; letter-spacing: .05em; }
+    .custom-ranking-icon { background: none; border: none; }
+    .cofi-halo { animation: cofiPulso 1.4s ease-in-out infinite; }
+    @keyframes cofiPulso { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+    .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background-color: rgba(232,106,51,.35); }
+    .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background-color: var(--accent); color: #fff; font-weight: 700; font-family: var(--font-body); }
+
+    .leaflet-container { font-family: var(--font-body); }
+    .leaflet-popup-content { margin: 12px 14px; }
+    .popup-cafe { text-align: center; font-family: var(--font-body); font-size: .85rem; line-height: 1.4; }
+    .popup-cafe b { display: block; margin-bottom: .2rem; font-size: .95rem; }
+    .popup-acciones { display: flex; flex-direction: column; gap: 6px; align-items: center; margin-top: 8px; }
+    .popup-btn { display: inline-block; background: var(--coffee-900); color: white !important; padding: 7px 14px; border-radius: 5px; font-size: .8rem; text-decoration: none; }
+    .popup-link { font-size: .8rem; color: var(--coffee-500); font-weight: 600; text-decoration: underline; padding: 3px 0; }
+
+    /* ===== Tarjetas ===== */
+    .resultados-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px,100%), 1fr)); gap: 1rem; }
+    .cafe-card { position: relative; min-width: 0; background: var(--cream-50); padding: 1.1rem 1.2rem; border-radius: var(--radius-md); border: 1px solid rgba(196,167,125,.25); box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
+    .cafe-card:hover { transform: translateY(-3px); border-color: var(--tan-500); box-shadow: var(--shadow-md); }
+    .cafe-card.destacada { border-color: var(--coffee-900); box-shadow: 0 0 0 3px rgba(196,167,125,.6); }
+    .cafe-card h3 { margin: 0 0 6px; font-size: 1.1rem; color: var(--coffee-900); font-family: var(--font-display); font-weight: 800; font-variation-settings: 'opsz' 40; line-height: 1.25; padding-right: 34px; }
+    .cafe-card h3 a { color: inherit; text-decoration: none; }
+    .cafe-card h3 a:hover { color: var(--accent); }
+    .cafe-card p { margin: 0; font-size: .85rem; color: var(--coffee-500); line-height: 1.5; }
+    .cafe-card .card-badge { display: inline-block; background: var(--accent); color: white; font-size: .62rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; padding: 2px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle; font-family: var(--font-body); }
+
+    .fav-btn { position: absolute; top: 6px; right: 6px; background: transparent; border: none; font-size: 1.4rem; cursor: pointer; width: 40px; height: 40px; border-radius: 6px; line-height: 1; color: var(--tan-500); transition: var(--transition); }
+    .fav-btn:hover { transform: scale(1.15); color: var(--accent); }
+    .fav-btn.is-fav { color: var(--accent); }
+
+    .cafe-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cafe-actions a, .cafe-actions button { flex: 1 1 auto; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; text-align: center; padding: 8px 10px; background: transparent; border-radius: var(--radius-sm); font-weight: 600; font-size: .72rem; color: var(--coffee-900); border: 1px solid var(--coffee-900); text-transform: uppercase; letter-spacing: .05em; text-decoration: none; cursor: pointer; transition: var(--transition); }
+    .cafe-actions a:hover, .cafe-actions button:hover { background: var(--coffee-900); color: white; }
+
+    .btn-ver-mas { grid-column: 1 / -1; justify-self: center; min-height: 44px; background: var(--coffee-900); color: white; border: none; padding: 12px 28px; border-radius: var(--radius-sm); font-weight: 600; font-size: .9rem; cursor: pointer; transition: var(--transition); }
+    .btn-ver-mas:hover { background: var(--coffee-700); }
+
+    .msg-vacio { grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; }
+    .msg-vacio .emoji { font-size: 2.5rem; margin-bottom: .6rem; display: block; }
+    .msg-vacio h3 { font-family: var(--font-display); font-size: 1.2rem; color: var(--coffee-900); margin: 0 0 .4rem; }
+    .msg-vacio p { font-size: .85rem; color: var(--coffee-500); margin: 0 0 1rem; }
+    .msg-vacio button { min-height: 44px; padding: 10px 20px; border-radius: var(--radius-sm); border: 1px solid var(--coffee-900); background: transparent; font-weight: 600; font-size: .85rem; cursor: pointer; color: var(--coffee-900); }
+    .msg-vacio button:hover { background: var(--coffee-900); color: white; }
+
+    .skeleton-card { height: 130px; background: linear-gradient(90deg, #ece4d6 25%, #f5f0e8 37%, #ece4d6 63%); background-size: 400% 100%; animation: skeleton 1.4s ease infinite; border-radius: var(--radius-md); }
+    @keyframes skeleton { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+    .rank-badge { color: white; font-weight: 700; border-radius: 3px; padding: 2px 6px; font-size: .72rem; }
+
+    /* ===== Tostadores ===== */
+    .tostadores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px,100%), 1fr)); gap: 1rem; }
+    .tostador-card { background: var(--cream-50); border: 1px solid rgba(196,167,125,.3); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; transition: var(--transition); }
+    .tostador-card:hover { transform: translateY(-3px); border-color: var(--coffee-900); }
+    .tostador-img { width: 100%; height: 200px; object-fit: cover; background: var(--cream-100); display: block; }
+    @media (max-width: 600px) { .tostador-img { height: 170px; } }
+    .tostador-content { padding: 1.1rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; gap: .8rem; }
+    .tostador-content h3 { margin: 0 0 4px; font-family: var(--font-display); font-size: 1.15rem; color: var(--coffee-900); }
+    .tostador-content p { margin: 0; font-size: .85rem; color: var(--coffee-500); }
+
+    .hidden { display: none !important; }
+
+    /* ===== SweetAlert ===== */
+    .swal2-popup.swal-custom-popup { width: min(32em, 92vw) !important; border-radius: var(--radius-md) !important; padding: 1.6rem 1.2rem !important; border: 1px solid rgba(196,167,125,.5) !important; font-family: var(--font-body) !important; background: white !important; }
+    .swal-custom-input { width: 100% !important; padding: 12px 14px !important; border: 1px solid rgba(196,167,125,.5) !important; border-radius: var(--radius-sm) !important; font-family: var(--font-body) !important; font-size: 16px !important; box-sizing: border-box !important; background: var(--cream-100) !important; color: var(--coffee-900) !important; margin: 0 !important; }
+    .swal-custom-input:focus { border-color: var(--coffee-900) !important; outline: none !important; box-shadow: 0 0 0 3px rgba(26,15,10,.1) !important; }
+    .swal2-styled.swal-custom-btn-confirm { background-color: var(--coffee-900) !important; border-radius: var(--radius-sm) !important; font-weight: 600 !important; font-family: var(--font-body) !important; }
+    .swal2-styled.swal-custom-btn-cancel { background-color: transparent !important; border: 1px solid var(--coffee-900) !important; color: var(--coffee-900) !important; border-radius: var(--radius-sm) !important; font-weight: 600 !important; font-family: var(--font-body) !important; }
   </style>
 </head>
 <body>
 
-  <video id="video-fondo" autoplay muted playsinline loop>
-    <source src="/video-1.mp4" type="video/mp4" />
-  </video>
-
-  <nav class="top-nav">
-    <a href="#servicios">Servicios</a>
-    <a href="#portafolio">Portafolio</a>
-    <a href="#contacto">Contacto</a>
+  <nav class="nav-bar">
+    <h2 class="nav-brand">Cofiteca</h2>
+    <div class="nav-actions">
+      <button type="button" onclick="cofiAbrirSumate()" class="nav-action-link">Añadir local</button>
+      <button type="button" onclick="cofiAbrirReporte()" class="nav-action-link">Soporte</button>
+    </div>
   </nav>
 
-  <div class="brand-hero fade-on-scroll">
-    <h1 class="brand-title">Cofiteca</h1>
-    <span class="brand-subtitle">by Mad Diseño</span>
-    <p class="brand-tagline">El primer estudio creativo exclusivo para el mundo del café de especialidad en Argentina. Creadores del Mapa Nacional.</p>
-    
-    <div class="brand-actions">
-      <a href="#servicios" class="btn-hero-primary">Transformá tu marca</a>
-      <a href="/buscador" class="btn-hero-secondary">📍 Explorar el Mapa</a>
+  <div class="data-real-container">
+    <div class="metrics-sidebar">
+      <div class="metric-item" id="caja-cafes"><span class="metric-number" id="stat-cafes">{meta.cafes}</span><span class="metric-label" id="label-cafes">Locales</span></div>
+      <div class="metric-item" id="caja-tostadores"><span class="metric-number" id="stat-tostadores">{meta.tostadores}</span><span class="metric-label">Tostadores</span></div>
+      <div class="metric-item" id="caja-provincias"><span class="metric-number" id="stat-provincias">{meta.provincias}</span><span class="metric-label" id="label-provincias">Provincias</span></div>
+      <div class="metric-item" id="caja-ciudades"><span class="metric-number" id="stat-ciudades">{meta.ciudades}</span><span class="metric-label">Ciudades</span></div>
+    </div>
+
+    <div class="buscador-main-panel">
+      <div class="data-header">
+        <h1>Mapa Cofiteca</h1>
+        <div class="view-tabs">
+          <button class="view-tab-btn active" onclick="cofiSwitchTab('mapa')" id="btn-tab-mapa">Mapa</button>
+          <button class="view-tab-btn" onclick="cofiSwitchTab('ranking')" id="btn-tab-ranking">Rankings</button>
+          <button class="view-tab-btn" onclick="cofiSwitchTab('tostadores')" id="btn-tab-tostadores">Tostadores</button>
+        </div>
+      </div>
+
+      <div class="buscador-ui" id="vista-mapa">
+        <div class="quick-chips" id="quick-chips"></div>
+        <div class="recientes-wrap hidden" id="recientes-wrap">
+          <div class="recientes-label">Volvé a donde estabas</div>
+          <div class="recientes-list" id="recientes-list"></div>
+        </div>
+        <div class="search-controls">
+          <input type="search" id="input-busqueda" class="input-moderno" placeholder="Buscar por nombre, zona o dirección..." autocomplete="off" oninput="cofiFiltrar('texto')">
+          <select id="select-ciudad" class="input-moderno" onchange="cofiActualizarZonas(); cofiFiltrar(true)"><option value="Todas">Región / Ciudad</option></select>
+          <select id="select-zona" class="input-moderno" onchange="cofiFiltrar(true)"><option value="Todas">Zona / Barrio</option></select>
+        </div>
+        <div class="search-buttons">
+          <button class="btn-outline-mad" onclick="cofiMedirDesdeDireccion()">📍 Buscar por dirección</button>
+          <button class="btn-primary-mad" onclick="cofiUsarMiGPS()">🎯 Cerca de mí</button>
+        </div>
+        <div class="filter-row">
+          <button class="filter-pill" id="pill-favs" onclick="cofiToggleSoloFavs()">★ Sólo favoritos</button>
+          <span id="fav-count" style="color:var(--coffee-500);font-size:.8rem;"></span>
+        </div>
+        <p id="cofi-status" class="cofi-status hidden"></p>
+        <div class="map-wrapper"><div id="cofiteca-map"></div></div>
+        <p id="cofi-count" class="results-count"></p>
+        <div id="cofi-resultados" class="resultados-grid">
+          <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+          <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+        </div>
+      </div>
+
+      <div class="buscador-ui hidden" id="vista-ranking">
+        <div class="search-controls cols-2">
+          <select id="select-ranking-tipo" class="input-moderno" onchange="cofiActualizarRankingCiudades(); cofiFiltrarRanking(); cofiActualizarMetricas();">
+            <option value="arg">Top 100 Argentina</option>
+            <option value="sud">Top 100 Sudamérica</option>
+            <option value="mun">Top 100 Mundial</option>
+          </select>
+          <select id="select-ranking-ciudad" class="input-moderno" onchange="cofiFiltrarRanking()"><option value="Todas">Todas las Ciudades</option></select>
+        </div>
+        <div class="map-wrapper"><div id="ranking-map"></div></div>
+        <div id="ranking-resultados" class="resultados-grid"></div>
+      </div>
+
+      <div class="buscador-ui hidden" id="vista-tostadores">
+        <div class="search-controls cols-1">
+          <select id="select-ciudad-tostadores" class="input-moderno" onchange="cofiRenderizarTostadores()"><option value="Todas">Todas las Ciudades</option></select>
+        </div>
+        <div id="lista-tostadores" class="tostadores-grid"></div>
+      </div>
     </div>
   </div>
 
-  <main>
-    <!-- SECCIÓN: NOSOTROS / MANIFIESTO -->
-    <div id="nosotros"></div>
-    <div class="about-container fade-on-scroll">
-      <h2 class="about-manifesto-title">Datos reales. Diseño con propósito. Buen café.</h2>
-      
-      <div class="about-grid">
-        <div class="about-block">
-          <p class="about-label">El Origen</p>
-          <p class="about-text">Nacimos con la idea de crear el primer mapa nacional del café de especialidad, una herramienta basada en datos reales para destacar tanto a los referentes del sector como a los que recién empiezan.</p>
-        </div>
-        
-        <div class="about-block">
-          <p class="about-label">El Problema</p>
-          <p class="about-text">Recorriendo cafeterías descubrimos un patrón: muchos lugares con un producto excepcional no lograban reflejar esa calidad en su identidad visual. Decidimos cambiar eso.</p>
-        </div>
-        
-        <div class="about-block">
-          <p class="about-label">La Solución</p>
-          <p class="about-text">Combinamos el análisis de datos con más de 10 años de experiencia en diseño gráfico para crear un estudio creativo exclusivo. Si vos tenés la pasión por el producto, nosotros tenemos las herramientas para construir una imagen de marca sólida que refleje fielmente la calidad de lo que hacés.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- SECCIÓN: SERVICIOS -->
-    <div id="servicios"></div>
-    <h2 class="section-title fade-on-scroll">Nuestros Servicios</h2>
-    <div class="services-grid fade-on-scroll">
-      <a href="#" class="service-card media-trigger" data-type="image" data-src="/tio1.jpg" data-title="Identidad Visual" data-desc="Hacemos branding pensado para proyectos gastronómicos con alma. Ya sea que tengas una cafetería, una heladería artesanal, un proyecto de pastelería o tuestes tu propio café; construimos la identidad de cero (o hacemos un rebranding) para que tu marca se despegue del ruido y tenga una voz gráfica única, coherente y profesional.">
-        <div class="service-thumb"><img src="/tio1.jpg" alt="Identidad Visual" loading="lazy" /></div>
-        <h3>Identidad Visual</h3>
-        <span class="service-hover-text">Leer más ✦</span>
-      </a>
-      
-      <a href="#" class="service-card media-trigger" data-type="image" data-src="/black-bean.jpg" data-title="Piezas para tu Negocio" data-desc="Después de relevar miles de locales en todo el país, sabemos qué funciona. Cruzamos nuestra investigación gráfica con tus ideas para lograr piezas únicas y con identidad propia. Diseñamos menús a medida, packaging para tus productos (desde bolsas de café hasta cajas de cookies o donas) y todos los detalles físicos que acompañan y elevan la experiencia.">
-        <div class="service-thumb"><img src="/black-bean.jpg" alt="Piezas para tu Negocio" loading="lazy" /></div>
-        <h3>Piezas para tu Negocio</h3>
-        <span class="service-hover-text">Leer más ✦</span>
-      </a>
-      
-      <a href="#" class="service-card media-trigger" data-type="image" data-src="/cafe-de-obra.jpg" data-title="Señalética y Espacio" data-desc="Hacemos que tu espacio comunique por vos. Cubrimos toda la pata gráfica y de circulación: desde la fachada de tu local hasta la comunicación visual adentro de tu academia o la cartelería para ferias y eventos del rubro.">
-        <div class="service-thumb"><img src="/cafe-de-obra.jpg" alt="Señalética y Espacio" loading="lazy" /></div>
-        <h3>Señalética y Espacio</h3>
-        <span class="service-hover-text">Leer más ✦</span>
-      </a>
-      
-      <a href="#" class="service-card media-trigger" data-type="image" data-src="/Sara.jpg" data-title="Diseño con Data Real" data-desc="Diseñamos con respaldo técnico. Aprovechamos el mapeo masivo de Cofiteca para investigar y entender el ecosistema a nivel nacional. Esta data nos permite darle a cada diseño un contexto real, asegurando que el resultado final le otorgue a tu proyecto una identidad propia, auténtica y bien plantada en su rubro.">
-        <div class="service-thumb"><img src="/Sara.jpg" alt="Diseño con Data Real" loading="lazy" /></div>
-        <h3>Diseño con Data Real</h3>
-        <span class="service-hover-text">Leer más ✦</span>
-      </a>
-    </div>
-
-    <!-- SECCIÓN: PROCESO -->
-    <div id="proceso"></div>
-    <h2 class="section-title fade-on-scroll">Nuestro Proceso</h2>
-    <div class="process-grid fade-on-scroll">
-      <div class="process-step">
-        <div class="step-number">1</div>
-        <h4>Auditoría y Contexto</h4>
-        <p>Analizamos cada caso particular integrando tus ideas con nuestra experiencia. Cruzamos esta información con la base de datos de Cofiteca para sumar contexto real.</p>
-      </div>
-      <div class="process-step">
-        <div class="step-number">2</div>
-        <h4>Conceptualización</h4>
-        <p>Búsqueda de un diseño con propósito. Desarrollamos la identidad visual creando marcas sólidas que representan genuinamente tu propuesta.</p>
-      </div>
-      <div class="process-step">
-        <div class="step-number">3</div>
-        <h4>Despliegue</h4>
-        <p>Aplicación estratégica. Bajamos el concepto aprobado a los distintos puntos de contacto: desde packaging y etiquetas hasta la cartelería.</p>
-      </div>
-      <div class="process-step">
-        <div class="step-number">4</div>
-        <h4>Revisión Final</h4>
-        <p>Siempre hay detalles visuales por afinar. Hacemos un control de las piezas que entregamos para asegurarnos de que la calidad se mantenga impecable.</p>
-      </div>
-    </div>
-
-    <!-- SECCIÓN: PORTAFOLIO -->
-    <div id="portafolio"></div>
-    <h2 class="section-title fade-on-scroll">Casos de Éxito</h2>
-    <div class="portfolio-grid fade-on-scroll">
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-4.png" data-title="Café Ina" data-desc="<strong>Identidad Visual y Experiencia de Barra</strong><br/><em>El Desafío:</em> Crear una identidad sólida para una cafetería de especialidad que logre destacarse en el circuito local.">
-        <img src="/cafe-ina-4.png" alt="Café Ina" loading="lazy" />
-      </a>
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-ina-5.jpg" data-title="Café Ina" data-desc="<strong>Aplicación de Marca</strong><br/>Detalle de la identidad visual en los puntos de contacto del local.">
-        <img src="/cafe-ina-5.jpg" alt="Café Ina Detalle" loading="lazy" />
-      </a>
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/cafe-de-obra.jpg" data-title="Café de Obra" data-desc="<strong>Branding Institucional</strong><br/><em>El Desafío:</em> Integrar una cafetería de especialidad dentro del Centro de Constructores, respetando el entorno histórico.">
-        <img src="/cafe-de-obra.jpg" alt="Café de Obra" loading="lazy" />
-      </a>
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/black-bean.jpg" data-title="Black Bean" data-desc="<strong>Producto B2B y Packaging</strong><br/><em>El Desafío:</em> Introducir brownies a base de porotos negros diseñados para maridar con café de especialidad.">
-        <img src="/black-bean.jpg" alt="Black Bean" loading="lazy" />
-      </a>
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/Sara.jpg" data-title="Sara Coffee Shop" data-desc="<strong>Identidad y Redes</strong><br/>Concepto visual, paleta tipográfica y piezas de comunicación.">
-        <img src="/Sara.jpg" alt="Sara" loading="lazy" />
-      </a>
-      <a href="#" class="portfolio-item media-trigger video-trigger" data-type="video" data-src="/luccianos.mp4" data-title="Luccianos" data-desc="<strong>Producción Audiovisual</strong><br/>Registro dinámico de la experiencia y el flujo de trabajo en el local.">
-        <video src="/luccianos.mp4" muted loop playsinline autoplay class="thumbnail-video"></video>
-        <div class="play-indicator">▶</div>
-      </a>
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/tio1.jpg" data-title="Proyecto Tio" data-desc="<strong>Diseño y Aplicación</strong><br/>Exploración visual y desarrollo de estética.">
-        <img src="/tio1.jpg" alt="Tio" loading="lazy" />
-      </a>
-      <a href="#" class="portfolio-item media-trigger" data-type="image" data-src="/tio2.jpg" data-title="Proyecto Tio" data-desc="<strong>Diseño y Aplicación</strong><br/>Variación de las piezas visuales.">
-        <img src="/tio2.jpg" alt="Tio 2" loading="lazy" />
-      </a>
-    </div>
-
-    <!-- SECCIÓN: CONTACTO -->
-    <div id="contacto"></div>
-    <h2 class="section-title fade-on-scroll">Contacto</h2>
-    <div style="text-align: center;">
-      <div class="contact-info fade-on-scroll">
-        <p class="contact-intro">¿Listos para elevar la experiencia de su café? Hablemos.</p>
-        <p class="contact-text"><strong>Email:</strong> <a href="mailto:buscadordecafe@gmail.com">buscadordecafe@gmail.com</a></p>
-        <p class="contact-text"><strong>Instagram:</strong> <a href="https://instagram.com/cofiteca_" target="_blank" rel="noopener noreferrer">@cofiteca_</a></p>
-        <p class="contact-text"><strong>Sede:</strong> Mar del Plata, Argentina</p>
-      </div>
-    </div>
-  </main>
-
-  <!-- LIGHTBOX -->
-  <div id="lightbox">
-    <div class="lightbox-overlay">
-      <span class="lightbox-close">&times;</span>
-      <div class="lightbox-content-wrapper">
-        <div id="lightbox-media-container"></div>
-        <div class="lightbox-text-panel">
-          <h3 id="lightbox-title"></h3>
-          <p id="lightbox-desc"></p>
-        </div>
-      </div>
-    </div>
-  </div>
+  <script is:inline type="application/json" id="cofi-data" set:html={datosJSON}></script>
 
   <script is:inline>
-    document.addEventListener('DOMContentLoaded', () => {
-      // 1. Rotación de video
-      const video = document.getElementById('video-fondo');
-      const playlist = ['/video-1.mp4', '/video-2.mp4', '/video-3.mp4'];
-      let currentVideo = 0;
-      if (video) {
-        video.addEventListener('ended', () => {
-          currentVideo = (currentVideo + 1) % playlist.length;
-          video.src = playlist[currentVideo];
-          video.play();
+    function iniciarBuscadorSeguro(intento) {
+      intento = intento || 0;
+      if (typeof L === 'undefined' || typeof L.markerClusterGroup === 'undefined' ||
+          typeof L.maplibreGL === 'undefined' || typeof maplibregl === 'undefined') {
+        if (intento < 200) setTimeout(function () { iniciarBuscadorSeguro(intento + 1); }, 50);
+        return;
+      }
+      const mapEl = document.getElementById('cofiteca-map');
+      const dataEl = document.getElementById('cofi-data');
+      if (!mapEl || !dataEl || mapEl._cofiInit) return;
+      mapEl._cofiInit = true;
+
+      const $ = id => document.getElementById(id);
+      const norm = s => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+
+      const datos = JSON.parse(dataEl.textContent);
+      const baseDatos = datos.cafes.map(c => ({
+        id: c.id, nombre: c.n, ubicacion: c.u, instagram: c.s, lat: c.a, lon: c.o,
+        ciudad: datos.regiones[c.r], zona: c.z >= 0 ? datos.zonas[c.z] : '', ciudadReal: c.c >= 0 ? datos.ciudadesReales[c.c] : '', slug: c.slug
+      }));
+      baseDatos.forEach(c => { c._q = norm([c.nombre, c.ubicacion, c.zona, c.ciudadReal, c.ciudad].join(' ')); });
+
+      const tostadoresDatos = datos.tostadores;
+      const rankingDatos = datos.ranking;
+      const meta = datos.meta;
+
+      const rankMap = new Map();
+      (function () {
+        const nombres = new Map();
+        ['arg', 'sud', 'mun'].forEach(tipo => {
+          (rankingDatos[tipo] || []).forEach(it => {
+            const k = norm(it.nombre);
+            const cur = nombres.get(k);
+            if (!cur || it.rank < cur) nombres.set(k, it.rank);
+          });
+        });
+        baseDatos.forEach(c => {
+          const r = nombres.get(norm(c.nombre));
+          if (r) rankMap.set(c.id, r);
+        });
+      })();
+
+      const FAV_KEY = 'cofi-favs';
+      let favoritos = new Set();
+      try { favoritos = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch {}
+      const RECIENTES_KEY = 'cofi-recientes';
+      let recientes = [];
+      try { recientes = JSON.parse(localStorage.getItem(RECIENTES_KEY) || '[]'); } catch {}
+
+      const PAGINA = 24;
+      const ZOOM_ETIQUETAS = 15;
+      // Normal (naranja) -> resultado de búsqueda (marrón, más grande) -> seleccionado (marrón grande + halo)
+      const ESTILO_BASE = { radius: 7, color: '#ffffff', fillColor: '#e86a33', fillOpacity: 1, weight: 2 };
+      const ESTILO_BUSQUEDA = { radius: 10, color: '#ffffff', fillColor: '#1a0f0a', fillOpacity: 1, weight: 3 };
+      const ESTILO_ACTIVO = { radius: 12, color: '#ffffff', fillColor: '#1a0f0a', fillOpacity: 1, weight: 3 };
+      const VISTA_ARGENTINA = [-38.41, -63.61];
+      const zoomInicial = () => window.innerWidth < 700 ? 3.5 : 4;
+      const IMG_FALLBACK = 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=600';
+      // Mismo proveedor que Versé Café. Otros estilos: 'bright', 'liberty'
+      const ESTILO_MAPA = 'https://tiles.openfreemap.org/styles/positron';
+      const ATRIBUCION = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
+
+      let mapaCofiteca = null, markerCluster = null;
+      let mapaRanking = null, markerClusterRanking = null;
+      let tostadoresRenderizados = false, rankingIniciado = false;
+
+      const markersPorId = new Map();
+      let idsEnMapa = new Set();
+      let marcadoresActuales = [];
+      let marcadoresConEtiqueta = [];
+
+      let origen = null, markerOrigen = null;
+      let markerActivoId = null, haloActivo = null;
+      let listaActual = [], idsEnLista = new Set(), mostrados = PAGINA, idDestacado = null;
+      let soloFavoritos = false;
+      let busquedaActiva = false;
+
+      const estiloBase = id => (busquedaActiva && idsEnLista.has(id)) ? ESTILO_BUSQUEDA : ESTILO_BASE;
+
+      let swalPromise = null;
+      function ensureSwal() {
+        if (window.Swal) return Promise.resolve();
+        if (swalPromise) return swalPromise;
+        swalPromise = new Promise((res, rej) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+        return swalPromise;
+      }
+
+      function calcularD(lat1, lon1, lat2, lon2) {
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+        return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      }
+      function textoDistancia(dist) {
+        const cuadras = Math.round(dist * 10);
+        if (cuadras === 0) return '¡A menos de 1 cuadra!';
+        if (cuadras <= 30) return 'A ' + cuadras + ' cuadra' + (cuadras !== 1 ? 's' : '');
+        return 'A ' + dist.toFixed(1).replace('.', ',') + ' km';
+      }
+      const urlComoLlegar = c => 'https://www.google.com/maps/search/?api=1&query=' + c.lat + ',' + c.lon;
+
+      // ---------- Favoritos / recientes ----------
+      function persistirFavs() {
+        try { localStorage.setItem(FAV_KEY, JSON.stringify([...favoritos])); } catch {}
+        $('fav-count').textContent = favoritos.size ? '(' + favoritos.size + ')' : '';
+      }
+      window.cofiToggleFav = function (id, btn) {
+        if (favoritos.has(id)) favoritos.delete(id); else favoritos.add(id);
+        persistirFavs();
+        btn.textContent = favoritos.has(id) ? '★' : '☆';
+        btn.classList.toggle('is-fav', favoritos.has(id));
+        if (soloFavoritos) window.cofiFiltrar(false);
+      };
+      window.cofiToggleSoloFavs = function () {
+        soloFavoritos = !soloFavoritos;
+        $('pill-favs').classList.toggle('active', soloFavoritos);
+        window.cofiFiltrar(true);
+      };
+      function registrarVisto(id) {
+        recientes = [id, ...recientes.filter(x => x !== id)].slice(0, 8);
+        try { localStorage.setItem(RECIENTES_KEY, JSON.stringify(recientes)); } catch {}
+      }
+      function renderRecientes() {
+        const wrap = $('recientes-wrap');
+        if (!recientes.length) { wrap.classList.add('hidden'); return; }
+        wrap.classList.remove('hidden');
+        const cont = $('recientes-list');
+        const frag = document.createDocumentFragment();
+        recientes.slice(0, 6).forEach(id => {
+          const c = baseDatos[id]; if (!c) return;
+          const btn = document.createElement('button');
+          btn.className = 'reciente-chip';
+          btn.textContent = '☕ ' + c.nombre;
+          btn.onclick = () => verEnMapa(id);
+          frag.appendChild(btn);
+        });
+        cont.replaceChildren(frag);
+      }
+
+      // ---------- Métricas ----------
+      window.cofiActualizarMetricas = function () {
+        const esRanking = $('btn-tab-ranking').classList.contains('active');
+        let cafes = 0, tost = 0, prov = 0, ciu = 0;
+        if (esRanking) {
+          const tipo = $('select-ranking-tipo').value;
+          const data = rankingDatos[tipo] || [];
+          const cuenta = (campo, vacio) => new Set(data.map(d => d[campo]).filter(v => v && v !== vacio)).size;
+          cafes = data.length;
+          if (tipo === 'arg') { $('label-provincias').innerText = 'Provincias'; prov = cuenta('provincia', 'Desconocida'); }
+          else { $('label-provincias').innerText = 'Países'; prov = cuenta('pais', 'Desconocido'); }
+          ciu = cuenta('ciudad', 'Desconocida');
+        } else {
+          $('label-provincias').innerText = 'Provincias';
+          cafes = meta.cafes; tost = meta.tostadores; prov = meta.provincias; ciu = meta.ciudades;
+        }
+        $('stat-cafes').innerText = cafes;
+        $('stat-tostadores').innerText = tost;
+        $('stat-provincias').innerText = prov;
+        $('stat-ciudades').innerText = ciu;
+        $('caja-provincias').style.display = prov > 0 ? '' : 'none';
+        $('caja-ciudades').style.display = ciu > 0 ? '' : 'none';
+        $('caja-tostadores').style.display = (!esRanking && tost > 0) ? '' : 'none';
+      };
+
+      window.cofiSwitchTab = function (tab) {
+        ['mapa', 'ranking', 'tostadores'].forEach(t => {
+          $('vista-' + t).classList.toggle('hidden', t !== tab);
+          $('btn-tab-' + t).classList.toggle('active', t === tab);
+        });
+        window.cofiActualizarMetricas();
+
+        if (tab === 'mapa' && mapaCofiteca) {
+          setTimeout(() => { mapaCofiteca.invalidateSize(); aplicarFiltros(false); }, 100);
+        }
+        if (tab === 'tostadores' && !tostadoresRenderizados) { window.cofiRenderizarTostadores(); tostadoresRenderizados = true; }
+        if (tab === 'ranking') {
+          if (!rankingIniciado) {
+            initMapaRanking();
+            window.cofiActualizarRankingCiudades();
+            window.cofiFiltrarRanking();
+            rankingIniciado = true;
+          } else if (mapaRanking) {
+            setTimeout(() => mapaRanking.invalidateSize(), 100);
+          }
+        }
+        sincronizarURL();
+      };
+
+      // ---------- Mapa principal ----------
+      function initMapa() {
+        mapaCofiteca = L.map('cofiteca-map', { minZoom: 3, maxZoom: 19, zoomSnap: 0.5 }).setView(VISTA_ARGENTINA, zoomInicial());
+        L.maplibreGL({ style: ESTILO_MAPA, attribution: ATRIBUCION }).addTo(mapaCofiteca);
+        markerCluster = L.markerClusterGroup({ maxClusterRadius: 40, disableClusteringAtZoom: 14, spiderfyOnMaxZoom: true, showCoverageOnHover: false, chunkedLoading: true }).addTo(mapaCofiteca);
+        mapaCofiteca.on('zoomend moveend', actualizarEtiquetas);
+
+        baseDatos.forEach(c => {
+          const m = L.circleMarker([c.lat, c.lon], { ...ESTILO_BASE });
+          m._nombre = c.nombre;
+          m.bindPopup(() => popupHTML(baseDatos[c.id]), { maxWidth: 260 });
+          m.on('click', () => { registrarVisto(c.id); resaltarCard(c.id); renderRecientes(); });
+          m.on('popupopen', () => resaltarMarker(c.id));
+          m.on('popupclose', quitarResaltadoMarker);
+          markersPorId.set(c.id, m);
+        });
+        setTimeout(() => mapaCofiteca.invalidateSize(), 200);
+        window.addEventListener('resize', () => {
+          if (mapaCofiteca) mapaCofiteca.invalidateSize();
+          if (mapaRanking) mapaRanking.invalidateSize();
         });
       }
-      
-      // 2. Animación de scroll
-      const fadeElements = document.querySelectorAll('.fade-on-scroll');
-      const fadeObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            fadeObserver.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.15 });
-      fadeElements.forEach(el => fadeObserver.observe(el));
 
-      // 3. Lógica del Lightbox (Ventana emergente)
-      const lightbox = document.getElementById('lightbox');
-      const overlay = lightbox.querySelector('.lightbox-overlay');
-      const wrapper = lightbox.querySelector('.lightbox-content-wrapper');
-      const mediaContainer = document.getElementById('lightbox-media-container');
-      const titleEl = document.getElementById('lightbox-title');
-      const descEl = document.getElementById('lightbox-desc');
-      const close = lightbox.querySelector('.lightbox-close');
-      
-      document.querySelectorAll('.media-trigger').forEach((trigger) => {
-        trigger.addEventListener('click', (e) => {
-          e.preventDefault(); 
-          
-          const type = trigger.getAttribute('data-type');
-          const src = trigger.getAttribute('data-src');
-          
-          titleEl.textContent = trigger.getAttribute('data-title');
-          descEl.innerHTML = trigger.getAttribute('data-desc');
-          mediaContainer.innerHTML = '';
-          
-          if (type === 'text') {
-            wrapper.classList.add('text-only-mode');
-          } else {
-            wrapper.classList.remove('text-only-mode');
-            if (type === 'video') {
-              mediaContainer.innerHTML = `<video src="${src}" autoplay controls playsinline class="lightbox-media"></video>`;
-            } else {
-              mediaContainer.innerHTML = `<img src="${src}" class="lightbox-media" alt="Ampliación" />`;
-            }
+      function popupHTML(c) {
+        const ig = c.instagram ? '<a href="' + esc(c.instagram) + '" target="_blank" rel="noopener noreferrer" class="popup-btn">Instagram</a>' : '';
+        const enLista = idsEnLista.has(c.id) ? '<a href="#" class="popup-link" onclick="cofiVerEnLista(' + c.id + '); return false;">Ver en la lista ↓</a>' : '';
+        const detalle = '<a href="/cafe/' + esc(c.slug) + '" class="popup-link">Ver ficha completa</a>';
+        return '<div class="popup-cafe"><b>' + esc(c.nombre) + '</b><small>' + esc(c.ubicacion) + '</small><div class="popup-acciones">' + ig + detalle + enLista + '</div></div>';
+      }
+
+      function quitarResaltadoMarker() {
+        if (markerActivoId !== null) {
+          const m = markersPorId.get(markerActivoId);
+          if (m) m.setStyle({ ...estiloBase(markerActivoId) });
+          markerActivoId = null;
+        }
+        if (haloActivo) { mapaCofiteca.removeLayer(haloActivo); haloActivo = null; }
+      }
+      function resaltarMarker(id) {
+        quitarResaltadoMarker();
+        const m = markersPorId.get(id);
+        if (!m) return;
+        markerActivoId = id;
+        m.setStyle({ ...ESTILO_ACTIVO });
+        haloActivo = L.circleMarker(m.getLatLng(), { radius: 22, weight: 0, fillColor: '#e86a33', fillOpacity: .3, interactive: false, className: 'cofi-halo' }).addTo(mapaCofiteca);
+        if (m._map) m.bringToFront();
+      }
+
+      function actualizarEtiquetas() {
+        if (!mapaCofiteca) return;
+        if (mapaCofiteca.getZoom() < ZOOM_ETIQUETAS) {
+          marcadoresConEtiqueta.forEach(m => { m.unbindTooltip(); m._tt = false; });
+          marcadoresConEtiqueta = [];
+          return;
+        }
+        const area = mapaCofiteca.getBounds().pad(0.2);
+        marcadoresActuales.forEach(m => {
+          if (!m._tt && area.contains(m.getLatLng())) {
+            m.bindTooltip(esc(m._nombre), { permanent: true, direction: 'top', className: 'cafe-label', offset: [0, -10] });
+            m._tt = true;
+            marcadoresConEtiqueta.push(m);
           }
-          lightbox.classList.add('active');
-          document.body.style.overflow = 'hidden';
         });
-      });
-      
-      const closeLightbox = () => {
-        lightbox.classList.remove('active');
-        document.body.style.overflow = '';
-        mediaContainer.innerHTML = '';
+      }
+
+      function dibujarMapa(lista, recentrar) {
+        quitarResaltadoMarker();
+        marcadoresConEtiqueta.forEach(m => { m.unbindTooltip(); m._tt = false; });
+        marcadoresConEtiqueta = [];
+
+        const nuevoSet = new Set(lista.map(c => c.id));
+        const idsQuitar = [], aAgregar = [];
+        for (const id of idsEnMapa) if (!nuevoSet.has(id)) idsQuitar.push(id);
+        for (const id of nuevoSet) if (!idsEnMapa.has(id)) aAgregar.push(markersPorId.get(id));
+        const aQuitar = idsQuitar.map(id => markersPorId.get(id));
+        if (aQuitar.length) markerCluster.removeLayers(aQuitar);
+        if (aAgregar.length) markerCluster.addLayers(aAgregar);
+        idsEnMapa = nuevoSet;
+        marcadoresActuales = lista.map(c => markersPorId.get(c.id));
+
+        // Colores: los que salen del mapa vuelven al color base; los resultados de búsqueda se iluminan
+        idsQuitar.forEach(id => markersPorId.get(id).setStyle({ ...ESTILO_BASE }));
+        lista.forEach(c => markersPorId.get(c.id).setStyle({ ...estiloBase(c.id) }));
+
+        if (recentrar) {
+          const ciu = $('select-ciudad').value, zon = $('select-zona').value;
+          if (ciu === 'Todas' && zon === 'Todas' && !busquedaActiva && !origen && !soloFavoritos) {
+            mapaCofiteca.setView(VISTA_ARGENTINA, zoomInicial());
+          } else if (lista.length) {
+            mapaCofiteca.fitBounds(L.latLngBounds(lista.map(c => [c.lat, c.lon])), { padding: [40, 40], maxZoom: 17 });
+          }
+        }
+
+        // Un único resultado de búsqueda: se ilumina con halo
+        if (busquedaActiva && lista.length === 1) resaltarMarker(lista[0].id);
+
+        actualizarEtiquetas();
+      }
+
+      // ---------- Lista ----------
+      function setLista(lista) {
+        listaActual = lista;
+        idsEnLista = new Set(lista.map(c => c.id));
+        mostrados = PAGINA;
+        idDestacado = null;
+        renderizarLista();
+      }
+
+      function crearCard(c) {
+        const div = document.createElement('div');
+        div.className = 'cafe-card' + (c.id === idDestacado ? ' destacada' : '');
+        div.dataset.id = c.id;
+
+        const dist = c.dist !== undefined ? '<br><b>📍 ' + textoDistancia(c.dist) + '</b>' : '';
+        const ig = c.instagram ? '<a href="' + esc(c.instagram) + '" target="_blank" rel="noopener noreferrer">Instagram</a>' : '';
+        const rank = rankMap.get(c.id);
+        const badge = rank ? ' <span class="card-badge">#' + rank + ' top</span>' : '';
+        const favActivo = favoritos.has(c.id) ? 'is-fav' : '';
+        const favIcon = favoritos.has(c.id) ? '★' : '☆';
+
+        div.innerHTML =
+          '<button class="fav-btn ' + favActivo + '" data-fav="' + c.id + '" aria-label="Favorito">' + favIcon + '</button>' +
+          '<div>' +
+            '<h3><a href="/cafe/' + esc(c.slug) + '">' + esc(c.nombre) + '</a>' + badge + '</h3>' +
+            '<p>' + esc(c.ubicacion) + ' • <b>' + esc(c.ciudadReal || c.ciudad) + '</b>' + dist + '</p>' +
+          '</div>' +
+          '<div class="cafe-actions">' +
+            '<button type="button" data-ver-mapa>Ver en mapa</button>' +
+            ig +
+            '<a href="' + urlComoLlegar(c) + '" target="_blank" rel="noopener noreferrer">Cómo llegar</a>' +
+          '</div>';
+
+        div.querySelector('.fav-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          window.cofiToggleFav(c.id, e.currentTarget);
+        });
+        div.querySelector('[data-ver-mapa]').addEventListener('click', () => verEnMapa(c.id));
+        return div;
+      }
+
+      function renderizarLista() {
+        const cont = $('cofi-resultados');
+        const frag = document.createDocumentFragment();
+
+        if (!listaActual.length) {
+          const empty = document.createElement('div');
+          empty.className = 'msg-vacio';
+          empty.innerHTML =
+            '<span class="emoji">☕</span>' +
+            '<h3>Sin resultados</h3>' +
+            '<p>Probá con menos filtros o buscá cerca tuyo.</p>' +
+            '<button onclick="cofiUsarMiGPS()">Cerca de mi ubicación</button>';
+          frag.appendChild(empty);
+        } else {
+          listaActual.slice(0, mostrados).forEach(c => frag.appendChild(crearCard(c)));
+          if (listaActual.length > mostrados) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-ver-mas';
+            btn.textContent = 'Ver más (' + (listaActual.length - mostrados) + ' restantes)';
+            btn.addEventListener('click', () => { mostrados += PAGINA; renderizarLista(); });
+            frag.appendChild(btn);
+          }
+        }
+        cont.replaceChildren(frag);
+
+        const count = $('cofi-count');
+        count.textContent = listaActual.length
+          ? 'Mostrando ' + Math.min(mostrados, listaActual.length) + ' de ' + listaActual.length + ' locales'
+          : '';
+      }
+
+      function verEnMapa(id) {
+        const c = baseDatos[id];
+        const m = markersPorId.get(id);
+        registrarVisto(id);
+        renderRecientes();
+        resaltarCard(id);
+        document.querySelector('#vista-mapa .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (markerCluster.hasLayer(m)) markerCluster.zoomToShowLayer(m, () => m.openPopup());
+        else {
+          mapaCofiteca.setView([c.lat, c.lon], 16);
+          m.openPopup();
+        }
+      }
+
+      function resaltarCard(id) {
+        idDestacado = id;
+        document.querySelectorAll('#cofi-resultados .cafe-card.destacada').forEach(el => el.classList.remove('destacada'));
+        const el = document.querySelector('#cofi-resultados .cafe-card[data-id="' + id + '"]');
+        if (el) el.classList.add('destacada');
+      }
+
+      window.cofiVerEnLista = function (id) {
+        const idx = listaActual.findIndex(c => c.id === id);
+        if (idx === -1) return;
+        if (idx >= mostrados) { mostrados = idx + 1; renderizarLista(); }
+        resaltarCard(id);
+        const el = document.querySelector('#cofi-resultados .cafe-card[data-id="' + id + '"]');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       };
-      
-      close.addEventListener('click', closeLightbox);
-      overlay.addEventListener('click', (e) => { if (e.target === overlay) closeLightbox(); });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
-    });
+
+      // ---------- Filtros ----------
+      window.cofiActualizarZonas = function () {
+        const ciu = $('select-ciudad').value;
+        const base = ciu === 'Todas' ? baseDatos : baseDatos.filter(c => c.ciudad === ciu);
+        const zonas = [...new Set(base.map(c => c.zona))].filter(z => z && z !== '-' && z !== 'Sin Zona').sort((a, b) => a.localeCompare(b, 'es'));
+        $('select-zona').innerHTML = '<option value="Todas">Zona / Barrio</option>' + zonas.map(z => '<option value="' + esc(z) + '">' + esc(z) + '</option>').join('');
+      };
+
+      function filtrarDatos() {
+        const ciu = $('select-ciudad').value;
+        const zon = $('select-zona').value;
+        const tokens = norm($('input-busqueda').value).trim().split(/\s+/).filter(Boolean);
+
+        let filtrados = baseDatos.filter(c =>
+          (ciu === 'Todas' || c.ciudad === ciu) &&
+          (zon === 'Todas' || c.zona === zon) &&
+          (!soloFavoritos || favoritos.has(c.id)) &&
+          tokens.every(t => c._q.includes(t))
+        );
+
+        if (origen) {
+          filtrados = filtrados.slice().sort((a, b) =>
+            calcularD(origen.lat, origen.lon, a.lat, a.lon) - calcularD(origen.lat, origen.lon, b.lat, b.lon));
+        }
+        return filtrados;
+      }
+
+      function limpiarOrigen() {
+        if (markerOrigen) { mapaCofiteca.removeLayer(markerOrigen); markerOrigen = null; }
+        origen = null;
+        $('cofi-status').classList.add('hidden');
+      }
+
+      function aplicarFiltros(recentrar) {
+        busquedaActiva = $('input-busqueda').value.trim().length > 0;
+        const filtrados = filtrarDatos();
+        setLista(filtrados);
+        dibujarMapa(filtrados, recentrar);
+        sincronizarURL();
+      }
+
+      let debounceFiltro = null;
+      // modo: true = filtro de selects (limpia origen y recentra) | 'texto' = escribiendo (recentra) | false = sin recentrar
+      window.cofiFiltrar = function (modo) {
+        clearTimeout(debounceFiltro);
+        debounceFiltro = setTimeout(() => {
+          if (modo === true) limpiarOrigen();
+          aplicarFiltros(modo === true || modo === 'texto');
+        }, 200);
+      };
+      window.cofiQuitarOrigen = function () { limpiarOrigen(); aplicarFiltros(true); };
+
+      function sincronizarURL() {
+        const p = new URLSearchParams(location.search);
+        const c = $('select-ciudad').value;
+        const q = $('input-busqueda').value.trim();
+        const tab = document.querySelector('.view-tab-btn.active').id.replace('btn-tab-', '');
+        if (c !== 'Todas') p.set('c', c); else p.delete('c');
+        if (q) p.set('q', q); else p.delete('q');
+        if (tab !== 'mapa') p.set('v', tab); else p.delete('v');
+        history.replaceState(null, '', p.toString() ? '?' + p : location.pathname);
+      }
+
+      function hidratarDesdeURL() {
+        const p = new URLSearchParams(location.search);
+        const c = p.get('c'), q = p.get('q'), v = p.get('v');
+        if (c) {
+          const opt = Array.from($('select-ciudad').options).find(o => o.value === c);
+          if (opt) { $('select-ciudad').value = c; window.cofiActualizarZonas(); }
+        }
+        if (q) $('input-busqueda').value = q;
+        if (v && ['ranking', 'tostadores'].includes(v)) {
+          setTimeout(() => window.cofiSwitchTab(v), 50);
+        }
+      }
+
+      // ---------- Rankings ----------
+      function getRankingColor(rank) {
+        if (!rank || isNaN(rank)) return '#34495e';
+        if (rank <= 3) return '#D4AF37';
+        if (rank <= 10) return '#E86A33';
+        if (rank <= 20) return '#009FBD';
+        if (rank <= 30) return '#8e44ad';
+        if (rank <= 40) return '#27ae60';
+        if (rank <= 50) return '#f39c12';
+        if (rank <= 60) return '#d35400';
+        if (rank <= 70) return '#c0392b';
+        if (rank <= 80) return '#16a085';
+        if (rank <= 90) return '#7f8c8d';
+        return '#2c3e50';
+      }
+
+      function initMapaRanking() {
+        mapaRanking = L.map('ranking-map', { minZoom: 2, maxZoom: 19 }).setView(VISTA_ARGENTINA, 4);
+        L.maplibreGL({ style: ESTILO_MAPA, attribution: ATRIBUCION }).addTo(mapaRanking);
+        markerClusterRanking = L.markerClusterGroup({ maxClusterRadius: 35, disableClusteringAtZoom: 12, spiderfyOnMaxZoom: true }).addTo(mapaRanking);
+        setTimeout(() => mapaRanking.invalidateSize(), 200);
+      }
+
+      window.cofiActualizarRankingCiudades = function () {
+        const tipo = $('select-ranking-tipo').value;
+        const data = rankingDatos[tipo] || [];
+        const lugares = [...new Set(data.map(c => c.lugar))].sort((a, b) => a.localeCompare(b, 'es'));
+        const texto = tipo === 'arg' ? 'Todas las Ciudades' : 'Todos los Países';
+        $('select-ranking-ciudad').innerHTML = '<option value="Todas">' + texto + '</option>' + lugares.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+      };
+
+      window.cofiFiltrarRanking = function () {
+        if (!markerClusterRanking) return;
+        const tipo = $('select-ranking-tipo').value;
+        const lugar = $('select-ranking-ciudad').value;
+        const filtrados = (rankingDatos[tipo] || []).filter(c => lugar === 'Todas' || c.lugar === lugar);
+
+        const markers = filtrados.map(c => {
+          const color = getRankingColor(c.rank);
+          const icon = L.divIcon({
+            html: '<div style="background-color:' + color + '; color:white; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-weight:800; border:2px solid white; box-shadow:0 3px 6px rgba(0,0,0,.3); font-size:13px; font-family:Inter,sans-serif;">' + esc(c.rank) + '</div>',
+            className: 'custom-ranking-icon', iconSize: [28, 28], iconAnchor: [14, 14]
+          });
+          const ig = c.ig ? '<div class="popup-acciones"><a href="' + esc(c.ig) + '" target="_blank" rel="noopener noreferrer" class="popup-btn">Instagram</a></div>' : '';
+          return L.marker([c.lat, c.lon], { icon }).bindPopup(
+            '<div class="popup-cafe"><span class="rank-badge" style="background:' + color + ';">#' + esc(c.rank) + '</span><br><b>' + esc(c.nombre) + '</b><small>' + esc(c.ubicacion) + ' • ' + esc(c.lugar) + '</small>' + ig + '</div>',
+            { maxWidth: 260 }
+          );
+        });
+
+        markerClusterRanking.clearLayers();
+        markerClusterRanking.addLayers(markers);
+
+        if (filtrados.length) {
+          let zoom = 12;
+          if (lugar === 'Todas') zoom = tipo === 'mun' ? 2 : 4;
+          else if (tipo !== 'arg') zoom = 5;
+          const lat = filtrados.reduce((s, c) => s + c.lat, 0) / filtrados.length;
+          const lon = filtrados.reduce((s, c) => s + c.lon, 0) / filtrados.length;
+          mapaRanking.setView([lat, lon], zoom);
+        }
+
+        const frag = document.createDocumentFragment();
+        filtrados.forEach(c => {
+          const color = getRankingColor(c.rank);
+          const div = document.createElement('div');
+          div.className = 'cafe-card';
+          const ig = c.ig ? '<a href="' + esc(c.ig) + '" target="_blank" rel="noopener noreferrer">Instagram</a>' : '';
+          div.innerHTML =
+            '<div><h3 style="padding-right:0"><span class="rank-badge" style="background:' + color + ';">#' + esc(c.rank) + '</span> ' + esc(c.nombre) + '</h3>' +
+            '<p>' + esc(c.ubicacion) + ' • <b>' + esc(c.lugar) + '</b></p></div>' +
+            '<div class="cafe-actions">' + ig + '<a href="' + urlComoLlegar(c) + '" target="_blank" rel="noopener noreferrer">Cómo llegar</a></div>';
+          frag.appendChild(div);
+        });
+        $('ranking-resultados').replaceChildren(frag);
+      };
+
+      // ---------- Tostadores ----------
+      window.cofiRenderizarTostadores = function () {
+        const ciudad = $('select-ciudad-tostadores').value;
+        const filtrados = tostadoresDatos.filter(t => ciudad === 'Todas' || t.ciudad === ciudad);
+        const cont = $('lista-tostadores');
+
+        if (!filtrados.length) {
+          cont.innerHTML = '<p class="msg-vacio"><span class="emoji">🌱</span>Todavía no hay tostadores registrados en esta ciudad.</p>';
+          return;
+        }
+        const frag = document.createDocumentFragment();
+        filtrados.forEach(t => {
+          const div = document.createElement('div');
+          div.className = 'tostador-card';
+          const img = t.foto || IMG_FALLBACK;
+          let botones = '';
+          if (t.ig) botones += '<a href="' + esc(t.ig) + '" target="_blank" rel="noopener noreferrer" class="btn-outline-mad" style="margin-bottom:8px;display:flex;">Instagram</a>';
+          if (t.tienda) botones += '<a href="' + esc(t.tienda) + '" target="_blank" rel="noopener noreferrer" class="btn-primary-mad" style="display:flex;">Tienda Online</a>';
+          div.innerHTML =
+            '<img src="' + esc(img) + '" class="tostador-img" width="400" height="200" loading="lazy" decoding="async" alt="' + esc(t.nombre) + '" onerror="this.onerror=null;this.src=\'' + IMG_FALLBACK + '\'">' +
+            '<div class="tostador-content"><div>' +
+              '<h3>' + esc(t.nombre) + '</h3>' +
+              '<p>📍 ' + esc(t.ciudad) + '</p>' +
+            '</div><div>' + botones + '</div></div>';
+          frag.appendChild(div);
+        });
+        cont.replaceChildren(frag);
+      };
+
+      // ---------- Ubicación ----------
+      function cofiProcesarOrigen(lat, lon, label) {
+        $('select-ciudad').value = 'Todas';
+        window.cofiActualizarZonas();
+        $('input-busqueda').value = '';
+        busquedaActiva = false;
+        limpiarOrigen();
+
+        origen = { lat, lon, label };
+        markerOrigen = L.circleMarker([lat, lon], { radius: 9, color: '#1a0f0a', fillColor: '#fff', weight: 3, fillOpacity: 1 })
+          .addTo(mapaCofiteca).bindPopup(esc(label)).openPopup();
+
+        const conDist = baseDatos.map(c => ({ ...c, dist: calcularD(lat, lon, c.lat, c.lon) }))
+          .sort((a, b) => a.dist - b.dist);
+        setLista(conDist);
+
+        dibujarMapa(baseDatos, false);
+        mapaCofiteca.setView([lat, lon], 15);
+        document.querySelector('#vista-mapa .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        const st = $('cofi-status');
+        st.innerHTML = '📍 Más cercanos a <b>' + esc(label) + '</b>' +
+          ' · <a onclick="cofiFiltrarRadio(1)">1 km</a>' +
+          ' · <a onclick="cofiFiltrarRadio(5)">5 km</a>' +
+          ' · <a onclick="cofiFiltrarRadio(15)">15 km</a>' +
+          ' · <a onclick="cofiFiltrarRadio(50)">50 km</a>' +
+          ' · <a onclick="cofiQuitarOrigen()">Quitar</a>';
+        st.classList.remove('hidden');
+        sincronizarURL();
+      }
+
+      window.cofiFiltrarRadio = function (km) {
+        if (!origen) return;
+        const dentro = baseDatos.map(c => ({ ...c, dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) }))
+          .filter(c => c.dist <= km).sort((a, b) => a.dist - b.dist);
+        setLista(dentro);
+        dibujarMapa(dentro, false);
+        $('cofi-status').innerHTML = '📍 A menos de <b>' + km + ' km</b> de <b>' + esc(origen.label) + '</b>' +
+          ' · <a onclick="cofiQuitarOrigen()">Quitar</a>';
+      };
+
+      window.cofiUsarMiGPS = function () {
+        if (!navigator.geolocation) { ensureSwal().then(() => Swal.fire('Error', 'Tu navegador no soporta GPS.', 'error')); return; }
+        navigator.geolocation.getCurrentPosition(
+          p => cofiProcesarOrigen(p.coords.latitude, p.coords.longitude, 'tu ubicación'),
+          () => ensureSwal().then(() => Swal.fire('Aviso', 'No pudimos obtener tu ubicación. Revisá los permisos.', 'warning')),
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+        );
+      };
+
+      window.cofiMedirDesdeDireccion = async function () {
+        await ensureSwal();
+        Swal.fire({
+          title: '¿Dónde estás?',
+          html: '<p style="font-size:.9rem;color:#5c3d2e;margin-bottom:15px;">Escribí tu calle y ciudad (Ej: Güemes, Mar del Plata)</p>' +
+                '<input id="swal-autocomplete-input" class="swal-custom-input" placeholder="Escribir..." autocomplete="off">' +
+                '<div id="autocomplete-results" style="text-align:left;margin-top:10px;max-height:200px;overflow-y:auto;"></div>',
+          showConfirmButton: false, showCancelButton: true, cancelButtonText: 'Cerrar',
+          customClass: { popup: 'swal-custom-popup', cancelButton: 'swal-custom-btn-cancel' },
+          didOpen: () => {
+            const input = $('swal-autocomplete-input');
+            const resultsContainer = $('autocomplete-results');
+            let timeout = null, solicitudId = 0;
+            input.focus();
+            input.addEventListener('input', () => {
+              clearTimeout(timeout);
+              const val = input.value.trim();
+              if (val.length < 4) { resultsContainer.innerHTML = ''; return; }
+              resultsContainer.innerHTML = '<div style="padding:10px;color:#1a0f0a;font-weight:bold;text-align:center;">Buscando...</div>';
+              timeout = setTimeout(async () => {
+                const miId = ++solicitudId;
+                try {
+                  const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(val) + '&countrycodes=ar&addressdetails=1&limit=6');
+                  const data = await res.json();
+                  if (miId !== solicitudId) return;
+                  resultsContainer.innerHTML = '';
+                  if (!data.length) { resultsContainer.innerHTML = '<div style="padding:10px;opacity:.7;text-align:center;">No encontramos la dirección.</div>'; return; }
+                  data.forEach(item => {
+                    const partes = [];
+                    if (item.address.road) partes.push(item.address.road + (item.address.house_number ? ' ' + item.address.house_number : ''));
+                    const localidad = item.address.city || item.address.town || item.address.village;
+                    if (localidad) partes.push(localidad);
+                    const nombreStr = partes.length ? partes.join(', ') : item.display_name.split(',').slice(0, 3).join(', ');
+                    const btn = document.createElement('button');
+                    btn.style.cssText = 'width:100%;text-align:left;background:rgba(255,255,255,.7);color:#1a0f0a;border:1px solid rgba(196,167,125,.5);padding:12px;border-radius:6px;cursor:pointer;margin-bottom:8px;font-family:Inter,sans-serif;font-size:.9rem;';
+                    btn.innerHTML = '📍 <b>' + esc(nombreStr) + '</b>';
+                    btn.onclick = () => { Swal.close(); cofiProcesarOrigen(parseFloat(item.lat), parseFloat(item.lon), nombreStr); };
+                    resultsContainer.appendChild(btn);
+                  });
+                } catch { if (miId === solicitudId) resultsContainer.innerHTML = '<div style="padding:10px;color:red;text-align:center;">Error con el mapa.</div>'; }
+              }, 800);
+            });
+          }
+        });
+      };
+
+      // ---------- Formularios ----------
+      window.cofiAbrirReporte = async function () {
+        await ensureSwal();
+        const { value: formValues } = await Swal.fire({
+          title: 'Soporte',
+          customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
+          html: '<div style="text-align:left;">' +
+                '<select id="swal-tipo" class="swal-custom-input" style="margin-bottom:10px;"><option value="Dato Incorrecto">Corrección de datos</option><option value="Local Cerrado">Local cerrado</option></select>' +
+                '<input id="swal-local" class="swal-custom-input" placeholder="Nombre del local o tu teléfono" style="margin-bottom:10px;">' +
+                '<textarea id="swal-detalle" class="swal-custom-input" placeholder="Detalle de la solicitud..." style="height:80px;resize:none;"></textarea></div>',
+          showCancelButton: true, confirmButtonText: 'Enviar', cancelButtonText: 'Cancelar',
+          preConfirm: () => {
+            const local = $('swal-local').value.trim();
+            if (!local) { Swal.showValidationMessage('Ingresá una referencia válida'); return false; }
+            return { tipo: $('swal-tipo').value, local, detalle: $('swal-detalle').value.trim() };
+          }
+        });
+        if (formValues) window.cofiEnviarReporteEmail(formValues);
+      };
+
+      window.cofiAbrirSumate = async function () {
+        await ensureSwal();
+        const { value: formValues } = await Swal.fire({
+          title: 'Añadir Local',
+          customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
+          html: '<div style="text-align:left;">' +
+                '<select id="sumate-tipo" class="swal-custom-input" style="margin-bottom:10px;"><option value="Cafetería / Tostaduría">Cafetería / Tostaduría</option></select>' +
+                '<input id="sumate-nombre" class="swal-custom-input" placeholder="Nombre comercial" style="margin-bottom:10px;">' +
+                '<input id="sumate-link" class="swal-custom-input" placeholder="Link a Instagram o Web" style="margin-bottom:10px;"></div>',
+          showCancelButton: true, confirmButtonText: 'Enviar Solicitud', cancelButtonText: 'Cancelar',
+          preConfirm: () => {
+            const nombre = $('sumate-nombre').value.trim();
+            if (!nombre) { Swal.showValidationMessage('Ingresá el nombre comercial'); return false; }
+            return { tipo: 'ALTA NUEVA: ' + $('sumate-tipo').value, local: nombre, detalle: 'Link/IG: ' + $('sumate-link').value.trim() };
+          }
+        });
+        if (formValues) window.cofiEnviarReporteEmail(formValues);
+      };
+
+      window.cofiEnviarReporteEmail = async function (datosForm) {
+        try {
+          await fetch('/api/reporte?t=' + Date.now(), {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(datosForm)
+          });
+          Swal.fire({ title: 'Enviado', text: 'Tu solicitud fue recibida.', icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
+        } catch {
+          Swal.fire({ title: 'Error', text: 'Problemas de conexión con el servidor.', icon: 'error', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
+        }
+      };
+
+      document.addEventListener('keydown', e => {
+        if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'SELECT') {
+          e.preventDefault();
+          $('input-busqueda').focus();
+        }
+        if (e.key === 'Escape' && document.activeElement.id === 'input-busqueda') {
+          $('input-busqueda').value = '';
+          window.cofiFiltrar('texto');
+        }
+      });
+
+      // ---------- Arranque ----------
+      const ciudades = [...new Set(baseDatos.map(c => c.ciudad))].sort((a, b) => a.localeCompare(b, 'es'));
+      $('select-ciudad').innerHTML = '<option value="Todas">Región / Ciudad</option>' + ciudades.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+
+      const ciudadesTost = [...new Set(tostadoresDatos.map(t => t.ciudad))].sort((a, b) => a.localeCompare(b, 'es'));
+      $('select-ciudad-tostadores').innerHTML = '<option value="Todas">Todas las Ciudades</option>' + ciudadesTost.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+
+      const GRANDES = ['CABA y Gran Buenos Aires', 'Córdoba', 'Mar del Plata', 'Mendoza', 'La Plata'];
+      $('quick-chips').innerHTML = GRANDES
+        .filter(r => ciudades.includes(r))
+        .map(r => '<button class="quick-chip" onclick="cofiQuickRegion(\'' + esc(r) + '\')">' + esc(r.replace(' y Gran Buenos Aires', '')) + '</button>')
+        .join('');
+
+      window.cofiQuickRegion = function (r) {
+        $('select-ciudad').value = r;
+        window.cofiActualizarZonas();
+        window.cofiFiltrar(true);
+      };
+
+      persistirFavs();
+      renderRecientes();
+      window.cofiActualizarZonas();
+      window.cofiActualizarMetricas();
+      initMapa();
+      hidratarDesdeURL();
+      // Si llegó desde una ficha (?c=...&q=...) recentra y resalta el local
+      const vieneConFiltro = $('input-busqueda').value.trim() !== '' || $('select-ciudad').value !== 'Todas';
+      aplicarFiltros(vieneConFiltro);
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { iniciarBuscadorSeguro(); });
+    else iniciarBuscadorSeguro();
+    document.addEventListener('astro:page-load', function () { iniciarBuscadorSeguro(); });
   </script>
 </body>
 </html>
