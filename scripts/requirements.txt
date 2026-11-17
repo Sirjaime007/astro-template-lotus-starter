@@ -4,3 +4,4 @@ shapely
 requests
 rasterio
 numpy
+gdown
