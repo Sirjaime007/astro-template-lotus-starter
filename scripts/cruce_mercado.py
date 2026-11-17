@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import time
 import socket
@@ -13,7 +14,7 @@ import urllib3.util.connection as urllib3_cn
 urllib3_cn.allowed_gai_family = lambda: socket.AF_INET
 
 # ==============================================================================
-# PEGÁ ENTRE COMILLAS LOS DOS ENLACES DE GOOGLE DRIVE QUE COMPARTISTE RECIÉN:
+# PEGÁ ENTRE COMILLAS TUS DOS ENLACES DE GOOGLE DRIVE (RADIOS Y DEPARTAMENTOS):
 URL_DRIVE_RADIOS = "https://drive.google.com/file/d/1KiOw4aettgbjLZJIwms86yVp-lPXcBXQ/view?usp=drivesdk"
 URL_DRIVE_DEPTOS = "https://drive.google.com/file/d/1_BthlwEU2QMKtUlzwDv1AEsF4mB6SB9E/view?usp=drivesdk"
 # ==============================================================================
@@ -46,10 +47,39 @@ def descargar_desde_drive(url_drive, ruta_destino):
     if not url_drive.startswith("http"):
         return False
     os.makedirs(os.path.dirname(ruta_destino), exist_ok=True)
-    if not os.path.exists(ruta_destino):
-        print(f"Descargando capa censal en la nube -> {ruta_destino}...")
-        gdown.download(url_drive, ruta_destino, quiet=False, fuzzy=True)
-    return os.path.exists(ruta_destino)
+    if os.path.exists(ruta_destino) and os.path.getsize(ruta_destino) > 10000:
+        return True
+
+    match = re.search(r"(?:/d/|id=)([a-zA-Z0-9_-]+)", url_drive)
+    if not match:
+        print(f"No se pudo extraer ID del enlace: {url_drive}")
+        return False
+
+    file_id = match.group(1)
+    print(f"Descargando capa censal en la nube -> {ruta_destino}...")
+
+    # 1. Descarga directa sin límite de tamaño en Google Drive
+    url_directa = f"https://drive.usercontent.google.com/download?id={file_id}&export=download&confirm=t"
+    try:
+        with requests.get(url_directa, stream=True, timeout=120) as r:
+            if r.status_code == 200 and "text/html" not in r.headers.get("Content-Type", ""):
+                with open(ruta_destino, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=1024 * 256):
+                        if chunk:
+                            f.write(chunk)
+                if os.path.exists(ruta_destino) and os.path.getsize(ruta_destino) > 10000:
+                    print(f"Descarga completada ({os.path.getsize(ruta_destino) // (1024*1024)} MB).")
+                    return True
+    except Exception as e:
+        print(f"Aviso en descarga directa: {e}")
+
+    # 2. Respaldo compatible con cualquier versión de gdown
+    try:
+        gdown.download(id=file_id, output=ruta_destino, quiet=False)
+    except Exception as e:
+        print(f"Error descargando con gdown: {e}")
+
+    return os.path.exists(ruta_destino) and os.path.getsize(ruta_destino) > 10000
 
 
 def detectar_columna_poblacion(columnas):
@@ -74,7 +104,7 @@ def detectar_columna_poblacion(columnas):
 
 def detectar_columna_hogares(columnas):
     cols_lower = {c.lower(): c for c in columnas}
-    for candidato in ["hog_2022", "hogares_2022", "h2022", "hogares", "hog"]:
+    for candidato in ["hog_2022", "hogares_2022", "h2022", "hogares", "hog", "viv_2022", "viviendas"]:
         if candidato in cols_lower:
             return cols_lower[candidato]
     return None
@@ -90,6 +120,12 @@ def calcular_censo_500m(gdf_buffers_3857, ruta_gpkg):
 
     if not col_pob:
         print(f"No se encontró columna de población en {ruta_gpkg}")
+        return {}, {}
+
+    # Pre-filtro espacial ultrarrápido: descarta polígonos lejanos sin cafeterías
+    indices_cercanos = gdf_c.sjoin(gdf_buffers_3857[["geometry"]], how="inner", predicate="intersects").index.unique()
+    gdf_c = gdf_c.loc[indices_cercanos].copy()
+    if gdf_c.empty:
         return {}, {}
 
     gdf_c["area_poligono"] = gdf_c.geometry.area.replace(0, np.nan)
@@ -167,7 +203,6 @@ def calcular_perfil_socioeconomico(row):
     atr = row["atractores_500m"]
     comp = row["competidores_500m"]
 
-    # Hogares unipersonales/chicos (< 2.4 pers/hogar) suelen correlacionar con PEA joven/activa alta
     pers_por_hogar = (pob / hog) if hog > 0 else 2.8
     bonus_hogar = max(0.0, (3.0 - pers_por_hogar) * 5.0)
     pea_est = round(min(76.0, max(54.0, 56.0 + bonus_hogar + (atr * 0.7))), 1)
