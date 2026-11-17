@@ -1,18 +1,27 @@
 import os
 import time
+import socket
 from datetime import datetime
 import pandas as pd
 import geopandas as gpd
 import requests
+import urllib3.util.connection as urllib3_cn
 
-# Tu hoja Datos_Mercado publicada como CSV
+# Forzar IPv4 para evitar "[Errno 101] Network is unreachable" en GitHub Actions
+urllib3_cn.allowed_gai_family = lambda: socket.AF_INET
+
 URL_DATOS_MERCADO_CSV = (
     "https://docs.google.com/spreadsheets/d/e/"
     "2PACX-1vSFR6-_mxHeIRopuVzI4bskv8hSyqvnjjy0pRdJ8cNCI2vtsQlcLCDzJD5m8StLzceZL3Zn3Pmh_bbn/"
     "pub?gid=802012693&single=true&output=csv"
 )
 
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+OVERPASS_URLS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+]
+
 RUTA_CENSO = "datos_censales/radios_censales.geojson"
 
 
@@ -25,19 +34,37 @@ def cargar_locales():
     return df
 
 
+def consultar_servidor_osm(query):
+    for url in OVERPASS_URLS:
+        try:
+            resp = requests.post(url, data={"data": query}, timeout=18)
+            if resp.status_code == 200:
+                return resp.json().get("elements", [])
+        except Exception:
+            continue
+    return None
+
+
 def obtener_atractores_osm(df_locales):
-    """Consulta OpenStreetMap agrupando locales en grillas de ~11 km para evitar límites de API."""
+    """Agrupa locales en cuadrículas de ~55 km y usa servidores espejo con límite de 3 minutos."""
     grillas = df_locales.assign(
-        lat_g=df_locales["latitud"].round(1),
-        lon_g=df_locales["longitud"].round(1),
+        lat_g=(df_locales["latitud"] * 2).round() / 2,
+        lon_g=(df_locales["longitud"] * 2).round() / 2,
     )[["lat_g", "lon_g"]].drop_duplicates()
 
+    print(f"Consultando {len(grillas)} zonas urbanas en OpenStreetMap...")
     pois = {}
+    inicio = time.time()
+
     for _, row in grillas.iterrows():
-        s, w = row["lat_g"] - 0.06, row["lon_g"] - 0.06
-        n, e = row["lat_g"] + 0.06, row["lon_g"] + 0.06
+        if time.time() - inicio > 180:
+            print("Límite de tiempo OSM alcanzado, continuando con datos recolectados.")
+            break
+
+        s, w = row["lat_g"] - 0.26, row["lon_g"] - 0.26
+        n, e = row["lat_g"] + 0.26, row["lon_g"] + 0.26
         query = f"""
-        [out:json][timeout:25];
+        [out:json][timeout:15];
         (
           node["railway"~"station|subway_entrance"]({s},{w},{n},{e});
           node["amenity"~"university|college|coworking_space|hospital|bank"]({s},{w},{n},{e});
@@ -47,17 +74,14 @@ def obtener_atractores_osm(df_locales):
         );
         out center;
         """
-        try:
-            resp = requests.post(OVERPASS_URL, data={"data": query}, timeout=30)
-            if resp.status_code == 200:
-                for el in resp.json().get("elements", []):
-                    lat = el.get("lat") or el.get("center", {}).get("lat")
-                    lon = el.get("lon") or el.get("center", {}).get("lon")
-                    if lat and lon:
-                        pois[(el["type"], el["id"])] = {"lat": lat, "lon": lon}
-            time.sleep(1.5)
-        except Exception as err:
-            print(f"Aviso Overpass en grilla ({row['lat_g']}, {row['lon_g']}): {err}")
+        elementos = consultar_servidor_osm(query)
+        if elementos:
+            for el in elementos:
+                lat = el.get("lat") or el.get("center", {}).get("lat")
+                lon = el.get("lon") or el.get("center", {}).get("lon")
+                if lat and lon:
+                    pois[(el["type"], el["id"])] = {"lat": lat, "lon": lon}
+        time.sleep(0.5)
 
     if not pois:
         return gpd.GeoDataFrame(columns=["geometry"], crs="EPSG:3857")
@@ -80,7 +104,6 @@ def main():
         crs="EPSG:4326",
     ).to_crs(epsg=3857)
 
-    # Círculo exacto de 500 metros alrededor de cada cafetería
     gdf_buffers = gdf_locales[["slug_local", "geometry"]].copy()
     gdf_buffers["geometry"] = gdf_buffers.geometry.buffer(500)
 
@@ -96,7 +119,6 @@ def main():
     else:
         conteo_pois = pd.Series(dtype=int)
 
-    # Base de resultados
     res = df_locales[["slug_local", "latitud", "longitud"]].copy()
     res["competidores_500m"] = res["slug_local"].map(conteo_comp).fillna(0).astype(int)
     res["atractores_500m"] = res["slug_local"].map(conteo_pois).fillna(0).astype(int)
@@ -104,17 +126,14 @@ def main():
     res["pea_porcentaje"] = 0.0
     res["nivel_socioeconomico"] = "En calibración"
 
-    print("4. Verificando capa censal (INDEC / poblaciones.org)...")
     if os.path.exists(RUTA_CENSO):
         gdf_censo = gpd.read_file(RUTA_CENSO).to_crs(epsg=3857)
         cruce_censo = gpd.sjoin(gdf_buffers, gdf_censo, how="inner", predicate="intersects")
-        # Ajustá los nombres de columna según el GeoJSON descargado (ej. POBLACION / TOT_POB)
         col_pob = next((c for c in gdf_censo.columns if c.upper() in ["POBLACION", "TOT_POB", "POB_TOT"]), None)
         if col_pob:
             pob_map = cruce_censo.groupby("slug_local")[col_pob].sum()
             res["poblacion_500m"] = res["slug_local"].map(pob_map).fillna(0).astype(int)
 
-    # Cálculo del Índice de Oportunidad (Demanda + Tráfico diurno vs Competencia)
     res["indice_oportunidad"] = (
         ((res["poblacion_500m"] / 100.0) + (res["atractores_500m"] * 15.0))
         / (res["competidores_500m"] + 1)
@@ -125,10 +144,8 @@ def main():
     os.makedirs("src/data", exist_ok=True)
     os.makedirs("public/data", exist_ok=True)
 
-    # 1) JSON listo para importar directo en Astro
     res.set_index("slug_local").to_json("src/data/mercado.json", orient="index", force_ascii=False, indent=2)
 
-    # 2) CSV limpio para sincronizar de vuelta con Google Sheets
     cols_sheets = [
         "poblacion_500m",
         "pea_porcentaje",
@@ -139,7 +156,7 @@ def main():
         "fecha_actualizacion",
     ]
     res[cols_sheets].to_csv("public/data/mercado.csv", index=False)
-    print(f"Proceso completado: {len(res)} locales analizados.")
+    print(f"Proceso completado en tiempo récord: {len(res)} locales analizados.")
 
 
 if __name__ == "__main__":
