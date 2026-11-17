@@ -1,5 +1,4 @@
 import os
-import glob
 import json
 import time
 import socket
@@ -8,11 +7,16 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 import requests
-import rasterio
-from rasterio.mask import mask
+import gdown
 import urllib3.util.connection as urllib3_cn
 
 urllib3_cn.allowed_gai_family = lambda: socket.AF_INET
+
+# ==============================================================================
+# PEGÁ ENTRE COMILLAS LOS DOS ENLACES DE GOOGLE DRIVE QUE COMPARTISTE RECIÉN:
+URL_DRIVE_RADIOS = "https://drive.google.com/file/d/1KiOw4aettgbjLZJIwms86yVp-lPXcBXQ/view?usp=drivesdk"
+URL_DRIVE_DEPTOS = "https://drive.google.com/file/d/1_BthlwEU2QMKtUlzwDv1AEsF4mB6SB9E/view?usp=drivesdk"
+# ==============================================================================
 
 URL_DATOS_MERCADO_CSV = (
     "https://docs.google.com/spreadsheets/d/e/"
@@ -20,12 +24,8 @@ URL_DATOS_MERCADO_CSV = (
     "pub?gid=802012693&single=true&output=csv"
 )
 
-# Grilla poblacional 100m Argentina (descarga directa en la nube, ~25 MB)
-URL_GRILLA_POB = (
-    "https://data.worldpop.org/GIS/Population/Global_2000_2020_Constrained/"
-    "2020/BSGM/ARG/arg_ppp_2020_UNadj_constrained.tif"
-)
-RUTA_GRILLA_POB = "datos_censales/arg_pob_100m.tif"
+RUTA_RADIOS = "datos_censales/radios_2022.gpkg"
+RUTA_DEPTOS = "datos_censales/deptos_2022.gpkg"
 RUTA_CACHE_OSM = "datos_censales/pois_osm.json"
 
 OVERPASS_URLS = [
@@ -42,91 +42,71 @@ def cargar_locales():
     return df.dropna(subset=["latitud", "longitud"]).drop_duplicates(subset=["slug_local"])
 
 
-def calcular_poblacion_grilla(gdf_buffers_4326):
-    """Calcula habitantes en 500m usando la grilla de 100m sin descargar nada a tu tablet."""
-    os.makedirs("datos_censales", exist_ok=True)
-    if not os.path.exists(RUTA_GRILLA_POB):
-        print("Descargando grilla demográfica de Argentina (100m)...")
-        try:
-            with requests.get(URL_GRILLA_POB, stream=True, timeout=60) as r:
-                r.raise_for_status()
-                with open(RUTA_GRILLA_POB, "wb") as f:
-                    for chunk in r.iter_content(chunk_size=1024 * 256):
-                        f.write(chunk)
-        except Exception as e:
-            print(f"No se pudo descargar la grilla remota: {e}")
-            return {}
-
-    poblaciones = {}
-    try:
-        with rasterio.open(RUTA_GRILLA_POB) as src:
-            for _, row in gdf_buffers_4326.iterrows():
-                try:
-                    out_img, _ = mask(src, [row["geometry"]], crop=True, filled=True, nodata=0.0)
-                    valores = np.where(out_img > 0, out_img, 0.0)
-                    poblaciones[row["slug_local"]] = int(round(float(np.sum(valores))))
-                except Exception:
-                    poblaciones[row["slug_local"]] = 0
-    except Exception as e:
-        print(f"Error leyendo raster poblacional: {e}")
-    return poblaciones
+def descargar_desde_drive(url_drive, ruta_destino):
+    if not url_drive.startswith("http"):
+        return False
+    os.makedirs(os.path.dirname(ruta_destino), exist_ok=True)
+    if not os.path.exists(ruta_destino):
+        print(f"Descargando capa censal en la nube -> {ruta_destino}...")
+        gdown.download(url_drive, ruta_destino, quiet=False, fuzzy=True)
+    return os.path.exists(ruta_destino)
 
 
-def cruzar_capas_indec_locales(gdf_buffers_3857):
-    """Lee cualquier archivo GeoJSON / GeoPackage / ZIP de INDEC o poblaciones.org en datos_censales/."""
-    archivos = (
-        glob.glob("datos_censales/*.geojson")
-        + glob.glob("datos_censales/*.gpkg")
-        + glob.glob("datos_censales/*.zip")
-    )
-    if not archivos:
-        return {}, {}, {}
+def detectar_columna_poblacion(columnas):
+    prioridad = [
+        "pob_2022", "poblacion_2022", "personas_2022", "p2022",
+        "poblacion", "tot_pob", "pob_tot", "personas", "pob"
+    ]
+    cols_lower = {c.lower(): c for c in columnas}
+    for candidato in prioridad:
+        if candidato in cols_lower:
+            return cols_lower[candidato]
+    for c in columnas:
+        cl = c.lower()
+        if ("pob" in cl or "pers" in cl) and "2022" in cl and "dens" not in cl and "var" not in cl:
+            return c
+    for c in columnas:
+        cl = c.lower()
+        if "pob" in cl and "dens" not in cl and "var" not in cl and "pct" not in cl:
+            return c
+    return None
 
-    pob_indec, pea_indec, nse_indec = {}, {}, {}
-    for ruta in archivos:
-        try:
-            gdf_c = gpd.read_file(ruta).to_crs(epsg=3857)
-            gdf_c["area_radio"] = gdf_c.geometry.area.replace(0, np.nan)
 
-            col_pob = next((c for c in gdf_c.columns if c.upper() in ["POBLACION", "TOT_POB", "POB_TOT", "PERSONAS", "P_TOTAL", "POB"]), None)
-            col_pea = next((c for c in gdf_c.columns if c.upper() in ["PEA", "PEA_PCT", "POB_15_64", "EDAD_20_59"]), None)
-            col_edu = next((c for c in gdf_c.columns if c.upper() in ["UNIV", "SUP_COMP", "EDUC_SUP", "UNIVERSITARIO"]), None)
+def detectar_columna_hogares(columnas):
+    cols_lower = {c.lower(): c for c in columnas}
+    for candidato in ["hog_2022", "hogares_2022", "h2022", "hogares", "hog"]:
+        if candidato in cols_lower:
+            return cols_lower[candidato]
+    return None
 
-            inter = gpd.overlay(gdf_buffers_3857, gdf_c, how="intersection")
-            if inter.empty:
-                continue
-            inter["factor_area"] = (inter.geometry.area / inter["area_radio"]).clip(0, 1)
 
-            if col_pob:
-                inter["pob_prop"] = pd.to_numeric(inter[col_pob], errors="coerce").fillna(0) * inter["factor_area"]
-                for slug, val in inter.groupby("slug_local")["pob_prop"].sum().items():
-                    pob_indec[slug] = pob_indec.get(slug, 0) + int(round(val))
+def calcular_censo_500m(gdf_buffers_3857, ruta_gpkg):
+    """Intersecta los círculos de 500m con los polígonos de poblaciones.org."""
+    gdf_c = gpd.read_file(ruta_gpkg).to_crs(epsg=3857)
+    print(f"Columnas detectadas en {ruta_gpkg}: {list(gdf_c.columns)}")
 
-            if col_pea and col_pob:
-                inter["pea_prop"] = pd.to_numeric(inter[col_pea], errors="coerce").fillna(0) * inter["factor_area"]
-                for slug, grp in inter.groupby("slug_local"):
-                    tot_p = grp["pob_prop"].sum()
-                    if tot_p > 0:
-                        pea_indec[slug] = round((grp["pea_prop"].sum() / tot_p) * 100, 1)
+    col_pob = detectar_columna_poblacion(gdf_c.columns)
+    col_hog = detectar_columna_hogares(gdf_c.columns)
 
-            if col_edu and col_pob:
-                inter["edu_prop"] = pd.to_numeric(inter[col_edu], errors="coerce").fillna(0) * inter["factor_area"]
-                for slug, grp in inter.groupby("slug_local"):
-                    tot_p = grp["pob_prop"].sum()
-                    if tot_p > 0:
-                        pct_univ = (grp["edu_prop"].sum() / tot_p) * 100
-                        if pct_univ >= 28:
-                            nse_indec[slug] = "Alto"
-                        elif pct_univ >= 16:
-                            nse_indec[slug] = "Medio-Alto"
-                        elif pct_univ >= 8:
-                            nse_indec[slug] = "Medio"
-                        else:
-                            nse_indec[slug] = "Emergente"
-        except Exception as e:
-            print(f"Aviso leyendo {ruta}: {e}")
+    if not col_pob:
+        print(f"No se encontró columna de población en {ruta_gpkg}")
+        return {}, {}
 
-    return pob_indec, pea_indec, nse_indec
+    gdf_c["area_poligono"] = gdf_c.geometry.area.replace(0, np.nan)
+    inter = gpd.overlay(gdf_buffers_3857, gdf_c, how="intersection")
+    if inter.empty:
+        return {}, {}
+
+    inter["factor_area"] = (inter.geometry.area / inter["area_poligono"]).clip(0, 1)
+    inter["pob_prop"] = pd.to_numeric(inter[col_pob], errors="coerce").fillna(0) * inter["factor_area"]
+    pob_dict = inter.groupby("slug_local")["pob_prop"].sum().round().astype(int).to_dict()
+
+    hog_dict = {}
+    if col_hog:
+        inter["hog_prop"] = pd.to_numeric(inter[col_hog], errors="coerce").fillna(0) * inter["factor_area"]
+        hog_dict = inter.groupby("slug_local")["hog_prop"].sum().round().astype(int).to_dict()
+
+    return pob_dict, hog_dict
 
 
 def obtener_atractores_osm(df_locales):
@@ -181,18 +161,21 @@ def obtener_atractores_osm(df_locales):
     return gpd.GeoDataFrame(columns=["geometry"], crs="EPSG:3857")
 
 
-def estimar_nse_y_pea(row):
-    """Estimación de respaldo cuando aún no se subió el archivo provincial de INDEC."""
+def calcular_perfil_socioeconomico(row):
     pob = row["poblacion_500m"]
+    hog = row["hogares_500m"]
     atr = row["atractores_500m"]
     comp = row["competidores_500m"]
 
-    pea_est = round(min(74.0, max(54.0, 56.0 + (atr * 0.8) + (pob / 2500.0))), 1)
+    # Hogares unipersonales/chicos (< 2.4 pers/hogar) suelen correlacionar con PEA joven/activa alta
+    pers_por_hogar = (pob / hog) if hog > 0 else 2.8
+    bonus_hogar = max(0.0, (3.0 - pers_por_hogar) * 5.0)
+    pea_est = round(min(76.0, max(54.0, 56.0 + bonus_hogar + (atr * 0.7))), 1)
 
-    score_urbano = (pob / 1000.0) + (atr * 2.5) + (comp * 1.5)
-    if score_urbano >= 22:
+    score_urbano = (pob / 1000.0) + (atr * 2.5) + (comp * 1.5) + bonus_hogar
+    if score_urbano >= 24:
         nse = "Alto"
-    elif score_urbano >= 12:
+    elif score_urbano >= 13:
         nse = "Medio-Alto"
     elif score_urbano >= 5:
         nse = "Medio"
@@ -211,7 +194,6 @@ def main():
 
     gdf_buffers = gdf_locales[["slug_local", "geometry"]].copy()
     gdf_buffers["geometry"] = gdf_buffers.geometry.buffer(500)
-    gdf_buffers_4326 = gdf_buffers.to_crs(epsg=4326)
 
     # 1. Competencia en 500m
     cruce_comp = gpd.sjoin(gdf_buffers, gdf_locales[["slug_local", "geometry"]], how="left", predicate="intersects")
@@ -225,20 +207,30 @@ def main():
     else:
         conteo_pois = pd.Series(dtype=int)
 
-    # 3. Población en 500m (Grilla 100m + Capas INDEC si existen)
-    pob_grilla = calcular_poblacion_grilla(gdf_buffers_4326)
-    pob_indec, pea_indec, nse_indec = cruzar_capas_indec_locales(gdf_buffers)
+    # 3. Censo 2022 (Radios urbanos como principal, Departamentos como respaldo)
+    pob_radios, hog_radios = {}, {}
+    if descargar_desde_drive(URL_DRIVE_RADIOS, RUTA_RADIOS):
+        pob_radios, hog_radios = calcular_censo_500m(gdf_buffers, RUTA_RADIOS)
+
+    pob_deptos, hog_deptos = {}, {}
+    if descargar_desde_drive(URL_DRIVE_DEPTOS, RUTA_DEPTOS):
+        pob_deptos, hog_deptos = calcular_censo_500m(gdf_buffers, RUTA_DEPTOS)
 
     res = df_locales[["slug_local", "latitud", "longitud"]].copy()
     res["competidores_500m"] = res["slug_local"].map(conteo_comp).fillna(0).astype(int)
     res["atractores_500m"] = res["slug_local"].map(conteo_pois).fillna(0).astype(int)
+
     res["poblacion_500m"] = res["slug_local"].apply(
-        lambda s: pob_indec.get(s, pob_grilla.get(s, 0))
+        lambda s: pob_radios[s] if pob_radios.get(s, 0) > 0 else pob_deptos.get(s, 0)
     ).astype(int)
 
-    estimados = res.apply(estimar_nse_y_pea, axis=1)
-    res["pea_porcentaje"] = res["slug_local"].map(pea_indec).fillna(estimados[0])
-    res["nivel_socioeconomico"] = res["slug_local"].map(nse_indec).fillna(estimados[1])
+    res["hogares_500m"] = res["slug_local"].apply(
+        lambda s: hog_radios[s] if hog_radios.get(s, 0) > 0 else hog_deptos.get(s, 0)
+    ).astype(int)
+
+    perfiles = res.apply(calcular_perfil_socioeconomico, axis=1)
+    res["pea_porcentaje"] = perfiles[0]
+    res["nivel_socioeconomico"] = perfiles[1]
 
     res["indice_oportunidad"] = (
         ((res["poblacion_500m"] / 100.0) + (res["atractores_500m"] * 15.0))
@@ -260,7 +252,7 @@ def main():
         "fecha_actualizacion",
     ]
     res[cols_sheets].to_csv("public/data/mercado.csv", index=False)
-    print(f"Cruce demográfico completado: {len(res)} locales.")
+    print(f"Cruce censal 2022 finalizado: {len(res)} locales procesados.")
 
 
 if __name__ == "__main__":
