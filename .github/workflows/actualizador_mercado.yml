@@ -1,0 +1,35 @@
+name: Actualizar Datos de Mercado Cofiteca
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Todos los lunes a las 3:00 AM (hora Argentina)
+  workflow_dispatch:    # Permite ejecutarlo manualmente con un toque desde GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  calcular-mercado:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias geoespaciales
+        run: pip install -r scripts/requirements.txt
+
+      - name: Ejecutar cruce de datos de mercado
+        run: python scripts/cruce_mercado.py
+
+      - name: Guardar resultados en el repositorio
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add src/data/mercado.json public/data/mercado.csv
+          git commit -m "Actualización automática de datos de mercado" || exit 0
+          git push
