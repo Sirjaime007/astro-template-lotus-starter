@@ -2,3 +2,5 @@ pandas
 geopandas
 shapely
 requests
+rasterio
+numpy
