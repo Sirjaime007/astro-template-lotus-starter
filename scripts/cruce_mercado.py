@@ -24,7 +24,7 @@ URL_DATOS_MERCADO_CSV = (
 
 RUTA_RADIOS = "datos_censales/radios_2022.gpkg"
 RUTA_DEPTOS = "datos_censales/deptos_2022.gpkg"
-RUTA_CACHE_OSM = "datos_censales/pois_osm.json"
+RUTA_CACHE_OSM = "datos_censales/pois_osm_v2.json"
 
 OVERPASS_URLS = [
     "https://overpass-api.de/api/interpreter",
@@ -32,17 +32,25 @@ OVERPASS_URLS = [
 ]
 
 
+def log(msg):
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}", flush=True)
+
+
 def cargar_locales():
+    log("1/5 Descargando locales desde Google Sheets...")
     df = pd.read_csv(URL_DATOS_MERCADO_CSV)
     df = df[["slug_local", "latitud", "longitud"]].dropna().copy()
     df["latitud"] = pd.to_numeric(df["latitud"].astype(str).str.replace(",", "."), errors="coerce")
     df["longitud"] = pd.to_numeric(df["longitud"].astype(str).str.replace(",", "."), errors="coerce")
-    return df.dropna(subset=["latitud", "longitud"]).drop_duplicates(subset=["slug_local"])
+    df = df.dropna(subset=["latitud", "longitud"]).drop_duplicates(subset=["slug_local"])
+    log(f"    -> {len(df)} locales válidos cargados.")
+    return df
 
 
 def descargar_desde_drive(url_drive, ruta_destino):
     os.makedirs(os.path.dirname(ruta_destino), exist_ok=True)
-    if os.path.exists(ruta_destino) and os.path.getsize(ruta_destino) > 10000:
+    if os.path.exists(ruta_destino) and os.path.getsize(ruta_destino) > 50000:
+        log(f"    -> Archivo ya disponible en caché: {ruta_destino}")
         return True
 
     match = re.search(r"(?:/d/|id=)([a-zA-Z0-9_-]+)", url_drive)
@@ -50,27 +58,14 @@ def descargar_desde_drive(url_drive, ruta_destino):
         return False
 
     file_id = match.group(1)
-    print(f"Descargando {ruta_destino} desde Google Drive...")
-    url_directa = f"https://drive.usercontent.google.com/download?id={file_id}&export=download&confirm=t"
+    url_uc = f"https://drive.google.com/uc?id={file_id}"
+    log(f"    -> Descargando {ruta_destino} desde Google Drive...")
     try:
-        with requests.get(url_directa, stream=True, timeout=90) as r:
-            if r.status_code == 200 and "text/html" not in r.headers.get("Content-Type", ""):
-                with open(ruta_destino, "wb") as f:
-                    for chunk in r.iter_content(chunk_size=1024 * 256):
-                        if chunk:
-                            f.write(chunk)
-                if os.path.exists(ruta_destino) and os.path.getsize(ruta_destino) > 10000:
-                    print(f"Descargado OK ({os.path.getsize(ruta_destino) // (1024*1024)} MB).")
-                    return True
+        gdown.download(url_uc, ruta_destino, quiet=True)
     except Exception as e:
-        print(f"Aviso descarga directa: {e}")
+        log(f"    -> Aviso gdown: {e}")
 
-    try:
-        gdown.download(id=file_id, output=ruta_destino, quiet=True)
-    except Exception as e:
-        print(f"Aviso gdown: {e}")
-
-    return os.path.exists(ruta_destino) and os.path.getsize(ruta_destino) > 10000
+    return os.path.exists(ruta_destino) and os.path.getsize(ruta_destino) > 50000
 
 
 def detectar_columna_poblacion(columnas):
@@ -93,88 +88,97 @@ def detectar_columna_poblacion(columnas):
     return None
 
 
-def detectar_columna_hogares(columnas):
-    cols_lower = {c.lower(): c for c in columnas}
-    for candidato in ["hog_2022", "hogares_2022", "h2022", "hogares", "hog", "viv_2022", "viviendas"]:
-        if candidato in cols_lower:
-            return cols_lower[candidato]
-    return None
-
-
 def calcular_censo_500m(gdf_buffers_3857, ruta_gpkg):
     if gdf_buffers_3857.empty:
-        return {}, {}
+        return {}
 
-    bbox_4326 = tuple(gdf_buffers_3857.to_crs(epsg=4326).total_bounds)
-    gdf_c = gpd.read_file(ruta_gpkg, bbox=bbox_4326).to_crs(epsg=3857)
-    print(f"Leído {ruta_gpkg} ({len(gdf_c)} polígonos). Columnas: {list(gdf_c.columns)}")
-
+    log(f"    -> Leyendo polígonos de {ruta_gpkg}...")
+    gdf_c = gpd.read_file(ruta_gpkg).to_crs(epsg=3857)
     col_pob = detectar_columna_poblacion(gdf_c.columns)
-    col_hog = detectar_columna_hogares(gdf_c.columns)
     if not col_pob:
-        return {}, {}
+        return {}
 
-    indices_cercanos = gdf_c.sjoin(gdf_buffers_3857[["geometry"]], how="inner", predicate="intersects").index.unique()
-    gdf_c = gdf_c.loc[indices_cercanos].copy()
-    if gdf_c.empty:
-        return {}, {}
-
+    gdf_c = gdf_c[gdf_c.geometry.notnull() & ~gdf_c.geometry.is_empty].copy()
     gdf_c["area_poligono"] = gdf_c.geometry.area.replace(0, np.nan)
-    inter = gpd.overlay(gdf_buffers_3857, gdf_c, how="intersection")
-    if inter.empty:
-        return {}, {}
 
-    inter["factor_area"] = (inter.geometry.area / inter["area_poligono"]).clip(0, 1)
-    inter["pob_prop"] = pd.to_numeric(inter[col_pob], errors="coerce").fillna(0) * inter["factor_area"]
-    pob_dict = inter.groupby("slug_local")["pob_prop"].sum().round().astype(int).to_dict()
+    pares = gpd.sjoin(gdf_buffers_3857, gdf_c, how="inner", predicate="intersects")
+    if pares.empty:
+        return {}
 
-    hog_dict = {}
-    if col_hog:
-        inter["hog_prop"] = pd.to_numeric(inter[col_hog], errors="coerce").fillna(0) * inter["factor_area"]
-        hog_dict = inter.groupby("slug_local")["hog_prop"].sum().round().astype(int).to_dict()
+    geom_buf = gpd.GeoSeries(gdf_buffers_3857.loc[pares.index, "geometry"].values, crs="EPSG:3857")
+    geom_pol = gpd.GeoSeries(gdf_c.loc[pares["index_right"], "geometry"].values, crs="EPSG:3857")
+    area_inter = geom_buf.intersection(geom_pol).area.values
 
-    return pob_dict, hog_dict
+    factor_area = np.nan_to_num(np.clip(area_inter / pares["area_poligono"].values, 0.0, 1.0), nan=0.0)
+    pares["pob_prop"] = pd.to_numeric(pares[col_pob], errors="coerce").fillna(0).values * factor_area
+    return pares.groupby("slug_local")["pob_prop"].sum().round().astype(int).to_dict()
 
 
-def obtener_atractores_osm(df_locales):
+def clasificar_poi_osm(tags):
+    if tags.get("tourism") or tags.get("natural") == "beach":
+        return "turismo"
+    if tags.get("shop") or tags.get("amenity") in ("restaurant", "bar", "pub", "fast_food", "ice_cream"):
+        return "comercio"
+    return "transporte"
+
+
+def obtener_circulacion_osm(df_locales):
+    log("3/5 Consultando flujo comercial, turístico y transporte (OpenStreetMap)...")
     pois = {}
     if os.path.exists(RUTA_CACHE_OSM):
         with open(RUTA_CACHE_OSM, "r", encoding="utf-8") as f:
             pois = json.load(f)
 
-    # Agrupa en bloques amplios (3x3 grados) para hacer pocas consultas rápidas
-    grillas = df_locales.assign(
-        lat_g=(df_locales["latitud"] // 3) * 3,
-        lon_g=(df_locales["longitud"] // 3) * 3,
-    )[["lat_g", "lon_g"]].drop_duplicates()
+    # Agrupa por macro-regiones (2 grados) y consulta solo el rectángulo exacto donde hay locales
+    df_tmp = df_locales.copy()
+    df_tmp["gx"] = (df_tmp["longitud"] // 2.0) * 2.0
+    df_tmp["gy"] = (df_tmp["latitud"] // 2.0) * 2.0
 
-    for _, row in grillas.iterrows():
-        s, w = row["lat_g"] - 0.1, row["lon_g"] - 0.1
-        n, e = row["lat_g"] + 3.1, row["lon_g"] + 3.1
-        query = f"""
-        [out:json][timeout:10];
-        (
-          node["railway"~"station|subway_entrance"]({s},{w},{n},{e});
-          node["amenity"~"university|college|coworking_space|hospital"]({s},{w},{n},{e});
-          way["amenity"~"university|college|hospital"]({s},{w},{n},{e});
-          node["leisure"="fitness_centre"]({s},{w},{n},{e});
-        );
-        out center qt;
-        """
+    bloques = df_tmp.groupby(["gx", "gy"]).agg(
+        s=("latitud", "min"),
+        n=("latitud", "max"),
+        w=("longitud", "min"),
+        e=("longitud", "max"),
+    ).reset_index()
+
+    log(f"    -> Consultando {len(bloques)} polos regionales en bloque...")
+
+    for _, b in bloques.iterrows():
+        s, w = round(b["s"] - 0.01, 4), round(b["w"] - 0.01, 4)
+        n, e = round(b["n"] + 0.01, 4), round(b["e"] + 0.01, 4)
+
+        query = (
+            f'[out:json][timeout:18];('
+            f'node["shop"]({s},{w},{n},{e});'
+            f'node["amenity"~"restaurant|bar|pub|fast_food|ice_cream|university|college|hospital|clinic|bank|theatre|cinema"]({s},{w},{n},{e});'
+            f'node["tourism"~"hotel|hostel|guest_house|motel|apartment|museum|attraction|viewpoint|information"]({s},{w},{n},{e});'
+            f'way["tourism"~"hotel|museum|attraction"]({s},{w},{n},{e});'
+            f'way["natural"="beach"]({s},{w},{n},{e});'
+            f'node["highway"="bus_stop"]({s},{w},{n},{e});'
+            f'node["railway"~"station|subway_entrance"]({s},{w},{n},{e});'
+            f'way["leisure"="park"]({s},{w},{n},{e});'
+            f');out center qt;'
+        )
+
         for url in OVERPASS_URLS:
             try:
-                resp = requests.post(url, data={"data": query}, timeout=12)
+                resp = requests.post(url, data={"data": query}, timeout=(6, 22))
                 if resp.status_code == 200:
-                    for el in resp.json().get("elements", []):
+                    elementos = resp.json().get("elements", [])
+                    for el in elementos:
                         lat = el.get("lat") or el.get("center", {}).get("lat")
                         lon = el.get("lon") or el.get("center", {}).get("lon")
                         if lat and lon:
-                            pois[f"{el['type']}_{el['id']}"] = {"lat": lat, "lon": lon}
+                            cat = clasificar_poi_osm(el.get("tags", {}))
+                            pois[f"{el['type']}_{el['id']}"] = {"lat": lat, "lon": lon, "cat": cat}
+                    log(f"    -> Bloque ({s}, {w}): +{len(elementos)} puntos detectados.")
                     break
-            except Exception:
+            except Exception as ex:
+                log(f"    -> Reintentando espejo OSM ({ex})...")
                 continue
-        time.sleep(0.2)
+        time.sleep(0.4)
 
+    log(f"    -> Total acumulado en todo el país: {len(pois)} puntos de circulación.")
     if pois:
         os.makedirs("datos_censales", exist_ok=True)
         with open(RUTA_CACHE_OSM, "w", encoding="utf-8") as f:
@@ -186,20 +190,32 @@ def obtener_atractores_osm(df_locales):
             crs="EPSG:4326",
         ).to_crs(epsg=3857)
 
-    return gpd.GeoDataFrame(columns=["geometry"], crs="EPSG:3857")
+    return gpd.GeoDataFrame(columns=["cat", "geometry"], crs="EPSG:3857")
 
 
-def calcular_perfil_socioeconomico(row):
+def evaluar_entorno_y_circulacion(row):
     pob = row["poblacion_500m"]
-    hog = row["hogares_500m"]
-    atr = row["atractores_500m"]
+    com = row["comercios_500m"]
+    tur = row["turismo_500m"]
+    tra = row["transporte_500m"]
     comp = row["competidores_500m"]
 
-    pers_por_hogar = (pob / hog) if hog > 0 else 2.8
-    bonus_hogar = max(0.0, (3.0 - pers_por_hogar) * 5.0)
-    pea_est = round(min(76.0, max(54.0, 56.0 + bonus_hogar + (atr * 0.7))), 1)
+    # Score de circulación peatonal y turística
+    flujo_score = com + (tur * 4) + (tra * 2)
+    if flujo_score >= 120:
+        circulacion = "Muy Alta"
+    elif flujo_score >= 50:
+        circulacion = "Alta"
+    elif flujo_score >= 15:
+        circulacion = "Media"
+    else:
+        circulacion = "Baja"
 
-    score_urbano = (pob / 1000.0) + (atr * 2.5) + (comp * 1.5) + bonus_hogar
+    # PEA estimada según actividad diurna del entorno
+    pea_est = round(min(76.0, max(55.0, 56.0 + (tra * 0.4) + (com * 0.08))), 1)
+
+    # Perfil comercial/urbano del entorno
+    score_urbano = (pob / 1000.0) + (com * 0.15) + (tur * 0.6) + (comp * 1.2)
     if score_urbano >= 24:
         nse = "Alto"
     elif score_urbano >= 13:
@@ -208,7 +224,12 @@ def calcular_perfil_socioeconomico(row):
         nse = "Medio"
     else:
         nse = "Emergente"
-    return pd.Series([pea_est, nse])
+
+    # Índice de oportunidad equilibrado: combina residentes fijos + flujo peatonal/turístico
+    demanda_total = (pob / 100.0) + (flujo_score * 0.55)
+    oportunidad = round(demanda_total / (comp + 1), 1)
+
+    return pd.Series([circulacion, pea_est, nse, oportunidad])
 
 
 def main():
@@ -222,47 +243,49 @@ def main():
     gdf_buffers = gdf_locales[["slug_local", "geometry"]].copy()
     gdf_buffers["geometry"] = gdf_buffers.geometry.buffer(500)
 
+    log("2/5 Calculando competencia a 500 metros...")
     cruce_comp = gpd.sjoin(gdf_buffers, gdf_locales[["slug_local", "geometry"]], how="left", predicate="intersects")
     conteo_comp = (cruce_comp.groupby("slug_local_left").size() - 1).clip(lower=0)
 
-    gdf_pois = obtener_atractores_osm(df_locales)
+    gdf_pois = obtener_circulacion_osm(df_locales)
+    conteo_com = pd.Series(dtype=int)
+    conteo_tur = pd.Series(dtype=int)
+    conteo_tra = pd.Series(dtype=int)
+
     if not gdf_pois.empty:
-        cruce_pois = gpd.sjoin(gdf_buffers, gdf_pois, how="inner", predicate="intersects")
-        conteo_pois = cruce_pois.groupby("slug_local").size()
-    else:
-        conteo_pois = pd.Series(dtype=int)
+        cruce_pois = gpd.sjoin(gdf_buffers, gdf_pois[["cat", "geometry"]], how="inner", predicate="intersects")
+        conteo_com = cruce_pois[cruce_pois["cat"] == "comercio"].groupby("slug_local").size()
+        conteo_tur = cruce_pois[cruce_pois["cat"] == "turismo"].groupby("slug_local").size()
+        conteo_tra = cruce_pois[cruce_pois["cat"] == "transporte"].groupby("slug_local").size()
 
-    pob_radios, hog_radios = {}, {}
+    log("4/5 Procesando capas censales INDEC 2022...")
+    pob_radios = {}
     if descargar_desde_drive(URL_DRIVE_RADIOS, RUTA_RADIOS):
-        pob_radios, hog_radios = calcular_censo_500m(gdf_buffers, RUTA_RADIOS)
+        pob_radios = calcular_censo_500m(gdf_buffers, RUTA_RADIOS)
 
-    # Solo consulta departamentos para los locales que no cayeron en radios urbanos
     slugs_sin_pob = [s for s in df_locales["slug_local"] if pob_radios.get(s, 0) == 0]
-    pob_deptos, hog_deptos = {}, {}
+    pob_deptos = {}
     if slugs_sin_pob and descargar_desde_drive(URL_DRIVE_DEPTOS, RUTA_DEPTOS):
         gdf_faltantes = gdf_buffers[gdf_buffers["slug_local"].isin(slugs_sin_pob)]
-        pob_deptos, hog_deptos = calcular_censo_500m(gdf_faltantes, RUTA_DEPTOS)
+        pob_deptos = calcular_censo_500m(gdf_faltantes, RUTA_DEPTOS)
 
+    log("5/5 Exportando datos finales para web y Google Sheets...")
     res = df_locales[["slug_local", "latitud", "longitud"]].copy()
     res["competidores_500m"] = res["slug_local"].map(conteo_comp).fillna(0).astype(int)
-    res["atractores_500m"] = res["slug_local"].map(conteo_pois).fillna(0).astype(int)
+    res["comercios_500m"] = res["slug_local"].map(conteo_com).fillna(0).astype(int)
+    res["turismo_500m"] = res["slug_local"].map(conteo_tur).fillna(0).astype(int)
+    res["transporte_500m"] = res["slug_local"].map(conteo_tra).fillna(0).astype(int)
+    res["atractores_500m"] = res["comercios_500m"] + res["turismo_500m"] + res["transporte_500m"]
 
     res["poblacion_500m"] = res["slug_local"].apply(
         lambda s: pob_radios[s] if pob_radios.get(s, 0) > 0 else pob_deptos.get(s, 0)
     ).astype(int)
 
-    res["hogares_500m"] = res["slug_local"].apply(
-        lambda s: hog_radios[s] if hog_radios.get(s, 0) > 0 else hog_deptos.get(s, 0)
-    ).astype(int)
-
-    perfiles = res.apply(calcular_perfil_socioeconomico, axis=1)
-    res["pea_porcentaje"] = perfiles[0]
-    res["nivel_socioeconomico"] = perfiles[1]
-
-    res["indice_oportunidad"] = (
-        ((res["poblacion_500m"] / 100.0) + (res["atractores_500m"] * 15.0))
-        / (res["competidores_500m"] + 1)
-    ).round(1)
+    evaluacion = res.apply(evaluar_entorno_y_circulacion, axis=1)
+    res["nivel_circulacion"] = evaluacion[0]
+    res["pea_porcentaje"] = evaluacion[1]
+    res["nivel_socioeconomico"] = evaluacion[2]
+    res["indice_oportunidad"] = evaluacion[3]
     res["fecha_actualizacion"] = datetime.now().strftime("%Y-%m-%d")
 
     os.makedirs("src/data", exist_ok=True)
@@ -277,9 +300,13 @@ def main():
         "nivel_socioeconomico",
         "atractores_500m",
         "fecha_actualizacion",
+        "nivel_circulacion",
+        "comercios_500m",
+        "turismo_500m",
+        "transporte_500m",
     ]
     res[cols_sheets].to_csv("public/data/mercado.csv", index=False)
-    print(f"Cruce finalizado en tiempo récord: {len(res)} locales.")
+    log(f"¡COMPLETADO! {len(res)} locales con datos censales y circulación turística.")
 
 
 if __name__ == "__main__":
