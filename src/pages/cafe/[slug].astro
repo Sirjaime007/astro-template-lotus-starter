@@ -5,6 +5,7 @@ import mercadoRaw from '../../data/mercado.json';
 
 interface DatosMercado {
   poblacion_500m: number;
+  publico_diurno_500m?: number;
   pea_porcentaje: number;
   competidores_500m: number;
   indice_oportunidad: number;
@@ -30,6 +31,9 @@ interface DatosMercado {
   gasto_turista_usd?: number;
   costo_alquiler_zona?: string;
   ecuacion_rentabilidad?: string;
+  es_corredor_ruta?: boolean;
+  ruta_cercana?: string;
+  flujo_ruta_diario?: number;
   fecha_actualizacion: string;
 }
 
@@ -40,13 +44,70 @@ export function getStaticPaths() {
   }));
 }
 
+function distanciaMetros(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371000;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 const { cafe } = Astro.props as { cafe: CafeExpanded };
 const cercanos = cafesCercanos(cafe);
 const ciudadDisplay = cafe.ciudadReal || cafe.ciudad;
 const urlMapa = `/?c=${encodeURIComponent(cafe.ciudad)}&q=${encodeURIComponent(cafe.nombre)}`;
 
 const mercadoMap = mercadoRaw as Record<string, DatosMercado>;
-const mercado = mercadoMap[cafe.slug] ?? null;
+
+function resolverMercadoLocal(c: CafeExpanded): DatosMercado {
+  const slugNorm = c.slug.trim().toLowerCase();
+  const directo = mercadoMap[c.slug] ?? mercadoMap[slugNorm];
+  if (directo) return directo;
+
+  const competidoresReales = cafesExpanded.filter(
+    otro => otro.slug !== c.slug && distanciaMetros(c.lat, c.lon, otro.lat, otro.lon) <= 500
+  ).length;
+
+  let masCercano: DatosMercado | null = null;
+  let distMin = 2000;
+  for (const otro of cafesExpanded) {
+    const datoOtro = mercadoMap[otro.slug] ?? mercadoMap[otro.slug.trim().toLowerCase()];
+    if (!datoOtro) continue;
+    const d = distanciaMetros(c.lat, c.lon, otro.lat, otro.lon);
+    if (d < distMin) {
+      distMin = d;
+      masCercano = datoOtro;
+    }
+  }
+
+  if (masCercano) {
+    return {
+      ...masCercano,
+      competidores_500m: competidoresReales
+    };
+  }
+
+  return {
+    poblacion_500m: 3800,
+    publico_diurno_500m: 6200,
+    pea_porcentaje: 62,
+    competidores_500m: competidoresReales,
+    indice_oportunidad: Number((12 / (competidoresReales + 1)).toFixed(1)),
+    nivel_socioeconomico: 'Medio-Alto',
+    atractores_500m: 20,
+    nivel_circulacion: 'Media',
+    comercios_500m: 14,
+    turismo_500m: 2,
+    transporte_500m: 4,
+    fecha_actualizacion: '2026-11-18'
+  };
+}
+
+const mercado = resolverMercadoLocal(cafe);
 
 const datosCiudad = cafesExpanded
   .filter(c => c.ciudad === cafe.ciudad && mercadoMap[c.slug])
@@ -60,27 +121,71 @@ const promCompCiudad = datosCiudad.length
   ? Number((datosCiudad.reduce((acc, d) => acc + d.competidores_500m, 0) / datosCiudad.length).toFixed(1))
   : 0;
 
-const diffPobPct = (mercado && promPobCiudad > 0)
+const diffPobPct = promPobCiudad > 0
   ? Math.round(((mercado.poblacion_500m - promPobCiudad) / promPobCiudad) * 100)
   : 0;
 
-const comercios = mercado?.comercios_500m ?? 0;
-const turismo = mercado?.turismo_500m ?? 0;
-const transporte = mercado?.transporte_500m ?? 0;
-const totalPuntosFlujo = mercado?.atractores_500m ?? (comercios + turismo + transporte);
-const nivelCirculacion = mercado?.nivel_circulacion ?? (
-  totalPuntosFlujo >= 80 ? 'Muy Alta' : totalPuntosFlujo >= 35 ? 'Alta' : totalPuntosFlujo >= 12 ? 'Media' : 'Baja'
+function detectarInfoRutaLocal(c: CafeExpanded, m: DatosMercado) {
+  if (typeof m.es_corredor_ruta === 'boolean') {
+    return {
+      esRuta: m.es_corredor_ruta,
+      rutaNombre: m.ruta_cercana || 'Corredor de Ruta',
+      flujoRuta: m.flujo_ruta_diario ?? 0
+    };
+  }
+  const zona = `${c.ciudad} ${c.ciudadReal || ''} ${c.zona || ''} ${c.ubicacion || ''} ${c.slug}`
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  if (zona.includes('chapadmalal') || (c.lat >= -38.26 && c.lat <= -38.105 && c.lon >= -57.75 && c.lon <= -57.54)) {
+    return { esRuta: true, rutaNombre: 'RP 11 · Corredor Costero Sur', flujoRuta: 9200 };
+  }
+  if (/(bariloche|bustillo|llao|catedral|angostura|siete lagos|san martin de los andes)/.test(zona) || (c.lat >= -41.25 && c.lat <= -40.05 && c.lon >= -71.75 && c.lon <= -71.10)) {
+    return { esRuta: true, rutaNombre: 'Av. Bustillo / RN 40 · Paso Cordillerano', flujoRuta: 11500 };
+  }
+  if (/(altas cumbres|cuadrado|carlos paz|calamuchita|cumbre|falda)/.test(zona)) {
+    return { esRuta: true, rutaNombre: 'Corredor Serrano / Paso de Montaña', flujoRuta: 8400 };
+  }
+  if (/(potrerillos|uspallata|cacheuta|valle de uco|ruta 7|rn 7|rp 11|ruta 11|ruta 40|rn 40)/.test(zona)) {
+    return { esRuta: true, rutaNombre: 'Corredor Vial / Paso Turístico', flujoRuta: 9000 };
+  }
+  return { esRuta: false, rutaNombre: '', flujoRuta: 0 };
+}
+
+const infoRuta = detectarInfoRutaLocal(cafe, mercado);
+
+const comercios = mercado.comercios_500m ?? 0;
+const turismo = mercado.turismo_500m ?? 0;
+const transporte = mercado.transporte_500m ?? 0;
+const totalPuntosFlujo = mercado.atractores_500m ?? (comercios + turismo + transporte);
+const nivelCirculacion = mercado.nivel_circulacion ?? (
+  (totalPuntosFlujo + (infoRuta.esRuta ? 40 : 0)) >= 80
+    ? 'Muy Alta'
+    : (totalPuntosFlujo + (infoRuta.esRuta ? 40 : 0)) >= 35
+      ? 'Alta'
+      : totalPuntosFlujo >= 12
+        ? 'Media'
+        : 'Baja'
 );
 
-const ocupAlta = mercado?.ocupacion_alta_pct ?? 60;
-const ocupBaja = mercado?.ocupacion_baja_pct ?? 50;
-const ratioEst = mercado?.ratio_estacionalidad ?? Number((ocupAlta / Math.max(1, ocupBaja)).toFixed(1));
-const turistasAnuales = mercado?.turistas_anuales_plaza ?? 0;
-const estadiaNoches = mercado?.estadia_promedio_noches ?? 0;
-const opBaja = mercado?.oportunidad_baja ?? mercado?.indice_oportunidad ?? 0;
-const opAlta = mercado?.oportunidad_alta ?? mercado?.indice_oportunidad ?? 0;
+const ocupAlta = mercado.ocupacion_alta_pct ?? 60;
+const ocupBaja = mercado.ocupacion_baja_pct ?? 50;
+const ratioEst = mercado.ratio_estacionalidad ?? Number((ocupAlta / Math.max(1, ocupBaja)).toFixed(1));
+const turistasAnuales = mercado.turistas_anuales_plaza ?? 0;
+const estadiaNoches = mercado.estadia_promedio_noches ?? 0;
+const opBaja = mercado.oportunidad_baja ?? mercado.indice_oportunidad ?? 0;
+const opAlta = mercado.oportunidad_alta ?? mercado.indice_oportunidad ?? 0;
+const esPlazaEstacional = ratioEst >= 1.8;
 
 function obtenerPerfilEconomicoLocal(c: CafeExpanded, m: DatosMercado) {
+  const zona = `${c.ciudad} ${c.ciudadReal || ''} ${c.ubicacion || ''} ${c.slug}`
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const esPuertoMadero = zona.includes('puerto madero') || (c.lat >= -34.628 && c.lat <= -34.593 && c.lon >= -58.370 && c.lon <= -58.348);
+
   if (m.corredor_economico && m.indice_ticket && m.costo_alquiler_zona) {
     return {
       corredor: m.corredor_economico,
@@ -88,23 +193,20 @@ function obtenerPerfilEconomicoLocal(c: CafeExpanded, m: DatosMercado) {
       indiceTicket: m.indice_ticket,
       gastoTuristaUsd: m.gasto_turista_usd ?? 55,
       costoAlquiler: m.costo_alquiler_zona,
-      ecuacion: m.ecuacion_rentabilidad ?? ''
+      ecuacion: m.ecuacion_rentabilidad ?? '',
+      esCorporativo: esPuertoMadero || m.corredor_economico.toLowerCase().includes('corporativo')
     };
   }
 
-  const zona = `${c.ciudad} ${c.ciudadReal || ''} ${c.ubicacion || ''} ${c.slug}`
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-
-  if (zona.includes('puerto madero')) {
+  if (esPuertoMadero) {
     return {
       corredor: 'Puerto Madero / Eje Corporativo',
       nivelGasto: 'Muy Alto',
       indiceTicket: 1.45,
       gastoTuristaUsd: 98,
       costoAlquiler: 'Muy Alto',
-      ecuacion: 'Ticket máximo y público internacional/ejecutivo, pero alquiler muy alto exige volumen sostenido.'
+      ecuacion: 'Ticket máximo y público internacional/ejecutivo, pero alquiler muy alto exige volumen sostenido.',
+      esCorporativo: true
     };
   }
   if (zona.includes('la boca') || zona.includes('barracas')) {
@@ -114,7 +216,8 @@ function obtenerPerfilEconomicoLocal(c: CafeExpanded, m: DatosMercado) {
       indiceTicket: 0.90,
       gastoTuristaUsd: 42,
       costoAlquiler: 'Medio-Bajo',
-      ecuacion: 'Turista excursionista diurno de estadía corta; conviene propuesta ágil y costos fijos bajos.'
+      ecuacion: 'Turista excursionista diurno de estadía corta; conviene propuesta ágil y costos fijos bajos.',
+      esCorporativo: false
     };
   }
   if (/(palermo|belgrano|recoleta|nunez|colegiales)/.test(zona)) {
@@ -124,7 +227,8 @@ function obtenerPerfilEconomicoLocal(c: CafeExpanded, m: DatosMercado) {
       indiceTicket: 1.30,
       gastoTuristaUsd: 80,
       costoAlquiler: 'Alto',
-      ecuacion: 'Fuerte consumo de especialidad y turismo receptivo; requiere alta rotación para amortizar alquiler.'
+      ecuacion: 'Fuerte consumo de especialidad y turismo receptivo; requiere alta rotación para amortizar alquiler.',
+      esCorporativo: false
     };
   }
   if (/(pinamar|carilo)/.test(zona)) {
@@ -134,7 +238,8 @@ function obtenerPerfilEconomicoLocal(c: CafeExpanded, m: DatosMercado) {
       indiceTicket: 1.40,
       gastoTuristaUsd: 88,
       costoAlquiler: 'Alto (estacional)',
-      ecuacion: 'Turista de alto poder adquisitivo en verano; clave negociar alquiler anual flexible.'
+      ecuacion: 'Turista de alto poder adquisitivo en verano; clave negociar alquiler anual flexible.',
+      esCorporativo: false
     };
   }
   if (/(guemes|playa grande|troncos|chapadmalal)/.test(zona)) {
@@ -144,7 +249,8 @@ function obtenerPerfilEconomicoLocal(c: CafeExpanded, m: DatosMercado) {
       indiceTicket: 1.22,
       gastoTuristaUsd: 68,
       costoAlquiler: 'Alto',
-      ecuacion: 'Público de mayor gasto promedio en la ciudad y cultura de especialidad consolidada.'
+      ecuacion: 'Público de mayor gasto promedio en la ciudad y cultura de especialidad consolidada.',
+      esCorporativo: false
     };
   }
   if (zona.includes('mar del plata')) {
@@ -154,7 +260,8 @@ function obtenerPerfilEconomicoLocal(c: CafeExpanded, m: DatosMercado) {
       indiceTicket: 1.00,
       gastoTuristaUsd: 48,
       costoAlquiler: 'Medio',
-      ecuacion: 'Turismo masivo heterogéneo + base residente anual con alquileres más accesibles.'
+      ecuacion: 'Turismo masivo heterogéneo + base residente anual con alquileres más accesibles.',
+      esCorporativo: false
     };
   }
   if (zona.includes('mendoza') || zona.includes('lujan de cuyo')) {
@@ -164,7 +271,8 @@ function obtenerPerfilEconomicoLocal(c: CafeExpanded, m: DatosMercado) {
       indiceTicket: 1.28,
       gastoTuristaUsd: 85,
       costoAlquiler: 'Medio-Alto',
-      ecuacion: 'Turista internacional/nacional de alto gasto frente a costos inmobiliarios más moderados que CABA.'
+      ecuacion: 'Turista internacional/nacional de alto gasto frente a costos inmobiliarios más moderados que CABA.',
+      esCorporativo: false
     };
   }
   return {
@@ -173,9 +281,21 @@ function obtenerPerfilEconomicoLocal(c: CafeExpanded, m: DatosMercado) {
     indiceTicket: 1.08,
     gastoTuristaUsd: 52,
     costoAlquiler: 'Medio',
-    ecuacion: 'Relación ingreso/costo equilibrada con demanda estable y valores de alquiler moderados.'
+    ecuacion: 'Relación ingreso/costo equilibrada con demanda estable y valores de alquiler moderados.',
+    esCorporativo: false
   };
 }
+
+const econ = obtenerPerfilEconomicoLocal(cafe, mercado);
+
+const publicoDiurnoEst = mercado.publico_diurno_500m ?? Math.round(
+  mercado.poblacion_500m +
+  (comercios * 45) +
+  (transporte * 150) +
+  (turismo * 90) +
+  (econ.esCorporativo ? 12000 : 2000) +
+  (infoRuta.esRuta ? Math.round(infoRuta.flujoRuta * 0.45) : 0)
+);
 
 function clasificarEstacionalidadHistorica(ratio: number) {
   if (ratio >= 3.2) return 'Estacionalidad Extrema';
@@ -184,10 +304,16 @@ function clasificarEstacionalidadHistorica(ratio: number) {
   return 'Demanda Anual Pareja';
 }
 
-function diagnosticarIntegral(m: DatosMercado, circ: string, ratio: number) {
+function diagnosticarIntegral(m: DatosMercado, circ: string, ratio: number, esRuta: boolean) {
   const esCluster = m.competidores_500m >= 6;
   const altoFlujo = circ === 'Muy Alta' || circ === 'Alta';
 
+  if (esRuta && !esCluster) {
+    return {
+      etiqueta: 'Parada estratégica en ruta',
+      resumen: `Ubicación sobre corredor vial/paso turístico (${infoRuta.rutaNombre}) con alto tránsito pasante y baja competencia directa (${m.competidores_500m} locales); clave buena señalización y servicio ágil.`
+    };
+  }
   if (ratio >= 3.2 && !esCluster) {
     return {
       etiqueta: 'Plaza turística con margen',
@@ -230,17 +356,24 @@ function diagnosticarIntegral(m: DatosMercado, circ: string, ratio: number) {
   };
 }
 
-function describirPerfilResidencial(diffPct: number, circ: string, ratio: number) {
+function describirMasaPublico(diffPct: number, circ: string, ratio: number, esCorp: boolean, esRuta: boolean) {
+  const resFmt = mercado.poblacion_500m.toLocaleString('es-AR');
+  if (esRuta) {
+    return `${resFmt} residentes fijos + ~${infoRuta.flujoRuta.toLocaleString('es-AR')} veh./pers. diarios sobre ${infoRuta.rutaNombre}.`;
+  }
+  if (esCorp) {
+    return `${resFmt} residentes censales + fuerte flujo diario de oficinas, universidades y turismo (eje corporativo y de torres).`;
+  }
   if (ratio >= 3.2) {
-    return `Base fija de invierno. En temporada alta la ocupación histórica salta de ${ocupBaja}% a ${ocupAlta}% (×${ratio}).`;
+    return `${resFmt} residentes fijos en invierno. En temporada alta la ocupación histórica salta de ${ocupBaja}% a ${ocupAlta}% (×${ratio}).`;
   }
   if (diffPct <= -15 && (circ === 'Muy Alta' || circ === 'Alta')) {
-    return `${diffPct}% vs. prom. ${cafe.ciudad} · Perfil comercial/turístico (casas bajas y locales; predomina el público de paso).`;
+    return `${resFmt} residentes censales (${diffPct}% vs. prom. ${cafe.ciudad}) · Corredor comercial/turístico donde predomina el público de paso.`;
   }
   if (diffPct >= 15) {
-    return `+${diffPct}% vs. prom. ${cafe.ciudad} · Perfil residencial denso (edificios y fuerte base de vecinos fijos).`;
+    return `${resFmt} residentes censales (+${diffPct}% vs. prom. ${cafe.ciudad}) · Perfil residencial denso con fuerte base vecinal.`;
   }
-  return `${diffPct >= 0 ? `+${diffPct}%` : `${diffPct}%`} vs. prom. ${cafe.ciudad} (${promPobCiudad.toLocaleString('es-AR')} hab. en 500 m).`;
+  return `${resFmt} residentes censales (${diffPct >= 0 ? `+${diffPct}%` : `${diffPct}%`} vs. prom. ${cafe.ciudad}) + flujo comercial diario.`;
 }
 
 function clasificarCompetencia(comp: number, prom: number) {
@@ -251,12 +384,10 @@ function clasificarCompetencia(comp: number, prom: number) {
   return `Baja vs. prom. ${cafe.ciudad} (${prom} locales).`;
 }
 
-const econ = mercado ? obtenerPerfilEconomicoLocal(cafe, mercado) : null;
 const etiquetaEstacionalidad = clasificarEstacionalidadHistorica(ratioEst);
-const diagnostico = mercado ? diagnosticarIntegral(mercado, nivelCirculacion, ratioEst) : null;
-const textoResidencial = mercado ? describirPerfilResidencial(diffPobPct, nivelCirculacion, ratioEst) : '';
-const textoCompetencia = mercado ? clasificarCompetencia(mercado.competidores_500m, promCompCiudad) : '';
-const esPlazaEstacional = ratioEst >= 1.8;
+const diagnostico = diagnosticarIntegral(mercado, nivelCirculacion, ratioEst, infoRuta.esRuta);
+const textoMasaPublico = describirMasaPublico(diffPobPct, nivelCirculacion, ratioEst, econ.esCorporativo, infoRuta.esRuta);
+const textoCompetencia = clasificarCompetencia(mercado.competidores_500m, promCompCiudad);
 
 const esquema: Record<string, any> = {
   "@context": "https://schema.org",
@@ -390,6 +521,11 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
       font-weight: 600;
       white-space: nowrap;
     }
+    .market-badge.ruta {
+      background: rgba(26,15,10,.08);
+      color: var(--coffee-900);
+      border-color: rgba(26,15,10,.25);
+    }
     .market-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -519,117 +655,118 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
         )}
         <a href={`https://www.google.com/maps/search/?api=1&query=${cafe.lat},${cafe.lon}`} target="_blank" rel="noopener noreferrer" class="btn-outline">Cómo llegar</a>
         <a href={urlMapa} class="btn-outline">Ver en el mapa interactivo</a>
-        {mercado && (
-          <button id="btn-mercado" type="button" class="btn-market" aria-expanded="false" aria-controls="panel-mercado">
-            📊 Datos de mercado
-          </button>
-        )}
+        <button id="btn-mercado" type="button" class="btn-market" aria-expanded="false" aria-controls="panel-mercado">
+          📊 Datos de mercado
+        </button>
       </div>
 
-      {mercado && diagnostico && econ && (
-        <section id="panel-mercado" class="market-panel" hidden>
-          <div class="market-header">
-            <div>
-              <h2 class="market-title">Radiografía comercial · Radio 500 m (~6 cuadras)</h2>
-              <p class="market-subtitle">
-                Cruce de censo residencial, flujo comercial, turismo histórico y poder de gasto en <b>{econ.corredor}</b>.
-              </p>
-            </div>
-            <div class="market-badges">
-              <span class="market-badge">{etiquetaEstacionalidad} (×{ratioEst})</span>
-              <span class="market-badge">{diagnostico.etiqueta}</span>
-            </div>
+      <section id="panel-mercado" class="market-panel" hidden>
+        <div class="market-header">
+          <div>
+            <h2 class="market-title">Radiografía comercial · Radio 500 m (~6 cuadras)</h2>
+            <p class="market-subtitle">
+              Cruce de censo residencial, flujo diurno/vial, turismo histórico y poder de gasto en <b>{econ.corredor}</b>.
+            </p>
+          </div>
+          <div class="market-badges">
+            {infoRuta.esRuta && (
+              <span class="market-badge ruta">🛣️ {infoRuta.rutaNombre}</span>
+            )}
+            <span class="market-badge">{etiquetaEstacionalidad} (×{ratioEst})</span>
+            <span class="market-badge">{diagnostico.etiqueta}</span>
+          </div>
+        </div>
+
+        <div class="market-grid">
+          <div class="market-card">
+            <span class="market-label">{infoRuta.esRuta ? 'Flujo Potencial (Zona + Ruta)' : esPlazaEstacional ? 'Piso Invierno vs. Flujo' : 'Público Potencial (500 m)'}</span>
+            <span class="market-value">~{publicoDiurnoEst.toLocaleString('es-AR')} <small>pers./día</small></span>
+            <span class="market-context">{textoMasaPublico}</span>
           </div>
 
-          <div class="market-grid">
-            <div class="market-card">
-              <span class="market-label">Piso Invierno (Residentes)</span>
-              <span class="market-value">{mercado.poblacion_500m.toLocaleString('es-AR')} <small>hab. fijos</small></span>
-              <span class="market-context">{textoResidencial}</span>
-            </div>
-
-            <div class="market-card">
-              <span class="market-label">Gasto y Ticket de Zona</span>
-              <span class="market-value">{econ.nivelGasto} <small>· Ticket ×{econ.indiceTicket.toFixed(2)}</small></span>
-              <span class="market-context">
-                Gasto turístico ref.: <b>~USD {econ.gastoTuristaUsd}/día</b>. Capacidad de consumo frente al promedio nacional (1.00).
-              </span>
-            </div>
-
-            <div class="market-card">
-              <span class="market-label">Costo Operativo / Alquiler</span>
-              <span class="market-value">{econ.costoAlquiler}</span>
-              <span class="market-context">{econ.ecuacion}</span>
-            </div>
-
-            <div class="market-card">
-              <span class="market-label">Curva Turística Histórica</span>
-              <span class="market-value">{ocupAlta}% <small>alta vs. {ocupBaja}% baja</small></span>
-              <span class="market-context">
-                {turistasAnuales > 0
-                  ? `~${(turistasAnuales / 1000000).toFixed(1)}M visitantes/año · Estadía prom. ${estadiaNoches} noches.`
-                  : 'Ocupación histórica de alojamiento en la plaza.'}
-              </span>
-            </div>
-
-            <div class="market-card">
-              <span class="market-label">Circulación en 500 m</span>
-              <span class="market-value">{nivelCirculacion} <small>({totalPuntosFlujo} polos)</small></span>
-              <span class="market-context">
-                <b>{comercios}</b> comercios/gastro · <b>{turismo}</b> hoteles/turismo · <b>{transporte}</b> paradas/polos.
-              </span>
-            </div>
-
-            <div class="market-card">
-              <span class="market-label">Competencia y Escenarios</span>
-              <span class="market-value">{mercado.competidores_500m} <small>locales</small></span>
-              <span class="market-context">
-                {textoCompetencia} <b>Índice: {opBaja} pts</b> (baja) / <b>{opAlta} pts</b> (pico).
-              </span>
-            </div>
+          <div class="market-card">
+            <span class="market-label">Gasto y Ticket de Zona</span>
+            <span class="market-value">{econ.nivelGasto} <small>· Ticket ×{econ.indiceTicket.toFixed(2)}</small></span>
+            <span class="market-context">
+              Gasto turístico ref.: <b>~USD {econ.gastoTuristaUsd}/día</b>. Capacidad de consumo frente al promedio nacional (1.00).
+            </span>
           </div>
 
-          <div class="history-box">
-            <div>
-              <strong>Calendario histórico de la plaza</strong>
-              <p>
-                <b>Pico:</b> {mercado.temporada_pico || 'Marzo a Diciembre'}<br />
-                <b>Valle:</b> {mercado.mes_valle || 'Enero - Febrero'} ({mercado.perfil_turistico || 'Plaza urbana'})
-              </p>
-            </div>
-            <div>
-              <strong>Diagnóstico integral ({diagnostico.etiqueta})</strong>
-              <p>{diagnostico.resumen}</p>
-            </div>
+          <div class="market-card">
+            <span class="market-label">Costo Operativo / Alquiler</span>
+            <span class="market-value">{econ.costoAlquiler}</span>
+            <span class="market-context">{econ.ecuacion}</span>
           </div>
 
-          <div class="market-guide">
-            <strong>¿Cómo interpretar estos indicadores para tomar decisiones?</strong>
-            <ul>
-              {esPlazaEstacional ? (
-                <li>
-                  <b>Piso de invierno vs. Pico turístico:</b> El dato del Censo 2022 muestra los residentes fijos que sostienen el local fuera de temporada, mientras que la ocupación histórica ({ocupBaja}% a {ocupAlta}%) estima el salto de público en meses pico.
-                </li>
-              ) : (
-                <li>
-                  <b>Demanda anual estable:</b> En esta plaza la ocupación se mantiene pareja todo el año ({ocupBaja}% a {ocupAlta}%), por lo que el negocio depende principalmente de los vecinos fijos, estudiantes y trabajadores del entorno.
-                </li>
-              )}
-              <li>
-                <b>Gasto esperado vs. Costo de zona:</b> Un ticket alto (como Puerto Madero, Palermo o Cariló) viene acompañado de alquileres comerciales altos que exigen mayor volumen; en cambio, corredores con alquiler medio y buena base vecinal suelen ofrecer mejor margen neto.
-              </li>
-              <li>
-                <b>Doble escenario del índice:</b> El primer puntaje mide la oportunidad en meses tranquilos y el segundo en temporada alta, ponderando ticket de zona y competencia activa en Cofiteca.
-              </li>
-            </ul>
+          <div class="market-card">
+            <span class="market-label">Curva Turística Histórica</span>
+            <span class="market-value">{ocupAlta}% <small>alta vs. {ocupBaja}% baja</small></span>
+            <span class="market-context">
+              {turistasAnuales > 0
+                ? `~${(turistasAnuales / 1000000).toFixed(1)}M visitantes/año · Estadía prom. ${estadiaNoches} noches.`
+                : 'Ocupación histórica de alojamiento en la plaza.'}
+            </span>
           </div>
 
-          <div class="market-footer">
-            <span>Fuentes: INDEC Censo 2022, SINTA / EOH Turismo Histórico, OpenStreetMap y Cofiteca</span>
-            <span>Actualizado: {mercado.fecha_actualizacion}</span>
+          <div class="market-card">
+            <span class="market-label">Circulación en 500 m</span>
+            <span class="market-value">
+              {nivelCirculacion}{' '}
+              <small>
+                {infoRuta.esRuta
+                  ? `(~${infoRuta.flujoRuta.toLocaleString('es-AR')} ruta/día)`
+                  : `(${totalPuntosFlujo} polos)`}
+              </small>
+            </span>
+            <span class="market-context">
+              {infoRuta.esRuta ? <><b>Ruta/Paso:</b> {infoRuta.rutaNombre} · </> : null}
+              <b>{comercios}</b> comercios/gastro · <b>{turismo}</b> hoteles/turismo · <b>{transporte}</b> paradas/polos.
+            </span>
           </div>
-        </section>
-      )}
+
+          <div class="market-card">
+            <span class="market-label">Competencia y Escenarios</span>
+            <span class="market-value">{mercado.competidores_500m} <small>locales</small></span>
+            <span class="market-context">
+              {textoCompetencia} <b>Índice: {opBaja} pts</b> (baja) / <b>{opAlta} pts</b> (pico).
+            </span>
+          </div>
+        </div>
+
+        <div class="history-box">
+          <div>
+            <strong>Calendario histórico de la plaza</strong>
+            <p>
+              <b>Pico:</b> {mercado.temporada_pico || 'Marzo a Diciembre'}<br />
+              <b>Valle:</b> {mercado.mes_valle || 'Enero - Febrero'} ({mercado.perfil_turistico || 'Plaza urbana'})
+            </p>
+          </div>
+          <div>
+            <strong>Diagnóstico integral ({diagnostico.etiqueta})</strong>
+            <p>{diagnostico.resumen}</p>
+          </div>
+        </div>
+
+        <div class="market-guide">
+          <strong>¿Cómo interpretar estos indicadores para tomar decisiones?</strong>
+          <ul>
+            <li>
+              <b>Residentes censales vs. Público diurno y de ruta:</b> En ejes corporativos (Puerto Madero) o corredores de ruta y montaña (Bustillo en Bariloche, Ruta 11 en Chapadmalal) viven pocos vecinos fijos, pero circulan miles de trabajadores o turistas en tránsito por día.
+            </li>
+            <li>
+              <b>Gasto esperado vs. Costo de zona:</b> Un ticket alto viene acompañado de alquileres comerciales altos que exigen mayor rotación; corredores con alquiler medio y buena base vecinal suelen ofrecer mejor margen neto.
+            </li>
+            <li>
+              <b>Doble escenario del índice:</b> El primer puntaje mide la oportunidad en meses tranquilos y el segundo en temporada alta, ponderando ticket de zona, tránsito pasante y competencia activa en Cofiteca.
+            </li>
+          </ul>
+        </div>
+
+        <div class="market-footer">
+          <span>Fuentes: INDEC Censo 2022, SINTA / EOH Turismo Histórico, OpenStreetMap Vial y Cofiteca</span>
+          <span>Actualizado: {mercado.fecha_actualizacion}</span>
+        </div>
+      </section>
     </header>
 
     <div class="map-frame">
