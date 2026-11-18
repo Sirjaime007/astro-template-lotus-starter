@@ -25,8 +25,49 @@ const cercanos = cafesCercanos(cafe);
 const ciudadDisplay = cafe.ciudadReal || cafe.ciudad;
 const urlMapa = `/?c=${encodeURIComponent(cafe.ciudad)}&q=${encodeURIComponent(cafe.nombre)}`;
 
-const mercado = (mercadoRaw as Record<string, DatosMercado>)[cafe.slug] ?? null;
+const mercadoMap = mercadoRaw as Record<string, DatosMercado>;
+const mercado = mercadoMap[cafe.slug] ?? null;
+
+// Promedios automáticos de la misma ciudad/región para dar referencia real
+const datosCiudad = cafesExpanded
+  .filter(c => c.ciudad === cafe.ciudad && mercadoMap[c.slug])
+  .map(c => mercadoMap[c.slug]);
+
+const promPobCiudad = datosCiudad.length
+  ? Math.round(datosCiudad.reduce((acc, d) => acc + d.poblacion_500m, 0) / datosCiudad.length)
+  : 0;
+
+const promCompCiudad = datosCiudad.length
+  ? Number((datosCiudad.reduce((acc, d) => acc + d.competidores_500m, 0) / datosCiudad.length).toFixed(1))
+  : 0;
+
+const diffPobPct = (mercado && promPobCiudad > 0)
+  ? Math.round(((mercado.poblacion_500m - promPobCiudad) / promPobCiudad) * 100)
+  : 0;
+
+const vecinosPorCafe = mercado
+  ? Math.round(mercado.poblacion_500m / (mercado.competidores_500m + 1))
+  : 0;
+
 const densidadKm2 = mercado ? Math.round(mercado.poblacion_500m / 0.7854) : 0;
+const habPorManzana = Math.round(densidadKm2 / 100);
+
+function clasificarOportunidad(pts: number) {
+  if (pts >= 25) return { nivel: 'Muy alta', detalle: 'Mucha población vecina y poca oferta cafetera' };
+  if (pts >= 12) return { nivel: 'Alta', detalle: 'Buena relación entre clientes potenciales y locales' };
+  if (pts >= 4)  return { nivel: 'Equilibrada', detalle: 'Oferta acorde al público residente del radio' };
+  return { nivel: 'Zona saturada', detalle: 'Alta competencia para los residentes estables' };
+}
+
+function clasificarCompetencia(comp: number, prom: number) {
+  if (comp === 0) return 'Sin competidores directos en 500 m';
+  if (comp <= Math.max(1, prom * 0.7)) return `Baja vs. prom. ${cafe.ciudad} (${prom})`;
+  if (comp <= prom * 1.3) return `En línea con prom. ${cafe.ciudad} (${prom})`;
+  return `Alta vs. prom. ${cafe.ciudad} (${prom})`;
+}
+
+const evalOportunidad = mercado ? clasificarOportunidad(mercado.indice_oportunidad) : null;
+const textoCompetencia = mercado ? clasificarCompetencia(mercado.competidores_500m, promCompCiudad) : '';
 
 const esquema: Record<string, any> = {
   "@context": "https://schema.org",
@@ -116,7 +157,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
 
     .market-panel {
       margin-top: 1.1rem;
-      padding: 1.25rem;
+      padding: 1.35rem;
       border-radius: var(--radius-md);
       background: var(--cream-50);
       border: 1px solid rgba(196,167,125,.45);
@@ -125,58 +166,100 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
     .market-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      gap: .6rem;
+      align-items: flex-start;
+      gap: .75rem;
       flex-wrap: wrap;
       margin-bottom: 1rem;
-      padding-bottom: .75rem;
+      padding-bottom: .85rem;
       border-bottom: 1px solid rgba(196,167,125,.3);
     }
     .market-title {
       font-family: var(--font-display);
-      font-size: 1.15rem;
+      font-size: 1.2rem;
       font-weight: 800;
       color: var(--coffee-900);
+      margin: 0 0 .25rem;
+    }
+    .market-subtitle {
       margin: 0;
+      font-size: .82rem;
+      color: var(--coffee-500);
+      line-height: 1.4;
     }
     .market-badge {
       background: rgba(232,106,51,.12);
       color: var(--accent);
       border: 1px solid rgba(232,106,51,.3);
-      padding: .25rem .7rem;
+      padding: .3rem .75rem;
       border-radius: 999px;
       font-size: .78rem;
       font-weight: 600;
+      white-space: nowrap;
     }
     .market-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
       gap: .75rem;
     }
     .market-card {
       background: var(--cream-100);
-      padding: .85rem 1rem;
+      padding: .95rem 1rem;
       border-radius: var(--radius-sm);
       border: 1px solid rgba(196,167,125,.3);
       display: flex;
       flex-direction: column;
-      gap: .2rem;
+      gap: .3rem;
+    }
+    .market-label {
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--coffee-500);
     }
     .market-value {
       font-family: var(--font-display);
-      font-size: 1.35rem;
+      font-size: 1.4rem;
       font-weight: 800;
       color: var(--coffee-900);
-      line-height: 1.1;
+      line-height: 1.15;
     }
-    .market-label {
+    .market-value small {
+      font-family: var(--font-body);
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .market-context {
       font-size: .78rem;
-      font-weight: 600;
-      color: var(--coffee-500);
+      color: var(--coffee-700);
+      line-height: 1.4;
+    }
+    .market-guide {
+      margin-top: 1rem;
+      padding: .9rem 1rem;
+      border-radius: var(--radius-sm);
+      background: rgba(196,167,125,.14);
+      border-left: 3px solid var(--tan-500);
+      font-size: .8rem;
+      color: var(--coffee-700);
+      line-height: 1.5;
+    }
+    .market-guide strong {
+      color: var(--coffee-900);
+      display: block;
+      margin-bottom: .3rem;
+    }
+    .market-guide ul {
+      margin: 0;
+      padding-left: 1.1rem;
+    }
+    .market-guide li {
+      margin-bottom: .25rem;
     }
     .market-footer {
       margin-top: .85rem;
-      font-size: .74rem;
+      font-size: .73rem;
       color: var(--coffee-500);
       display: flex;
       justify-content: space-between;
@@ -225,43 +308,63 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
         )}
       </div>
 
-      {mercado && (
+      {mercado && evalOportunidad && (
         <section id="panel-mercado" class="market-panel" hidden>
           <div class="market-header">
-            <h2 class="market-title">Inteligencia comercial · Radio 500 m</h2>
-            <span class="market-badge">Perfil zonal: {mercado.nivel_socioeconomico}</span>
+            <div>
+              <h2 class="market-title">Radiografía comercial · Radio 500 m (~6 cuadras)</h2>
+              <p class="market-subtitle">
+                Benchmark de entorno para evaluar apertura de locales, saturación y público de cercanía en <b>{cafe.ciudad}</b>.
+              </p>
+            </div>
+            <span class="market-badge">Entorno: {mercado.nivel_socioeconomico}</span>
           </div>
 
           <div class="market-grid">
             <div class="market-card">
-              <span class="market-value">{mercado.poblacion_500m.toLocaleString('es-AR')}</span>
-              <span class="market-label">Habitantes (Censo 2022)</span>
+              <span class="market-label">Residentes en 500 m</span>
+              <span class="market-value">{mercado.poblacion_500m.toLocaleString('es-AR')} <small>hab.</small></span>
+              <span class="market-context">
+                {promPobCiudad > 0
+                  ? `${diffPobPct >= 0 ? `+${diffPobPct}%` : `${diffPobPct}%`} vs. prom. ${cafe.ciudad} (${promPobCiudad.toLocaleString('es-AR')} hab.)`
+                  : 'Población estable según Censo 2022'}
+              </span>
             </div>
+
             <div class="market-card">
-              <span class="market-value">{mercado.competidores_500m}</span>
-              <span class="market-label">Cafeterías a 500 m</span>
+              <span class="market-label">Competencia cercana</span>
+              <span class="market-value">{mercado.competidores_500m} <small>locales</small></span>
+              <span class="market-context">{textoCompetencia}</span>
             </div>
+
             <div class="market-card">
-              <span class="market-value">{mercado.indice_oportunidad} pts</span>
               <span class="market-label">Índice de oportunidad</span>
+              <span class="market-value">{mercado.indice_oportunidad} <small>· {evalOportunidad.nivel}</small></span>
+              <span class="market-context">
+                <b>~{vecinosPorCafe.toLocaleString('es-AR')} vecinos</b> por cada cafetería activa. {evalOportunidad.detalle}.
+              </span>
             </div>
+
             <div class="market-card">
-              {mercado.atractores_500m > 0 ? (
-                <>
-                  <span class="market-value">{mercado.atractores_500m}</span>
-                  <span class="market-label">Atractores diurnos</span>
-                </>
-              ) : (
-                <>
-                  <span class="market-value">{densidadKm2.toLocaleString('es-AR')}</span>
-                  <span class="market-label">Densidad (hab/km²)</span>
-                </>
-              )}
+              <span class="market-label">Densidad residencial</span>
+              <span class="market-value">{densidadKm2.toLocaleString('es-AR')} <small>hab/km²</small></span>
+              <span class="market-context">
+                Equivale a <b>~{habPorManzana} vecinos por manzana</b> en un área caminable de 5-7 min.
+              </span>
             </div>
           </div>
 
+          <div class="market-guide">
+            <strong>¿A qué apunta este análisis y cómo leerlo?</strong>
+            <ul>
+              <li><b>Objetivo:</b> Ayudar a emprendedores y dueños de cafeterías a medir el equilibrio entre clientes potenciales del barrio y locales competidores registrados en Cofiteca.</li>
+              <li><b>Escala del índice:</b> Menos de <b>4 pts</b> indica zona muy competida; <b>4 a 12 pts</b> equilibrio comercial; más de <b>12 pts</b> alta demanda potencial por local.</li>
+              <li><b>Dato clave en zonas comerciales/turísticas:</b> Los habitantes provienen del Censo 2022 (residentes fijos). En polos gastronómicos o turísticos, el público de paso suma consumo adicional que no figura en el padrón residencial.</li>
+            </ul>
+          </div>
+
           <div class="market-footer">
-            <span>Fuente: INDEC Censo 2022 / poblaciones.org</span>
+            <span>Fuentes: INDEC Censo 2022 (radios urbanos) y base geográfica Cofiteca</span>
             <span>Actualizado: {mercado.fecha_actualizacion}</span>
           </div>
         </section>
