@@ -48,10 +48,6 @@ const diffPobPct = (mercado && promPobCiudad > 0)
   ? Math.round(((mercado.poblacion_500m - promPobCiudad) / promPobCiudad) * 100)
   : 0;
 
-const vecinosPorCafe = mercado
-  ? Math.round(mercado.poblacion_500m / (mercado.competidores_500m + 1))
-  : 0;
-
 const comercios = mercado?.comercios_500m ?? 0;
 const turismo = mercado?.turismo_500m ?? 0;
 const transporte = mercado?.transporte_500m ?? 0;
@@ -60,21 +56,60 @@ const nivelCirculacion = mercado?.nivel_circulacion ?? (
   totalPuntosFlujo >= 80 ? 'Muy Alta' : totalPuntosFlujo >= 35 ? 'Alta' : totalPuntosFlujo >= 12 ? 'Media' : 'Baja'
 );
 
-function clasificarOportunidad(pts: number) {
-  if (pts >= 25) return { nivel: 'Muy alta', detalle: 'Fuerte demanda residencial/turística frente a la oferta' };
-  if (pts >= 12) return { nivel: 'Alta', detalle: 'Buen margen de público potencial por cada cafetería' };
-  if (pts >= 4)  return { nivel: 'Equilibrada', detalle: 'Oferta acorde al movimiento y vecinos del radio' };
-  return { nivel: 'Zona saturada', detalle: 'Alta densidad de cafeterías para el flujo del radio' };
+function diagnosticarZona(m: DatosMercado, circ: string) {
+  const esCluster = m.competidores_500m >= 6;
+  const altoFlujo = circ === 'Muy Alta' || circ === 'Alta';
+
+  if (esCluster && altoFlujo) {
+    return {
+      etiqueta: 'Polo gastronómico consolidado',
+      resumen: 'Altísimo tránsito comercial/turístico y público cafetero habitual, pero con fuerte competencia directa (exige propuesta diferencial).'
+    };
+  }
+  if (!esCluster && altoFlujo) {
+    return {
+      etiqueta: 'Oportunidad de expansión',
+      resumen: 'Alto movimiento comercial y turístico con baja saturación de cafeterías de especialidad.'
+    };
+  }
+  if (!esCluster && m.poblacion_500m >= 5000) {
+    return {
+      etiqueta: 'Oportunidad barrial',
+      resumen: 'Buena masa de vecinos estables con poca competencia cercana; ideal para fidelización diaria y take-away.'
+    };
+  }
+  if (esCluster) {
+    return {
+      etiqueta: 'Alta densidad de oferta',
+      resumen: 'Muchos locales concentrados en pocas cuadras; clave analizar horario y diferencial de producto.'
+    };
+  }
+  return {
+    etiqueta: 'Zona de nicho / emergente',
+    resumen: 'Menor densidad urbana y comercial; funciona mejor como local de destino o punto de paso puntual.'
+  };
+}
+
+function describirPerfilResidencial(pob: number, diffPct: number, circ: string) {
+  if (diffPct <= -15 && (circ === 'Muy Alta' || circ === 'Alta')) {
+    return `${diffPct}% vs. prom. ${cafe.ciudad} · Perfil comercial/turístico (casas bajas y locales; el público principal es de paso y turismo).`;
+  }
+  if (diffPct >= 15) {
+    return `+${diffPct}% vs. prom. ${cafe.ciudad} · Perfil residencial denso (edificios y fuerte base de vecinos fijos).`;
+  }
+  return `${diffPct >= 0 ? `+${diffPct}%` : `${diffPct}%`} vs. prom. ${cafe.ciudad} (${promPobCiudad.toLocaleString('es-AR')} hab. en 500 m).`;
 }
 
 function clasificarCompetencia(comp: number, prom: number) {
-  if (comp === 0) return 'Sin competidores directos en 500 m';
-  if (comp <= Math.max(1, prom * 0.7)) return `Baja vs. prom. ${cafe.ciudad} (${prom})`;
-  if (comp <= prom * 1.3) return `En línea con prom. ${cafe.ciudad} (${prom})`;
-  return `Alta vs. prom. ${cafe.ciudad} (${prom})`;
+  if (comp === 0) return 'Sin competidores directos registrados en 500 m.';
+  if (comp >= 15) return `Clúster muy alto (prom. ${cafe.ciudad}: ${prom} locales).`;
+  if (comp > prom * 1.3) return `Alta vs. prom. ${cafe.ciudad} (${prom} locales).`;
+  if (comp >= prom * 0.7) return `En línea con prom. ${cafe.ciudad} (${prom} locales).`;
+  return `Baja vs. prom. ${cafe.ciudad} (${prom} locales).`;
 }
 
-const evalOportunidad = mercado ? clasificarOportunidad(mercado.indice_oportunidad) : null;
+const diagnostico = mercado ? diagnosticarZona(mercado, nivelCirculacion) : null;
+const textoResidencial = mercado ? describirPerfilResidencial(mercado.poblacion_500m, diffPobPct, nivelCirculacion) : '';
 const textoCompetencia = mercado ? clasificarCompetencia(mercado.competidores_500m, promCompCiudad) : '';
 
 const esquema: Record<string, any> = {
@@ -211,7 +246,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
     }
     .market-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: .75rem;
     }
     .market-card {
@@ -321,7 +356,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
         )}
       </div>
 
-      {mercado && evalOportunidad && (
+      {mercado && diagnostico && (
         <section id="panel-mercado" class="market-panel" hidden>
           <div class="market-header">
             <div>
@@ -332,7 +367,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
             </div>
             <div class="market-badges">
               <span class="market-badge">Circulación: {nivelCirculacion}</span>
-              <span class="market-badge">Entorno: {mercado.nivel_socioeconomico}</span>
+              <span class="market-badge">{diagnostico.etiqueta}</span>
             </div>
           </div>
 
@@ -348,11 +383,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
             <div class="market-card">
               <span class="market-label">Residentes fijos (500 m)</span>
               <span class="market-value">{mercado.poblacion_500m.toLocaleString('es-AR')} <small>hab.</small></span>
-              <span class="market-context">
-                {promPobCiudad > 0
-                  ? `${diffPobPct >= 0 ? `+${diffPobPct}%` : `${diffPobPct}%`} vs. prom. ${cafe.ciudad} (${promPobCiudad.toLocaleString('es-AR')} hab.)`
-                  : 'Población estable según Censo 2022'}
-              </span>
+              <span class="market-context">{textoResidencial}</span>
             </div>
 
             <div class="market-card">
@@ -362,25 +393,23 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
             </div>
 
             <div class="market-card">
-              <span class="market-label">Índice de oportunidad</span>
-              <span class="market-value">{mercado.indice_oportunidad} <small>· {evalOportunidad.nivel}</small></span>
-              <span class="market-context">
-                <b>~{vecinosPorCafe.toLocaleString('es-AR')} vecinos</b> por local activo + flujo peatonal. {evalOportunidad.detalle}.
-              </span>
+              <span class="market-label">Diagnóstico e índice ({mercado.indice_oportunidad} pts)</span>
+              <span class="market-value" style="font-size: 1.1rem;">{diagnostico.etiqueta}</span>
+              <span class="market-context">{diagnostico.resumen}</span>
             </div>
           </div>
 
           <div class="market-guide">
             <strong>¿A qué apunta este análisis y cómo leerlo?</strong>
             <ul>
-              <li><b>Objetivo:</b> Ayudar a emprendedores y dueños de cafeterías a medir el equilibrio entre residentes estables, tránsito comercial/turístico y locales competidores registrados en Cofiteca.</li>
-              <li><b>Cómo se mide la circulación:</b> Suma la densidad real de comercios/gastronomía, alojamientos o puntos turísticos (hoteles, playas, museos) y nodos de transporte/estudio en 6 cuadras a la redonda.</li>
-              <li><b>Escala del índice:</b> Menos de <b>4 pts</b> indica zona muy competida; <b>4 a 12 pts</b> equilibrio comercial; más de <b>12 pts</b> alta demanda potencial por local.</li>
+              <li><b>Objetivo:</b> Medir el equilibrio entre residentes estables, tránsito comercial/turístico y cafeterías competidoras registradas en Cofiteca dentro de 6 cuadras.</li>
+              <li><b>Clúster vs. barrio:</b> En polos como Palermo o Güemes, tener muchos competidores juntos confirma que hay demanda probada, pero exige diferenciación fuerte; en zonas residenciales con pocos cafés prima la captación de vecinos diarios.</li>
+              <li><b>Escala del índice:</b> Combina población fija + densidad comercial/turística dividida por la oferta cafetera activa (más de <b>12 pts</b> indica margen de expansión; menos de <b>6 pts</b> indica alta competencia por local).</li>
             </ul>
           </div>
 
           <div class="market-footer">
-            <span>Fuentes: INDEC Censo 2022, OpenStreetMap (turismo y comercio) y base Cofiteca</span>
+            <span>Fuentes: INDEC Censo 2022, OpenStreetMap Argentina (Geofabrik) y base Cofiteca</span>
             <span>Actualizado: {mercado.fecha_actualizacion}</span>
           </div>
         </section>
