@@ -27,9 +27,15 @@ RUTA_DEPTOS = "datos_censales/deptos_2022.gpkg"
 RUTA_CACHE_OSM = "datos_censales/pois_osm_v2.json"
 
 OVERPASS_URLS = [
-    "https://overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "https://overpass-api.de/api/interpreter",
 ]
+
+HEADERS_OSM = {
+    "User-Agent": "CofitecaMarketBot/1.0 (https://www.cofiteca.ar)",
+    "Accept-Encoding": "gzip, deflate",
+}
 
 
 def log(msg):
@@ -129,26 +135,37 @@ def obtener_circulacion_osm(df_locales):
         with open(RUTA_CACHE_OSM, "r", encoding="utf-8") as f:
             pois = json.load(f)
 
-    # Agrupa por macro-regiones (2 grados) y consulta solo el rectángulo exacto donde hay locales
+    # Ordena primero las regiones con mayor cantidad de locales (CABA, Córdoba, Mar del Plata, etc.)
     df_tmp = df_locales.copy()
     df_tmp["gx"] = (df_tmp["longitud"] // 2.0) * 2.0
     df_tmp["gy"] = (df_tmp["latitud"] // 2.0) * 2.0
 
-    bloques = df_tmp.groupby(["gx", "gy"]).agg(
-        s=("latitud", "min"),
-        n=("latitud", "max"),
-        w=("longitud", "min"),
-        e=("longitud", "max"),
-    ).reset_index()
+    bloques = (
+        df_tmp.groupby(["gx", "gy"])
+        .agg(
+            cantidad=("slug_local", "count"),
+            s=("latitud", "min"),
+            n=("latitud", "max"),
+            w=("longitud", "min"),
+            e=("longitud", "max"),
+        )
+        .sort_values("cantidad", ascending=False)
+        .reset_index()
+    )
 
-    log(f"    -> Consultando {len(bloques)} polos regionales en bloque...")
+    log(f"    -> Consultando {len(bloques)} polos regionales (máx. 35s)...")
+    inicio = time.time()
 
     for _, b in bloques.iterrows():
+        if time.time() - inicio > 35:
+            log("    -> Tiempo límite alcanzado; continuando con los polos ya descargados.")
+            break
+
         s, w = round(b["s"] - 0.01, 4), round(b["w"] - 0.01, 4)
         n, e = round(b["n"] + 0.01, 4), round(b["e"] + 0.01, 4)
 
         query = (
-            f'[out:json][timeout:18];('
+            f'[out:json][timeout:12];('
             f'node["shop"]({s},{w},{n},{e});'
             f'node["amenity"~"restaurant|bar|pub|fast_food|ice_cream|university|college|hospital|clinic|bank|theatre|cinema"]({s},{w},{n},{e});'
             f'node["tourism"~"hotel|hostel|guest_house|motel|apartment|museum|attraction|viewpoint|information"]({s},{w},{n},{e});'
@@ -156,13 +173,12 @@ def obtener_circulacion_osm(df_locales):
             f'way["natural"="beach"]({s},{w},{n},{e});'
             f'node["highway"="bus_stop"]({s},{w},{n},{e});'
             f'node["railway"~"station|subway_entrance"]({s},{w},{n},{e});'
-            f'way["leisure"="park"]({s},{w},{n},{e});'
             f');out center qt;'
         )
 
         for url in OVERPASS_URLS:
             try:
-                resp = requests.post(url, data={"data": query}, timeout=(6, 22))
+                resp = requests.post(url, data={"data": query}, headers=HEADERS_OSM, timeout=(3, 14))
                 if resp.status_code == 200:
                     elementos = resp.json().get("elements", [])
                     for el in elementos:
@@ -171,14 +187,13 @@ def obtener_circulacion_osm(df_locales):
                         if lat and lon:
                             cat = clasificar_poi_osm(el.get("tags", {}))
                             pois[f"{el['type']}_{el['id']}"] = {"lat": lat, "lon": lon, "cat": cat}
-                    log(f"    -> Bloque ({s}, {w}): +{len(elementos)} puntos detectados.")
+                    log(f"    -> Polo ({int(b['cantidad'])} locales): +{len(elementos)} puntos detectados.")
                     break
-            except Exception as ex:
-                log(f"    -> Reintentando espejo OSM ({ex})...")
+            except Exception:
                 continue
-        time.sleep(0.4)
+        time.sleep(0.2)
 
-    log(f"    -> Total acumulado en todo el país: {len(pois)} puntos de circulación.")
+    log(f"    -> Total acumulado: {len(pois)} puntos de circulación.")
     if pois:
         os.makedirs("datos_censales", exist_ok=True)
         with open(RUTA_CACHE_OSM, "w", encoding="utf-8") as f:
@@ -200,7 +215,6 @@ def evaluar_entorno_y_circulacion(row):
     tra = row["transporte_500m"]
     comp = row["competidores_500m"]
 
-    # Score de circulación peatonal y turística
     flujo_score = com + (tur * 4) + (tra * 2)
     if flujo_score >= 120:
         circulacion = "Muy Alta"
@@ -211,10 +225,8 @@ def evaluar_entorno_y_circulacion(row):
     else:
         circulacion = "Baja"
 
-    # PEA estimada según actividad diurna del entorno
     pea_est = round(min(76.0, max(55.0, 56.0 + (tra * 0.4) + (com * 0.08))), 1)
 
-    # Perfil comercial/urbano del entorno
     score_urbano = (pob / 1000.0) + (com * 0.15) + (tur * 0.6) + (comp * 1.2)
     if score_urbano >= 24:
         nse = "Alto"
@@ -225,7 +237,6 @@ def evaluar_entorno_y_circulacion(row):
     else:
         nse = "Emergente"
 
-    # Índice de oportunidad equilibrado: combina residentes fijos + flujo peatonal/turístico
     demanda_total = (pob / 100.0) + (flujo_score * 0.55)
     oportunidad = round(demanda_total / (comp + 1), 1)
 
