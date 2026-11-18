@@ -25,6 +25,11 @@ interface DatosMercado {
   temporada_pico?: string;
   mes_valle?: string;
   perfil_turistico?: string;
+  corredor_economico?: string;
+  indice_ticket?: number;
+  gasto_turista_usd?: number;
+  costo_alquiler_zona?: string;
+  ecuacion_rentabilidad?: string;
   fecha_actualizacion: string;
 }
 
@@ -74,6 +79,103 @@ const turistasAnuales = mercado?.turistas_anuales_plaza ?? 0;
 const estadiaNoches = mercado?.estadia_promedio_noches ?? 0;
 const opBaja = mercado?.oportunidad_baja ?? mercado?.indice_oportunidad ?? 0;
 const opAlta = mercado?.oportunidad_alta ?? mercado?.indice_oportunidad ?? 0;
+
+function obtenerPerfilEconomicoLocal(c: CafeExpanded, m: DatosMercado) {
+  if (m.corredor_economico && m.indice_ticket && m.costo_alquiler_zona) {
+    return {
+      corredor: m.corredor_economico,
+      nivelGasto: m.nivel_socioeconomico,
+      indiceTicket: m.indice_ticket,
+      gastoTuristaUsd: m.gasto_turista_usd ?? 55,
+      costoAlquiler: m.costo_alquiler_zona,
+      ecuacion: m.ecuacion_rentabilidad ?? ''
+    };
+  }
+
+  const zona = `${c.ciudad} ${c.ciudadReal || ''} ${c.ubicacion || ''} ${c.slug}`
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  if (zona.includes('puerto madero')) {
+    return {
+      corredor: 'Puerto Madero / Eje Corporativo',
+      nivelGasto: 'Muy Alto',
+      indiceTicket: 1.45,
+      gastoTuristaUsd: 98,
+      costoAlquiler: 'Muy Alto',
+      ecuacion: 'Ticket máximo y público internacional/ejecutivo, pero alquiler muy alto exige volumen sostenido.'
+    };
+  }
+  if (zona.includes('la boca') || zona.includes('barracas')) {
+    return {
+      corredor: 'La Boca / Circuito Diurno',
+      nivelGasto: 'Medio-Bajo',
+      indiceTicket: 0.90,
+      gastoTuristaUsd: 42,
+      costoAlquiler: 'Medio-Bajo',
+      ecuacion: 'Turista excursionista diurno de estadía corta; conviene propuesta ágil y costos fijos bajos.'
+    };
+  }
+  if (/(palermo|belgrano|recoleta|nunez|colegiales)/.test(zona)) {
+    return {
+      corredor: 'Palermo / Corredor Norte CABA',
+      nivelGasto: 'Alto',
+      indiceTicket: 1.30,
+      gastoTuristaUsd: 80,
+      costoAlquiler: 'Alto',
+      ecuacion: 'Fuerte consumo de especialidad y turismo receptivo; requiere alta rotación para amortizar alquiler.'
+    };
+  }
+  if (/(pinamar|carilo)/.test(zona)) {
+    return {
+      corredor: 'Pinamar / Cariló · Balneario ABC1',
+      nivelGasto: 'Muy Alto',
+      indiceTicket: 1.40,
+      gastoTuristaUsd: 88,
+      costoAlquiler: 'Alto (estacional)',
+      ecuacion: 'Turista de alto poder adquisitivo en verano; clave negociar alquiler anual flexible.'
+    };
+  }
+  if (/(guemes|playa grande|troncos|chapadmalal)/.test(zona)) {
+    return {
+      corredor: 'Mar del Plata · Güemes / Playa Grande / Sur',
+      nivelGasto: 'Alto',
+      indiceTicket: 1.22,
+      gastoTuristaUsd: 68,
+      costoAlquiler: 'Alto',
+      ecuacion: 'Público de mayor gasto promedio en la ciudad y cultura de especialidad consolidada.'
+    };
+  }
+  if (zona.includes('mar del plata')) {
+    return {
+      corredor: 'Mar del Plata · Centro / Barrial',
+      nivelGasto: 'Medio',
+      indiceTicket: 1.00,
+      gastoTuristaUsd: 48,
+      costoAlquiler: 'Medio',
+      ecuacion: 'Turismo masivo heterogéneo + base residente anual con alquileres más accesibles.'
+    };
+  }
+  if (zona.includes('mendoza') || zona.includes('lujan de cuyo')) {
+    return {
+      corredor: 'Mendoza · Enoturismo y Ciudad',
+      nivelGasto: 'Alto',
+      indiceTicket: 1.28,
+      gastoTuristaUsd: 85,
+      costoAlquiler: 'Medio-Alto',
+      ecuacion: 'Turista internacional/nacional de alto gasto frente a costos inmobiliarios más moderados que CABA.'
+    };
+  }
+  return {
+    corredor: c.ciudadReal || c.ciudad,
+    nivelGasto: m.nivel_socioeconomico || 'Medio-Alto',
+    indiceTicket: 1.08,
+    gastoTuristaUsd: 52,
+    costoAlquiler: 'Medio',
+    ecuacion: 'Relación ingreso/costo equilibrada con demanda estable y valores de alquiler moderados.'
+  };
+}
 
 function clasificarEstacionalidadHistorica(ratio: number) {
   if (ratio >= 3.2) return 'Estacionalidad Extrema';
@@ -149,10 +251,12 @@ function clasificarCompetencia(comp: number, prom: number) {
   return `Baja vs. prom. ${cafe.ciudad} (${prom} locales).`;
 }
 
+const econ = mercado ? obtenerPerfilEconomicoLocal(cafe, mercado) : null;
 const etiquetaEstacionalidad = clasificarEstacionalidadHistorica(ratioEst);
 const diagnostico = mercado ? diagnosticarIntegral(mercado, nivelCirculacion, ratioEst) : null;
 const textoResidencial = mercado ? describirPerfilResidencial(diffPobPct, nivelCirculacion, ratioEst) : '';
 const textoCompetencia = mercado ? clasificarCompetencia(mercado.competidores_500m, promCompCiudad) : '';
+const esPlazaEstacional = ratioEst >= 1.8;
 
 const esquema: Record<string, any> = {
   "@context": "https://schema.org",
@@ -309,7 +413,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
     }
     .market-value {
       font-family: var(--font-display);
-      font-size: 1.3rem;
+      font-size: 1.28rem;
       font-weight: 800;
       color: var(--coffee-900);
       line-height: 1.15;
@@ -332,7 +436,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
       background: #fffdf9;
       border: 1px solid rgba(232,106,51,.35);
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: .85rem;
     }
     .history-box strong {
@@ -347,7 +451,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
       margin: 0;
       font-size: .82rem;
       color: var(--coffee-900);
-      line-height: 1.4;
+      line-height: 1.45;
     }
     .market-guide {
       margin-top: .85rem;
@@ -422,13 +526,13 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
         )}
       </div>
 
-      {mercado && diagnostico && (
+      {mercado && diagnostico && econ && (
         <section id="panel-mercado" class="market-panel" hidden>
           <div class="market-header">
             <div>
               <h2 class="market-title">Radiografía comercial · Radio 500 m (~6 cuadras)</h2>
               <p class="market-subtitle">
-                Cruce de censo residencial, flujo comercial y serie turística histórica en <b>{mercado.plaza_turistica || ciudadDisplay}</b>.
+                Cruce de censo residencial, flujo comercial, turismo histórico y poder de gasto en <b>{econ.corredor}</b>.
               </p>
             </div>
             <div class="market-badges">
@@ -442,6 +546,20 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
               <span class="market-label">Piso Invierno (Residentes)</span>
               <span class="market-value">{mercado.poblacion_500m.toLocaleString('es-AR')} <small>hab. fijos</small></span>
               <span class="market-context">{textoResidencial}</span>
+            </div>
+
+            <div class="market-card">
+              <span class="market-label">Gasto y Ticket de Zona</span>
+              <span class="market-value">{econ.nivelGasto} <small>· Ticket ×{econ.indiceTicket.toFixed(2)}</small></span>
+              <span class="market-context">
+                Gasto turístico ref.: <b>~USD {econ.gastoTuristaUsd}/día</b>. Capacidad de consumo frente al promedio nacional (1.00).
+              </span>
+            </div>
+
+            <div class="market-card">
+              <span class="market-label">Costo Operativo / Alquiler</span>
+              <span class="market-value">{econ.costoAlquiler}</span>
+              <span class="market-context">{econ.ecuacion}</span>
             </div>
 
             <div class="market-card">
@@ -475,8 +593,8 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
             <div>
               <strong>Calendario histórico de la plaza</strong>
               <p>
-                <b>Pico:</b> {mercado.temporada_pico || 'Verano y feriados'}<br />
-                <b>Valle:</b> {mercado.mes_valle || 'Mayo - Junio'} ({mercado.perfil_turistico || 'Plaza mixta'})
+                <b>Pico:</b> {mercado.temporada_pico || 'Marzo a Diciembre'}<br />
+                <b>Valle:</b> {mercado.mes_valle || 'Enero - Febrero'} ({mercado.perfil_turistico || 'Plaza urbana'})
               </p>
             </div>
             <div>
@@ -486,10 +604,23 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
           </div>
 
           <div class="market-guide">
-            <strong>¿Cómo interpretar el cruce con el turismo histórico?</strong>
+            <strong>¿Cómo interpretar estos indicadores para tomar decisiones?</strong>
             <ul>
-              <li><b>Piso de supervivencia vs. Techo de temporada:</b> En destinos como Pinamar, Villa Gesell o Chapadmalal, el dato del Censo 2022 muestra quién sostiene el local en invierno, mientras que la ocupación histórica ({ocupBaja}% a {ocupAlta}%) muestra cuánto se multiplica la demanda en verano[span_2](start_span)[span_2](end_span).</li>
-              <li><b>Doble escenario del índice:</b> El primer valor mide la oportunidad en meses tranquilos y el segundo en temporada alta, ajustado por la cantidad de cafeterías competidoras registradas en Cofiteca[span_3](start_span)[span_3](end_span).</li>
+              {esPlazaEstacional ? (
+                <li>
+                  <b>Piso de invierno vs. Pico turístico:</b> El dato del Censo 2022 muestra los residentes fijos que sostienen el local fuera de temporada, mientras que la ocupación histórica ({ocupBaja}% a {ocupAlta}%) estima el salto de público en meses pico.
+                </li>
+              ) : (
+                <li>
+                  <b>Demanda anual estable:</b> En esta plaza la ocupación se mantiene pareja todo el año ({ocupBaja}% a {ocupAlta}%), por lo que el negocio depende principalmente de los vecinos fijos, estudiantes y trabajadores del entorno.
+                </li>
+              )}
+              <li>
+                <b>Gasto esperado vs. Costo de zona:</b> Un ticket alto (como Puerto Madero, Palermo o Cariló) viene acompañado de alquileres comerciales altos que exigen mayor volumen; en cambio, corredores con alquiler medio y buena base vecinal suelen ofrecer mejor margen neto.
+              </li>
+              <li>
+                <b>Doble escenario del índice:</b> El primer puntaje mide la oportunidad en meses tranquilos y el segundo en temporada alta, ponderando ticket de zona y competencia activa en Cofiteca.
+              </li>
             </ul>
           </div>
 
