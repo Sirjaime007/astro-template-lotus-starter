@@ -1,7 +1,7 @@
 import os
 import re
 import json
-import time
+import zipfile
 import socket
 from datetime import datetime
 import numpy as np
@@ -15,6 +15,7 @@ urllib3_cn.allowed_gai_family = lambda: socket.AF_INET
 
 URL_DRIVE_RADIOS = "https://drive.google.com/file/d/1KiOw4aettgbjLZJIwms86yVp-lPXcBXQ/view?usp=drivesdk"
 URL_DRIVE_DEPTOS = "https://drive.google.com/file/d/1_BthlwEU2QMKtUlzwDv1AEsF4mB6SB9E/view?usp=drivesdk"
+URL_GEOFABRIK_AR = "https://download.geofabrik.de/south-america/argentina-latest-free.shp.zip"
 
 URL_DATOS_MERCADO_CSV = (
     "https://docs.google.com/spreadsheets/d/e/"
@@ -26,15 +27,29 @@ RUTA_RADIOS = "datos_censales/radios_2022.gpkg"
 RUTA_DEPTOS = "datos_censales/deptos_2022.gpkg"
 RUTA_CACHE_OSM = "datos_censales/pois_osm_v2.json"
 
-OVERPASS_URLS = [
-    "https://overpass.kumi.systems/api/interpreter",
-    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
-    "https://overpass-api.de/api/interpreter",
-]
+CLASES_TURISMO = {
+    "hotel", "hostel", "guest_house", "motel", "chalet", "alpine_hut",
+    "camp_site", "caravan_site", "museum", "attraction", "viewpoint",
+    "theme_park", "zoo", "monument", "memorial", "castle", "ruins",
+    "arts_centre", "tourist_info", "beach",
+}
 
-HEADERS_OSM = {
-    "User-Agent": "CofitecaMarketBot/1.0 (https://www.cofiteca.ar)",
-    "Accept-Encoding": "gzip, deflate",
+CLASES_COMERCIO = {
+    "restaurant", "bar", "pub", "fast_food", "ice_cream", "food_court",
+    "biergarten", "bakery", "supermarket", "convenience", "mall",
+    "department_store", "clothes", "shoes", "boutique", "bookshop",
+    "gift", "jeweller", "beauty_shop", "hairdresser", "chemist",
+    "pharmacy", "florist", "greengrocer", "butcher", "beverages",
+    "optician", "mobile_phone_shop", "electronics", "furniture_shop",
+    "sports_shop", "toy_shop", "stationery", "kiosk",
+}
+
+CLASES_TRANSPORTE = {
+    "bus_stop", "bus_station", "railway_station", "railway_halt",
+    "subway_entrance", "tram_stop", "ferry_terminal", "taxi",
+    "university", "college", "school", "hospital", "clinic",
+    "bank", "courthouse", "town_hall", "post_office", "library",
+    "theatre", "cinema", "nightclub", "stadium", "sports_centre", "park",
 }
 
 
@@ -120,92 +135,93 @@ def calcular_censo_500m(gdf_buffers_3857, ruta_gpkg):
     return pares.groupby("slug_local")["pob_prop"].sum().round().astype(int).to_dict()
 
 
-def clasificar_poi_osm(tags):
-    if tags.get("tourism") or tags.get("natural") == "beach":
-        return "turismo"
-    if tags.get("shop") or tags.get("amenity") in ("restaurant", "bar", "pub", "fast_food", "ice_cream"):
-        return "comercio"
-    return "transporte"
-
-
-def obtener_circulacion_osm(df_locales):
-    log("3/5 Consultando flujo comercial, turístico y transporte (OpenStreetMap)...")
-    pois = {}
-    if os.path.exists(RUTA_CACHE_OSM):
+def obtener_circulacion_geofabrik(gdf_buffers_3857):
+    log("3/5 Cargando capa comercial, turística y transporte de Argentina...")
+    if os.path.exists(RUTA_CACHE_OSM) and os.path.getsize(RUTA_CACHE_OSM) > 10000:
         with open(RUTA_CACHE_OSM, "r", encoding="utf-8") as f:
-            pois = json.load(f)
+            registros = json.load(f)
+        if registros:
+            log(f"    -> Caché cargada: {len(registros)} polos cercanos.")
+            df_pois = pd.DataFrame(registros)
+            return gpd.GeoDataFrame(
+                df_pois[["cat"]],
+                geometry=gpd.points_from_xy(df_pois["lon"], df_pois["lat"]),
+                crs="EPSG:4326",
+            ).to_crs(epsg=3857)
 
-    # Ordena primero las regiones con mayor cantidad de locales (CABA, Córdoba, Mar del Plata, etc.)
-    df_tmp = df_locales.copy()
-    df_tmp["gx"] = (df_tmp["longitud"] // 2.0) * 2.0
-    df_tmp["gy"] = (df_tmp["latitud"] // 2.0) * 2.0
+    ruta_zip = "/tmp/argentina_osm.zip"
+    log("    -> Descargando capa OpenStreetMap Argentina (Geofabrik)...")
+    try:
+        with requests.get(URL_GEOFABRIK_AR, stream=True, timeout=(10, 90)) as r:
+            r.raise_for_status()
+            with open(ruta_zip, "wb") as f:
+                for chunk in r.iter_content(chunk_size=1024 * 1024):
+                    if chunk:
+                        f.write(chunk)
+    except Exception as e:
+        log(f"    -> Error descargando Geofabrik: {e}")
+        return gpd.GeoDataFrame(columns=["cat", "geometry"], crs="EPSG:3857")
 
-    bloques = (
-        df_tmp.groupby(["gx", "gy"])
-        .agg(
-            cantidad=("slug_local", "count"),
-            s=("latitud", "min"),
-            n=("latitud", "max"),
-            w=("longitud", "min"),
-            e=("longitud", "max"),
-        )
-        .sort_values("cantidad", ascending=False)
-        .reset_index()
-    )
+    mb = os.path.getsize(ruta_zip) / (1024 * 1024)
+    log(f"    -> Paquete descargado ({mb:.1f} MB). Extrayendo comercios, turismo y transporte...")
 
-    log(f"    -> Consultando {len(bloques)} polos regionales (máx. 35s)...")
-    inicio = time.time()
+    capas_validas = []
+    with zipfile.ZipFile(ruta_zip, "r") as zf:
+        shps = [
+            n for n in zf.namelist()
+            if n.endswith(".shp") and ("pois" in n or "transport" in n)
+        ]
 
-    for _, b in bloques.iterrows():
-        if time.time() - inicio > 35:
-            log("    -> Tiempo límite alcanzado; continuando con los polos ya descargados.")
-            break
-
-        s, w = round(b["s"] - 0.01, 4), round(b["w"] - 0.01, 4)
-        n, e = round(b["n"] + 0.01, 4), round(b["e"] + 0.01, 4)
-
-        query = (
-            f'[out:json][timeout:12];('
-            f'node["shop"]({s},{w},{n},{e});'
-            f'node["amenity"~"restaurant|bar|pub|fast_food|ice_cream|university|college|hospital|clinic|bank|theatre|cinema"]({s},{w},{n},{e});'
-            f'node["tourism"~"hotel|hostel|guest_house|motel|apartment|museum|attraction|viewpoint|information"]({s},{w},{n},{e});'
-            f'way["tourism"~"hotel|museum|attraction"]({s},{w},{n},{e});'
-            f'way["natural"="beach"]({s},{w},{n},{e});'
-            f'node["highway"="bus_stop"]({s},{w},{n},{e});'
-            f'node["railway"~"station|subway_entrance"]({s},{w},{n},{e});'
-            f');out center qt;'
-        )
-
-        for url in OVERPASS_URLS:
-            try:
-                resp = requests.post(url, data={"data": query}, headers=HEADERS_OSM, timeout=(3, 14))
-                if resp.status_code == 200:
-                    elementos = resp.json().get("elements", [])
-                    for el in elementos:
-                        lat = el.get("lat") or el.get("center", {}).get("lat")
-                        lon = el.get("lon") or el.get("center", {}).get("lon")
-                        if lat and lon:
-                            cat = clasificar_poi_osm(el.get("tags", {}))
-                            pois[f"{el['type']}_{el['id']}"] = {"lat": lat, "lon": lon, "cat": cat}
-                    log(f"    -> Polo ({int(b['cantidad'])} locales): +{len(elementos)} puntos detectados.")
-                    break
-            except Exception:
+    for shp in shps:
+        try:
+            gdf_capa = gpd.read_file(f"zip://{ruta_zip}!{shp}")
+            if "fclass" not in gdf_capa.columns or gdf_capa.empty:
                 continue
-        time.sleep(0.2)
 
-    log(f"    -> Total acumulado: {len(pois)} puntos de circulación.")
-    if pois:
-        os.makedirs("datos_censales", exist_ok=True)
-        with open(RUTA_CACHE_OSM, "w", encoding="utf-8") as f:
-            json.dump(pois, f)
-        df_pois = pd.DataFrame(list(pois.values()))
-        return gpd.GeoDataFrame(
-            df_pois,
-            geometry=gpd.points_from_xy(df_pois["lon"], df_pois["lat"]),
-            crs="EPSG:4326",
-        ).to_crs(epsg=3857)
+            gdf_capa["fclass"] = gdf_capa["fclass"].astype(str).str.lower()
+            gdf_capa["cat"] = np.select(
+                [
+                    gdf_capa["fclass"].isin(CLASES_TURISMO),
+                    gdf_capa["fclass"].isin(CLASES_COMERCIO),
+                    gdf_capa["fclass"].isin(CLASES_TRANSPORTE),
+                ],
+                ["turismo", "comercio", "transporte"],
+                default="",
+            )
+            gdf_capa = gdf_capa[gdf_capa["cat"] != ""][["cat", "geometry"]].copy()
+            if gdf_capa.empty:
+                continue
 
-    return gpd.GeoDataFrame(columns=["cat", "geometry"], crs="EPSG:3857")
+            gdf_capa = gdf_capa.to_crs(epsg=3857)
+            gdf_capa["geometry"] = gdf_capa.geometry.centroid
+            capas_validas.append(gdf_capa)
+            log(f"    -> {shp}: {len(gdf_capa)} puntos relevantes.")
+        except Exception as e:
+            log(f"    -> Aviso leyendo {shp}: {e}")
+
+    if os.path.exists(ruta_zip):
+        os.remove(ruta_zip)
+
+    if not capas_validas:
+        return gpd.GeoDataFrame(columns=["cat", "geometry"], crs="EPSG:3857")
+
+    gdf_todos = pd.concat(capas_validas, ignore_index=True)
+
+    # Filtra únicamente los POIs que caen dentro de algún radio de 500m para guardar una caché liviana
+    cruce_filtrado = gpd.sjoin(gdf_todos, gdf_buffers_3857[["geometry"]], how="inner", predicate="intersects")
+    gdf_relevantes = gdf_todos.loc[cruce_filtrado.index.unique()].copy()
+
+    gdf_4326 = gdf_relevantes.to_crs(epsg=4326)
+    registros = [
+        {"lat": round(geom.y, 6), "lon": round(geom.x, 6), "cat": cat}
+        for geom, cat in zip(gdf_4326.geometry, gdf_4326["cat"])
+    ]
+    os.makedirs("datos_censales", exist_ok=True)
+    with open(RUTA_CACHE_OSM, "w", encoding="utf-8") as f:
+        json.dump(registros, f)
+
+    log(f"    -> {len(gdf_relevantes)} polos guardados en caché para futuras actualizaciones.")
+    return gdf_relevantes
 
 
 def evaluar_entorno_y_circulacion(row):
@@ -218,7 +234,7 @@ def evaluar_entorno_y_circulacion(row):
     flujo_score = com + (tur * 4) + (tra * 2)
     if flujo_score >= 120:
         circulacion = "Muy Alta"
-    elif flujo_score >= 50:
+    elif flujo_score >= 45:
         circulacion = "Alta"
     elif flujo_score >= 15:
         circulacion = "Media"
@@ -237,7 +253,8 @@ def evaluar_entorno_y_circulacion(row):
     else:
         nse = "Emergente"
 
-    demanda_total = (pob / 100.0) + (flujo_score * 0.55)
+    # Combina residentes estables + masa crítica de circulación comercial y turística
+    demanda_total = (pob / 100.0) + (flujo_score * 0.85)
     oportunidad = round(demanda_total / (comp + 1), 1)
 
     return pd.Series([circulacion, pea_est, nse, oportunidad])
@@ -258,7 +275,7 @@ def main():
     cruce_comp = gpd.sjoin(gdf_buffers, gdf_locales[["slug_local", "geometry"]], how="left", predicate="intersects")
     conteo_comp = (cruce_comp.groupby("slug_local_left").size() - 1).clip(lower=0)
 
-    gdf_pois = obtener_circulacion_osm(df_locales)
+    gdf_pois = obtener_circulacion_geofabrik(gdf_buffers)
     conteo_com = pd.Series(dtype=int)
     conteo_tur = pd.Series(dtype=int)
     conteo_tra = pd.Series(dtype=int)
@@ -317,7 +334,7 @@ def main():
         "transporte_500m",
     ]
     res[cols_sheets].to_csv("public/data/mercado.csv", index=False)
-    log(f"¡COMPLETADO! {len(res)} locales con datos censales y circulación turística.")
+    log(f"¡COMPLETADO! {len(res)} locales con datos censales y circulación real.")
 
 
 if __name__ == "__main__":
