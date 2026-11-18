@@ -28,7 +28,6 @@ RUTA_RADIOS = "datos_censales/radios_2022.gpkg"
 RUTA_DEPTOS = "datos_censales/deptos_2022.gpkg"
 RUTA_CACHE_OSM = "datos_censales/pois_osm_v2.json"
 
-# Serie histórica calibrada con EOH (INDEC / SINTA) y observatorios turísticos provinciales
 HISTORICO_TURISMO = {
     "chapadmalal": {
         "plaza": "Chapadmalal / Sur Mar del Plata",
@@ -202,6 +201,105 @@ HISTORICO_TURISMO = {
     },
 }
 
+PERFILES_ECONOMICOS = {
+    "caba_puerto_madero": {
+        "corredor": "Puerto Madero / Eje Corporativo",
+        "nivel_gasto": "Muy Alto",
+        "indice_ticket": 1.45,
+        "gasto_turista_usd": 98,
+        "costo_alquiler": "Muy Alto",
+        "ecuacion_rentabilidad": "Ticket máximo y público internacional/ejecutivo, pero alquiler muy alto exige volumen sostenido.",
+    },
+    "caba_palermo_norte": {
+        "corredor": "Palermo / Belgrano / Núñez / Recoleta",
+        "nivel_gasto": "Alto",
+        "indice_ticket": 1.30,
+        "gasto_turista_usd": 80,
+        "costo_alquiler": "Alto",
+        "ecuacion_rentabilidad": "Fuerte consumo de especialidad y turismo receptivo; requiere alta rotación para amortizar alquiler.",
+    },
+    "caba_la_boca_sur": {
+        "corredor": "La Boca / Barracas / Circuito Diurno",
+        "nivel_gasto": "Medio-Bajo",
+        "indice_ticket": 0.90,
+        "gasto_turista_usd": 42,
+        "costo_alquiler": "Medio-Bajo",
+        "ecuacion_rentabilidad": "Turista excursionista diurno de estadía corta; conviene propuesta ágil y costos fijos bajos.",
+    },
+    "caba_barrial_medio": {
+        "corredor": "CABA · Corredor Barrial / Comercial",
+        "nivel_gasto": "Medio-Alto",
+        "indice_ticket": 1.12,
+        "gasto_turista_usd": 56,
+        "costo_alquiler": "Medio-Alto",
+        "ecuacion_rentabilidad": "Equilibrio saludable entre consumo habitual de vecinos y valor de alquiler intermedio.",
+    },
+    "pinamar_carilo": {
+        "corredor": "Pinamar / Cariló · Balneario ABC1",
+        "nivel_gasto": "Muy Alto",
+        "indice_ticket": 1.40,
+        "gasto_turista_usd": 88,
+        "costo_alquiler": "Alto (estacional)",
+        "ecuacion_rentabilidad": "Turista de alto poder adquisitivo en verano; clave negociar alquiler anual flexible.",
+    },
+    "gesell_pampas": {
+        "corredor": "Villa Gesell / Mar de las Pampas",
+        "nivel_gasto": "Medio-Alto",
+        "indice_ticket": 1.15,
+        "gasto_turista_usd": 62,
+        "costo_alquiler": "Medio-Alto (estacional)",
+        "ecuacion_rentabilidad": "Buen margen en temporada alta y escapadas; exige estructura liviana en invierno.",
+    },
+    "mdp_guemes_sur": {
+        "corredor": "Mar del Plata · Güemes / Playa Grande / Sur",
+        "nivel_gasto": "Alto",
+        "indice_ticket": 1.22,
+        "gasto_turista_usd": 68,
+        "costo_alquiler": "Alto",
+        "ecuacion_rentabilidad": "Público de mayor gasto promedio en la ciudad y cultura de café de especialidad consolidada.",
+    },
+    "mdp_urbano_masivo": {
+        "corredor": "Mar del Plata · Centro / Barrial",
+        "nivel_gasto": "Medio",
+        "indice_ticket": 1.00,
+        "gasto_turista_usd": 48,
+        "costo_alquiler": "Medio",
+        "ecuacion_rentabilidad": "Turismo masivo heterogéneo + base residente anual con alquileres más accesibles.",
+    },
+    "mendoza_enoturismo": {
+        "corredor": "Mendoza · Enoturismo y Ciudad",
+        "nivel_gasto": "Alto",
+        "indice_ticket": 1.28,
+        "gasto_turista_usd": 85,
+        "costo_alquiler": "Medio-Alto",
+        "ecuacion_rentabilidad": "Turista internacional/nacional de alto gasto frente a costos inmobiliarios más moderados que CABA.",
+    },
+    "patagonia_turistica": {
+        "corredor": "Patagonia · Plaza Receptiva",
+        "nivel_gasto": "Muy Alto",
+        "indice_ticket": 1.38,
+        "gasto_turista_usd": 92,
+        "costo_alquiler": "Alto",
+        "ecuacion_rentabilidad": "Ticket elevado en nieve y verano que compensa costos logísticos y de alquiler.",
+    },
+    "gran_ciudad_interior": {
+        "corredor": "Polo Universitario / Comercial Interior",
+        "nivel_gasto": "Medio-Alto",
+        "indice_ticket": 1.08,
+        "gasto_turista_usd": 52,
+        "costo_alquiler": "Medio",
+        "ecuacion_rentabilidad": "Excelente relación ingreso/costo por flujo diario constante y alquileres razonables.",
+    },
+    "plaza_regional": {
+        "corredor": "Plaza Regional / Escapadas",
+        "nivel_gasto": "Medio",
+        "indice_ticket": 0.96,
+        "gasto_turista_usd": 45,
+        "costo_alquiler": "Bajo a Medio",
+        "ecuacion_rentabilidad": "Punto de equilibrio bajo; ideal para operación propia y clientela recurrente.",
+    },
+}
+
 CLASES_TURISMO = {
     "hotel", "hostel", "guest_house", "motel", "chalet", "alpine_hut",
     "camp_site", "caravan_site", "museum", "attraction", "viewpoint",
@@ -304,6 +402,53 @@ def detectar_plaza_historica(row):
         return HISTORICO_TURISMO["grandes_ciudades_interior"]
 
     return HISTORICO_TURISMO["urbano_general"]
+
+
+def detectar_perfil_economico(row):
+    lat, lon = row["latitud"], row["longitud"]
+    texto = " ".join([
+        str(row.get("slug_local", "")),
+        str(row.get("ciudad", "")),
+        str(row.get("barrio", "")),
+    ]).lower()
+
+    # CABA sub-zonas diferenciadas
+    if -34.71 <= lat <= -34.52 and -58.54 <= lon <= -58.33:
+        if "puerto-madero" in texto or (-34.625 <= lat <= -34.595 and -58.368 <= lon <= -58.352):
+            return PERFILES_ECONOMICOS["caba_puerto_madero"]
+        if any(k in texto for k in ["la-boca", "barracas"]) or (-34.648 <= lat <= -34.626 and -58.375 <= lon <= -58.355):
+            return PERFILES_ECONOMICOS["caba_la_boca_sur"]
+        if any(k in texto for k in ["palermo", "belgrano", "recoleta", "nunez", "colegiales"]) or (
+            -34.596 <= lat <= -34.542 and -58.465 <= lon <= -58.382
+        ):
+            return PERFILES_ECONOMICOS["caba_palermo_norte"]
+        return PERFILES_ECONOMICOS["caba_barrial_medio"]
+
+    # Costa Atlántica
+    if "pinamar" in texto or "carilo" in texto or (-37.22 <= lat <= -37.05 and -57.00 <= lon <= -56.80):
+        return PERFILES_ECONOMICOS["pinamar_carilo"]
+    if "gesell" in texto or "pampas" in texto or (-37.38 <= lat < -37.22 and -57.10 <= lon <= -56.95):
+        return PERFILES_ECONOMICOS["gesell_pampas"]
+    if "chapadmalal" in texto or (-38.26 <= lat <= -38.012 and -57.75 <= lon <= -57.528):
+        return PERFILES_ECONOMICOS["mdp_guemes_sur"]
+    if "mar-del-plata" in texto or (-38.105 < lat <= -37.90 and -57.66 <= lon <= -57.50):
+        return PERFILES_ECONOMICOS["mdp_urbano_masivo"]
+
+    # Mendoza, Patagonia, Grandes Ciudades
+    if "mendoza" in texto or (-33.70 <= lat <= -32.80 and -69.30 <= lon <= -68.70):
+        return PERFILES_ECONOMICOS["mendoza_enoturismo"]
+    if any(k in texto for k in ["bariloche", "angostura", "san-martin-de-los-andes", "ushuaia", "calafate"]) or (
+        -43.20 <= lat <= -37.80 and -71.80 <= lon <= -70.90
+    ) or lat < -50.0:
+        return PERFILES_ECONOMICOS["patagonia_turistica"]
+    if any(k in texto for k in ["la-plata", "cordoba", "rosario", "santa-fe"]) or (
+        (-35.02 <= lat <= -34.85 and -58.10 <= lon <= -57.88)
+        or (-31.50 <= lat <= -31.30 and -64.30 <= lon <= -64.10)
+        or (-33.05 <= lat <= -32.85 and -60.75 <= lon <= -60.60)
+    ):
+        return PERFILES_ECONOMICOS["gran_ciudad_interior"]
+
+    return PERFILES_ECONOMICOS["plaza_regional"]
 
 
 def descargar_desde_drive(url_drive, ruta_destino):
@@ -467,6 +612,7 @@ def evaluar_modelo_integral(row):
     comp = row["competidores_500m"]
 
     hist = detectar_plaza_historica(row)
+    econ = detectar_perfil_economico(row)
     ratio_est = round(hist["ocupacion_alta_pct"] / max(1, hist["ocupacion_baja_pct"]), 1)
 
     flujo_score = com + (tur * 4) + (tra * 2)
@@ -481,33 +627,23 @@ def evaluar_modelo_integral(row):
 
     pea_est = round(min(76.0, max(55.0, 56.0 + (tra * 0.4) + (com * 0.08))), 1)
 
-    score_urbano = (pob / 1000.0) + (com * 0.15) + (tur * 0.6) + (comp * 1.2)
-    if score_urbano >= 24:
-        nse = "Alto"
-    elif score_urbano >= 13:
-        nse = "Medio-Alto"
-    elif score_urbano >= 5:
-        nse = "Medio"
-    else:
-        nse = "Emergente"
+    # Demanda ajustada por el ticket relativo de la zona
+    ticket_mult = econ["indice_ticket"]
 
-    # Demanda en temporada baja (piso fijo + actividad base)
     factor_baja = hist["ocupacion_baja_pct"] / 60.0
-    demanda_baja = (pob / 100.0) + ((com + tra * 2) * 0.65) + (tur * 2.5 * factor_baja)
+    demanda_baja = ((pob / 100.0) + ((com + tra * 2) * 0.65) + (tur * 2.5 * factor_baja)) * ticket_mult
     oportunidad_baja = round(demanda_baja / (comp + 1), 1)
 
-    # Demanda en temporada alta (incorpora el salto histórico de ocupación y visitantes)
     factor_alta = (hist["ocupacion_alta_pct"] / 50.0) * (1.0 + min(1.5, hist["turistas_anuales"] / 5000000.0))
-    demanda_alta = (pob / 100.0) + (flujo_score * 0.75 * factor_alta)
+    demanda_alta = ((pob / 100.0) + (flujo_score * 0.75 * factor_alta)) * ticket_mult
     oportunidad_alta = round(demanda_alta / (comp + 1), 1)
 
-    # Índice compuesto ponderado (60% piso anual + 40% pico de temporada)
     indice_compuesto = round((oportunidad_baja * 0.6) + (oportunidad_alta * 0.4), 1)
 
     return pd.Series([
         circulacion,
         pea_est,
-        nse,
+        econ["nivel_gasto"],
         indice_compuesto,
         oportunidad_baja,
         oportunidad_alta,
@@ -520,6 +656,11 @@ def evaluar_modelo_integral(row):
         hist["temporada_pico"],
         hist["mes_valle"],
         hist["perfil_turistico"],
+        econ["corredor"],
+        econ["indice_ticket"],
+        econ["gasto_turista_usd"],
+        econ["costo_alquiler"],
+        econ["ecuacion_rentabilidad"],
     ])
 
 
@@ -562,7 +703,7 @@ def main():
         gdf_faltantes = gdf_buffers[gdf_buffers["slug_local"].isin(slugs_sin_pob)]
         pob_deptos = calcular_censo_500m(gdf_faltantes, RUTA_DEPTOS)
 
-    log("5/5 Exportando modelo integral (Censo + Flujo + Turismo Histórico)...")
+    log("5/5 Exportando modelo integral (Censo + Flujo + Turismo + Gasto/Costo Zona)...")
     res = df_locales.copy()
     res["competidores_500m"] = res["slug_local"].map(conteo_comp).fillna(0).astype(int)
     res["comercios_500m"] = res["slug_local"].map(conteo_com).fillna(0).astype(int)
@@ -590,6 +731,11 @@ def main():
     res["temporada_pico"] = evaluacion[12]
     res["mes_valle"] = evaluacion[13]
     res["perfil_turistico"] = evaluacion[14]
+    res["corredor_economico"] = evaluacion[15]
+    res["indice_ticket"] = evaluacion[16]
+    res["gasto_turista_usd"] = evaluacion[17]
+    res["costo_alquiler_zona"] = evaluacion[18]
+    res["ecuacion_rentabilidad"] = evaluacion[19]
     res["fecha_actualizacion"] = datetime.now().strftime("%Y-%m-%d")
 
     os.makedirs("src/data", exist_ok=True)
@@ -616,9 +762,13 @@ def main():
         "ratio_estacionalidad",
         "oportunidad_baja",
         "oportunidad_alta",
+        "corredor_economico",
+        "indice_ticket",
+        "gasto_turista_usd",
+        "costo_alquiler_zona",
     ]
     res[cols_sheets].to_csv("public/data/mercado.csv", index=False)
-    log(f"¡COMPLETADO! {len(res)} locales con cruce histórico turístico.")
+    log(f"¡COMPLETADO! {len(res)} locales exportados con matriz de gasto y costo por zona.")
 
 
 if __name__ == "__main__":
