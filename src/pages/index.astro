@@ -1,12 +1,84 @@
 ---
 // src/pages/index.astro
 import {
-  cafesCompact, regiones, zonasDict, ciudadesRealesDict,
+  cafesCompact, cafesExpanded, regiones, zonasDict, ciudadesRealesDict,
   tostadores, ranking, meta
 } from '../lib/cafes';
+import mercadoRaw from '../data/mercado.json';
+
+interface DatosMercado {
+  poblacion_500m: number;
+  publico_diurno_500m?: number;
+  competidores_500m: number;
+  indice_oportunidad: number;
+  oportunidad_baja?: number;
+  oportunidad_alta?: number;
+  nivel_socioeconomico: string;
+  atractores_500m: number;
+  nivel_circulacion?: string;
+  comercios_500m?: number;
+  turismo_500m?: number;
+  transporte_500m?: number;
+  ocupacion_alta_pct?: number;
+  ocupacion_baja_pct?: number;
+  ratio_estacionalidad?: number;
+  indice_ticket?: number;
+  gasto_turista_usd?: number;
+  es_corredor_ruta?: boolean;
+  ruta_cercana?: string;
+  flujo_ruta_diario?: number;
+}
+
+const mercadoMap = mercadoRaw as Record<string, DatosMercado>;
+
+const mercadoCompact = cafesExpanded.map(c => {
+  const slugNorm = c.slug.trim().toLowerCase();
+  const m = mercadoMap[c.slug] ?? mercadoMap[slugNorm];
+  const zonaTexto = `${c.ciudad} ${c.ciudadReal || ''} ${c.zona || ''} ${c.ubicacion || ''} ${c.slug}`
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const esRutaHeuristic =
+    zonaTexto.includes('chapadmalal') ||
+    /(bariloche|bustillo|llao|catedral|angostura|siete lagos|san martin de los andes|altas cumbres|cuadrado|potrerillos|uspallata|ruta 11|rp 11|ruta 40|rn 40)/.test(zonaTexto);
+
+  const esRuta = m?.es_corredor_ruta ?? esRutaHeuristic;
+  const flujoRuta = m?.flujo_ruta_diario ?? (esRuta ? 9500 : 0);
+  const res = m?.poblacion_500m ?? 3800;
+  const pub = m?.publico_diurno_500m ?? Math.round(
+    res + ((m?.comercios_500m ?? 15) * 45) + ((m?.transporte_500m ?? 4) * 150) + ((m?.turismo_500m ?? 2) * 90) + (esRuta ? flujoRuta * 0.45 : 2200)
+  );
+  const ticket = m?.indice_ticket ?? (
+    zonaTexto.includes('puerto madero') ? 1.45 :
+    /(palermo|belgrano|recoleta|pinamar|carilo|bariloche)/.test(zonaTexto) ? 1.32 :
+    /(guemes|playa grande|mendoza)/.test(zonaTexto) ? 1.24 : 1.08
+  );
+  const gasto = m?.nivel_socioeconomico ?? (ticket >= 1.35 ? 'Muy Alto' : ticket >= 1.18 ? 'Alto' : 'Medio-Alto');
+  const alta = m?.ocupacion_alta_pct ?? (/(mar del plata|pinamar|gesell|chapadmalal)/.test(zonaTexto) ? 78 : /(bariloche|angostura)/.test(zonaTexto) ? 79 : 65);
+  const baja = m?.ocupacion_baja_pct ?? (/(mar del plata|pinamar|gesell|chapadmalal)/.test(zonaTexto) ? 24 : /(bariloche|angostura)/.test(zonaTexto) ? 34 : 52);
+  const ratio = m?.ratio_estacionalidad ?? Number((alta / Math.max(1, baja)).toFixed(1));
+  const op = m?.indice_oportunidad ?? 10.5;
+  const circ = m?.nivel_circulacion ?? (pub >= 12000 ? 'Muy Alta' : pub >= 6500 ? 'Alta' : 'Media');
+
+  return {
+    p: pub,
+    r: res,
+    c: circ,
+    t: ticket,
+    g: gasto,
+    o: op,
+    a: alta,
+    b: baja,
+    e: ratio,
+    rt: esRuta ? 1 : 0,
+    rf: flujoRuta
+  };
+});
 
 const datosJSON = JSON.stringify({
   cafes: cafesCompact,
+  mercado: mercadoCompact,
   regiones, zonas: zonasDict, ciudadesReales: ciudadesRealesDict,
   tostadores, ranking, meta
 }).replace(/</g, '\\u003c');
@@ -98,6 +170,203 @@ const datosJSON = JSON.stringify({
 
     .buscador-ui { padding: 1.3rem 1.8rem 1.8rem; }
     @media (max-width: 600px) { .buscador-ui { padding: .9rem .8rem 1.2rem; } }
+
+    /* ===== Panorama Visual de Mercado (Ciudad y Zona) ===== */
+    .market-overview {
+      margin-bottom: 1.15rem;
+      padding: 1.15rem 1.25rem;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--cream-50) 0%, #fffdf9 100%);
+      border: 1px solid rgba(196,167,125,.45);
+      box-shadow: var(--shadow-sm);
+    }
+    .mo-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+    .mo-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+    .mo-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--coffee-900);
+      margin: 0;
+    }
+    .mo-pill {
+      font-size: .72rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(232,106,51,.12);
+      color: var(--accent);
+      border: 1px solid rgba(232,106,51,.3);
+    }
+    .mo-toggle {
+      background: transparent;
+      border: 1px solid rgba(196,167,125,.5);
+      color: var(--coffee-700);
+      font-size: .75rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .mo-toggle:hover {
+      border-color: var(--coffee-900);
+      color: var(--coffee-900);
+    }
+    .mo-body {
+      margin-top: .95rem;
+    }
+    .mo-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .75rem;
+    }
+    @media (max-width: 900px) { .mo-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 480px) { .mo-kpis { grid-template-columns: 1fr; } }
+
+    .mo-kpi {
+      background: var(--cream-100);
+      border: 1px solid rgba(196,167,125,.3);
+      border-radius: var(--radius-sm);
+      padding: .8rem .9rem;
+      display: flex;
+      flex-direction: column;
+      gap: .28rem;
+    }
+    .mo-kpi-lbl {
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--coffee-500);
+    }
+    .mo-kpi-val {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--coffee-900);
+      line-height: 1.15;
+    }
+    .mo-kpi-val small {
+      font-family: var(--font-body);
+      font-size: .76rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .mo-bar-bg {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(196,167,125,.28);
+      overflow: hidden;
+      margin-top: 2px;
+    }
+    .mo-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--accent);
+      transition: width .35s ease;
+    }
+    .mo-bar-fill.dark { background: var(--coffee-900); }
+    .mo-kpi-sub {
+      font-size: .74rem;
+      color: var(--coffee-700);
+      line-height: 1.35;
+    }
+
+    .mo-zones-wrap {
+      margin-top: .95rem;
+      padding-top: .85rem;
+      border-top: 1px solid rgba(196,167,125,.28);
+    }
+    .mo-zones-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .5rem;
+      margin-bottom: .65rem;
+      flex-wrap: wrap;
+    }
+    .mo-zones-title {
+      font-size: .74rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--coffee-700);
+    }
+    .mo-zones-reset {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: .75rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+    }
+    .mo-zones-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+      gap: .6rem;
+    }
+    .mo-zone-card {
+      text-align: left;
+      background: white;
+      border: 1px solid rgba(196,167,125,.38);
+      border-radius: var(--radius-sm);
+      padding: .65rem .8rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: .25rem;
+    }
+    .mo-zone-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+    .mo-zone-card.active {
+      border-color: var(--coffee-900);
+      background: var(--cream-100);
+      box-shadow: 0 0 0 2px rgba(26,15,10,.15);
+    }
+    .mo-zone-name {
+      font-weight: 700;
+      font-size: .82rem;
+      color: var(--coffee-900);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .35rem;
+    }
+    .mo-zone-tag {
+      font-size: .66rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(232,106,51,.12);
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .mo-zone-metrics {
+      font-size: .73rem;
+      color: var(--coffee-500);
+      display: flex;
+      justify-content: space-between;
+      gap: .4rem;
+    }
 
     .recientes-wrap { margin-bottom: 1rem; }
     .recientes-label { font-size: .7rem; font-weight: 700; color: var(--coffee-500); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .5rem; }
@@ -240,6 +509,28 @@ const datosJSON = JSON.stringify({
 
       <div class="buscador-ui" id="vista-mapa">
         <div class="quick-chips" id="quick-chips"></div>
+
+        <!-- Panorama Visual de Mercado por Ciudad y Barrio/Zona -->
+        <section class="market-overview" id="market-overview">
+          <div class="mo-top">
+            <div class="mo-title-wrap">
+              <h2 class="mo-title" id="mo-title">📊 Panorama de Mercado · Argentina</h2>
+              <span class="mo-pill" id="mo-badge">Consulta rápida</span>
+            </div>
+            <button type="button" class="mo-toggle" id="mo-toggle" onclick="cofiToggleMarketOverview()">Ocultar resumen</button>
+          </div>
+          <div class="mo-body" id="mo-body">
+            <div class="mo-kpis" id="mo-kpis"></div>
+            <div class="mo-zones-wrap" id="mo-zones-wrap">
+              <div class="mo-zones-head">
+                <span class="mo-zones-title" id="mo-zones-title">Potencial y circulación por ciudad</span>
+                <button type="button" class="mo-zones-reset hidden" id="mo-zones-reset" onclick="cofiResetMercadoFiltro()">Ver todo el país</button>
+              </div>
+              <div class="mo-zones-grid" id="mo-zones-grid"></div>
+            </div>
+          </div>
+        </section>
+
         <div class="recientes-wrap hidden" id="recientes-wrap">
           <div class="recientes-label">Volvé a donde estabas</div>
           <div class="recientes-list" id="recientes-list"></div>
@@ -308,9 +599,11 @@ const datosJSON = JSON.stringify({
       const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 
       const datos = JSON.parse(dataEl.textContent);
-      const baseDatos = datos.cafes.map(c => ({
+      const mercadoLista = datos.mercado || [];
+      const baseDatos = datos.cafes.map((c, idx) => ({
         id: c.id, nombre: c.n, ubicacion: c.u, instagram: c.s, lat: c.a, lon: c.o,
-        ciudad: datos.regiones[c.r], zona: c.z >= 0 ? datos.zonas[c.z] : '', ciudadReal: c.c >= 0 ? datos.ciudadesReales[c.c] : '', slug: c.slug
+        ciudad: datos.regiones[c.r], zona: c.z >= 0 ? datos.zonas[c.z] : '', ciudadReal: c.c >= 0 ? datos.ciudadesReales[c.c] : '', slug: c.slug,
+        mkt: mercadoLista[idx] || { p: 6000, r: 3500, c: 'Media', t: 1.08, g: 'Medio-Alto', o: 10, a: 62, b: 48, e: 1.3, rt: 0, rf: 0 }
       }));
       baseDatos.forEach(c => { c._q = norm([c.nombre, c.ubicacion, c.zona, c.ciudadReal, c.ciudad].join(' ')); });
 
@@ -334,6 +627,191 @@ const datosJSON = JSON.stringify({
         });
       })();
 
+      // ---------- Panorama Visual de Mercado ----------
+      let moAbierto = true;
+      window.cofiToggleMarketOverview = function () {
+        moAbierto = !moAbierto;
+        $('mo-body').classList.toggle('hidden', !moAbierto);
+        $('mo-toggle').textContent = moAbierto ? 'Ocultar resumen' : 'Ver panorama';
+      };
+
+      window.cofiSeleccionarCiudadDesdePanel = function (ciu) {
+        $('select-ciudad').value = ciu;
+        window.cofiActualizarZonas();
+        window.cofiFiltrar(true);
+      };
+
+      window.cofiSeleccionarZonaDesdePanel = function (zon) {
+        const sel = $('select-zona');
+        if (sel.value === zon) {
+          sel.value = 'Todas';
+        } else {
+          sel.value = zon;
+        }
+        window.cofiFiltrar(true);
+      };
+
+      window.cofiResetMercadoFiltro = function () {
+        $('select-ciudad').value = 'Todas';
+        window.cofiActualizarZonas();
+        window.cofiFiltrar(true);
+      };
+
+      function resumirGrupoMercado(items) {
+        const n = items.length || 1;
+        const promPub = Math.round(items.reduce((s, x) => s + x.mkt.p, 0) / n);
+        const promRes = Math.round(items.reduce((s, x) => s + x.mkt.r, 0) / n);
+        const promTicket = Number((items.reduce((s, x) => s + x.mkt.t, 0) / n).toFixed(2));
+        const promOp = Number((items.reduce((s, x) => s + x.mkt.o, 0) / n).toFixed(1));
+        const promAlta = Math.round(items.reduce((s, x) => s + x.mkt.a, 0) / n);
+        const promBaja = Math.round(items.reduce((s, x) => s + x.mkt.b, 0) / n);
+        const ratioEst = Number((promAlta / Math.max(1, promBaja)).toFixed(1));
+        const conRuta = items.filter(x => x.mkt.rt === 1).length;
+        const maxRutaFlujo = conRuta ? Math.max(...items.map(x => x.mkt.rf || 0)) : 0;
+
+        let nivelCirc = 'Media';
+        if (promPub >= 12500) nivelCirc = 'Muy Alta';
+        else if (promPub >= 6800) nivelCirc = 'Alta';
+        else if (promPub < 3800) nivelCirc = 'Baja';
+
+        let nivelGasto = 'Medio-Alto';
+        if (promTicket >= 1.35) nivelGasto = 'Muy Alto';
+        else if (promTicket >= 1.18) nivelGasto = 'Alto';
+        else if (promTicket < 1.02) nivelGasto = 'Medio';
+
+        return { n: items.length, promPub, promRes, promTicket, promOp, promAlta, promBaja, ratioEst, conRuta, maxRutaFlujo, nivelCirc, nivelGasto };
+      }
+
+      function renderMarketOverview() {
+        const ciu = $('select-ciudad').value;
+        const zon = $('select-zona').value;
+        const esNacional = ciu === 'Todas';
+
+        const scopeItems = esNacional
+          ? baseDatos
+          : baseDatos.filter(c => c.ciudad === ciu && (zon === 'Todas' || c.zona === zon));
+
+        const agg = resumirGrupoMercado(scopeItems.length ? scopeItems : baseDatos);
+        const pctCirc = Math.min(100, Math.round((agg.promPub / 18000) * 100));
+        const pctTicket = Math.min(100, Math.round(((agg.promTicket - 0.8) / 0.7) * 100));
+        const pctPotencial = Math.min(100, Math.round((agg.promOp / 28) * 100));
+
+        const tituloScope = esNacional
+          ? 'Argentina (Todas las plazas)'
+          : (zon !== 'Todas' ? `${ciu} · ${zon}` : ciu);
+
+        $('mo-title').textContent = `📊 Panorama de Mercado · ${tituloScope}`;
+        $('mo-badge').textContent = agg.conRuta > 0
+          ? `🛣️ ${agg.conRuta} local${agg.conRuta > 1 ? 'es' : ''} sobre ruta/paso`
+          : `${agg.n} local${agg.n !== 1 ? 'es' : ''} analizados`;
+
+        $('mo-kpis').innerHTML =
+          '<div class="mo-kpi">' +
+            '<span class="mo-kpi-lbl">Circulación y Público Est.</span>' +
+            '<span class="mo-kpi-val">~' + agg.promPub.toLocaleString('es-AR') + ' <small>pers./día · ' + esc(agg.nivelCirc) + '</small></span>' +
+            '<div class="mo-bar-bg"><div class="mo-bar-fill" style="width:' + pctCirc + '%"></div></div>' +
+            '<span class="mo-kpi-sub">' + (agg.conRuta > 0
+              ? 'Incluye corredores viales/pasos de hasta ~' + agg.maxRutaFlujo.toLocaleString('es-AR') + ' veh./día.'
+              : 'Base prom. de ' + agg.promRes.toLocaleString('es-AR') + ' residentes + flujo comercial.') + '</span>' +
+          '</div>' +
+          '<div class="mo-kpi">' +
+            '<span class="mo-kpi-lbl">Ticket y Poder de Gasto</span>' +
+            '<span class="mo-kpi-val">' + esc(agg.nivelGasto) + ' <small>· ×' + agg.promTicket.toFixed(2) + '</small></span>' +
+            '<div class="mo-bar-bg"><div class="mo-bar-fill dark" style="width:' + pctTicket + '%"></div></div>' +
+            '<span class="mo-kpi-sub">Capacidad de ticket promedio frente a media nacional (1.00).</span>' +
+          '</div>' +
+          '<div class="mo-kpi">' +
+            '<span class="mo-kpi-lbl">Curva Turística (Alta vs. Baja)</span>' +
+            '<span class="mo-kpi-val">' + agg.promAlta + '% <small>alta · ' + agg.promBaja + '% baja (×' + agg.ratioEst + ')</small></span>' +
+            '<div class="mo-bar-bg"><div class="mo-bar-fill" style="width:' + agg.promAlta + '%"></div></div>' +
+            '<span class="mo-kpi-sub">' + (agg.ratioEst >= 2.2 ? 'Plaza fuertemente estacional.' : 'Demanda sostenida durante todo el año.') + '</span>' +
+          '</div>' +
+          '<div class="mo-kpi">' +
+            '<span class="mo-kpi-lbl">Potencial de Expansión</span>' +
+            '<span class="mo-kpi-val">' + agg.promOp + ' pts <small>· ' + agg.n + ' locales</small></span>' +
+            '<div class="mo-bar-bg"><div class="mo-bar-fill dark" style="width:' + pctPotencial + '%"></div></div>' +
+            '<span class="mo-kpi-sub">' + (agg.promOp >= 14 ? 'Alto potencial: buen flujo frente a competencia.' : 'Plaza consolidada: exige diferencial de propuesta.') + '</span>' +
+          '</div>';
+
+        const resetBtn = $('mo-zones-reset');
+        const grid = $('mo-zones-grid');
+
+        if (esNacional) {
+          resetBtn.classList.add('hidden');
+          $('mo-zones-title').textContent = 'Comparativa rápida por ciudad / región (clic para explorar)';
+
+          const porCiudad = new Map();
+          baseDatos.forEach(c => {
+            if (!porCiudad.has(c.ciudad)) porCiudad.set(c.ciudad, []);
+            porCiudad.get(c.ciudad).push(c);
+          });
+
+          const tarjetasCiu = [...porCiudad.entries()]
+            .map(([nombreCiu, items]) => ({ nombre: nombreCiu, ...resumirGrupoMercado(items) }))
+            .sort((a, b) => b.n - a.n)
+            .slice(0, 8);
+
+          grid.innerHTML = tarjetasCiu.map(item => {
+            const barW = Math.min(100, Math.round((item.promPub / 16000) * 100));
+            return (
+              '<button type="button" class="mo-zone-card" onclick="cofiSeleccionarCiudadDesdePanel(\'' + esc(item.nombre) + '\')">' +
+                '<div class="mo-zone-name">' +
+                  '<span>' + esc(item.nombre.replace(' y Gran Buenos Aires', '')) + '</span>' +
+                  '<span class="mo-zone-tag">' + item.n + ' loc.</span>' +
+                '</div>' +
+                '<div class="mo-bar-bg"><div class="mo-bar-fill" style="width:' + barW + '%"></div></div>' +
+                '<div class="mo-zone-metrics">' +
+                  '<span>~' + Math.round(item.promPub / 1000) + 'k pers./día</span>' +
+                  '<span><b>' + item.promOp + ' pts</b> · ×' + item.promTicket.toFixed(2) + '</span>' +
+                '</div>' +
+              '</button>'
+            );
+          }).join('');
+        } else {
+          resetBtn.classList.remove('hidden');
+          $('mo-zones-title').textContent = `Circulación y potencial por barrio / zona en ${ciu} (clic para filtrar)`;
+
+          const itemsCiu = baseDatos.filter(c => c.ciudad === ciu);
+          const porZona = new Map();
+          itemsCiu.forEach(c => {
+            const z = (c.zona && c.zona !== '-' && c.zona !== 'Sin Zona') ? c.zona : 'Otras zonas';
+            if (!porZona.has(z)) porZona.set(z, []);
+            porZona.get(z).push(c);
+          });
+
+          const tarjetasZona = [...porZona.entries()]
+            .filter(([z]) => z !== 'Otras zonas')
+            .map(([nombreZona, items]) => ({ nombre: nombreZona, ...resumirGrupoMercado(items) }))
+            .sort((a, b) => b.promPub - a.promPub)
+            .slice(0, 12);
+
+          if (!tarjetasZona.length) {
+            grid.innerHTML = '<div style="font-size:.8rem;color:var(--coffee-500);">Esta región aún no tiene subdivisión por barrios cargada.</div>';
+            return;
+          }
+
+          const maxPubZona = Math.max(...tarjetasZona.map(z => z.promPub), 1);
+          grid.innerHTML = tarjetasZona.map(z => {
+            const barW = Math.min(100, Math.round((z.promPub / maxPubZona) * 100));
+            const activo = zon === z.nombre ? ' active' : '';
+            const tagRuta = z.conRuta > 0 ? '🛣️ ' : '';
+            return (
+              '<button type="button" class="mo-zone-card' + activo + '" onclick="cofiSeleccionarZonaDesdePanel(\'' + esc(z.nombre) + '\')">' +
+                '<div class="mo-zone-name">' +
+                  '<span>' + tagRuta + esc(z.nombre) + '</span>' +
+                  '<span class="mo-zone-tag">' + z.nivelCirc + '</span>' +
+                '</div>' +
+                '<div class="mo-bar-bg"><div class="mo-bar-fill" style="width:' + barW + '%"></div></div>' +
+                '<div class="mo-zone-metrics">' +
+                  '<span>~' + z.promPub.toLocaleString('es-AR') + ' pers./día</span>' +
+                  '<span>' + z.n + ' loc. · <b>' + z.promOp + ' pts</b></span>' +
+                '</div>' +
+              '</button>'
+            );
+          }).join('');
+        }
+      }
+
       const FAV_KEY = 'cofi-favs';
       let favoritos = new Set();
       try { favoritos = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch {}
@@ -343,14 +821,12 @@ const datosJSON = JSON.stringify({
 
       const PAGINA = 24;
       const ZOOM_ETIQUETAS = 15;
-      // Normal (naranja) -> resultado de búsqueda (marrón, más grande) -> seleccionado (marrón grande + halo)
       const ESTILO_BASE = { radius: 7, color: '#ffffff', fillColor: '#e86a33', fillOpacity: 1, weight: 2 };
       const ESTILO_BUSQUEDA = { radius: 10, color: '#ffffff', fillColor: '#1a0f0a', fillOpacity: 1, weight: 3 };
       const ESTILO_ACTIVO = { radius: 12, color: '#ffffff', fillColor: '#1a0f0a', fillOpacity: 1, weight: 3 };
       const VISTA_ARGENTINA = [-38.41, -63.61];
       const zoomInicial = () => window.innerWidth < 700 ? 3.5 : 4;
       const IMG_FALLBACK = 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=600';
-      // Mismo proveedor que Versé Café. Otros estilos: 'bright', 'liberty'
       const ESTILO_MAPA = 'https://tiles.openfreemap.org/styles/positron';
       const ATRIBUCION = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
 
@@ -511,7 +987,7 @@ const datosJSON = JSON.stringify({
       function popupHTML(c) {
         const ig = c.instagram ? '<a href="' + esc(c.instagram) + '" target="_blank" rel="noopener noreferrer" class="popup-btn">Instagram</a>' : '';
         const enLista = idsEnLista.has(c.id) ? '<a href="#" class="popup-link" onclick="cofiVerEnLista(' + c.id + '); return false;">Ver en la lista ↓</a>' : '';
-        const detalle = '<a href="/cafe/' + esc(c.slug) + '" class="popup-link">Ver ficha completa</a>';
+        const detalle = '<a href="/cafe/' + esc(c.slug) + '" class="popup-link">Ver ficha y datos de mercado</a>';
         return '<div class="popup-cafe"><b>' + esc(c.nombre) + '</b><small>' + esc(c.ubicacion) + '</small><div class="popup-acciones">' + ig + detalle + enLista + '</div></div>';
       }
 
@@ -565,7 +1041,6 @@ const datosJSON = JSON.stringify({
         idsEnMapa = nuevoSet;
         marcadoresActuales = lista.map(c => markersPorId.get(c.id));
 
-        // Colores: los que salen del mapa vuelven al color base; los resultados de búsqueda se iluminan
         idsQuitar.forEach(id => markersPorId.get(id).setStyle({ ...ESTILO_BASE }));
         lista.forEach(c => markersPorId.get(c.id).setStyle({ ...estiloBase(c.id) }));
 
@@ -578,7 +1053,6 @@ const datosJSON = JSON.stringify({
           }
         }
 
-        // Un único resultado de búsqueda: se ilumina con halo
         if (busquedaActiva && lista.length === 1) resaltarMarker(lista[0].id);
 
         actualizarEtiquetas();
@@ -725,11 +1199,11 @@ const datosJSON = JSON.stringify({
         const filtrados = filtrarDatos();
         setLista(filtrados);
         dibujarMapa(filtrados, recentrar);
+        renderMarketOverview();
         sincronizarURL();
       }
 
       let debounceFiltro = null;
-      // modo: true = filtro de selects (limpia origen y recentra) | 'texto' = escribiendo (recentra) | false = sin recentrar
       window.cofiFiltrar = function (modo) {
         clearTimeout(debounceFiltro);
         debounceFiltro = setTimeout(() => {
@@ -886,6 +1360,7 @@ const datosJSON = JSON.stringify({
         setLista(conDist);
 
         dibujarMapa(baseDatos, false);
+        renderMarketOverview();
         mapaCofiteca.setView([lat, lon], 15);
         document.querySelector('#vista-mapa .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -1053,7 +1528,6 @@ const datosJSON = JSON.stringify({
       window.cofiActualizarMetricas();
       initMapa();
       hidratarDesdeURL();
-      // Si llegó desde una ficha (?c=...&q=...) recentra y resalta el local
       const vieneConFiltro = $('input-busqueda').value.trim() !== '' || $('select-ciudad').value !== 'Todas';
       aplicarFiltros(vieneConFiltro);
     }
