@@ -10,6 +10,10 @@ interface DatosMercado {
   indice_oportunidad: number;
   nivel_socioeconomico: string;
   atractores_500m: number;
+  nivel_circulacion?: string;
+  comercios_500m?: number;
+  turismo_500m?: number;
+  transporte_500m?: number;
   fecha_actualizacion: string;
 }
 
@@ -28,7 +32,6 @@ const urlMapa = `/?c=${encodeURIComponent(cafe.ciudad)}&q=${encodeURIComponent(c
 const mercadoMap = mercadoRaw as Record<string, DatosMercado>;
 const mercado = mercadoMap[cafe.slug] ?? null;
 
-// Promedios automáticos de la misma ciudad/región para dar referencia real
 const datosCiudad = cafesExpanded
   .filter(c => c.ciudad === cafe.ciudad && mercadoMap[c.slug])
   .map(c => mercadoMap[c.slug]);
@@ -49,14 +52,19 @@ const vecinosPorCafe = mercado
   ? Math.round(mercado.poblacion_500m / (mercado.competidores_500m + 1))
   : 0;
 
-const densidadKm2 = mercado ? Math.round(mercado.poblacion_500m / 0.7854) : 0;
-const habPorManzana = Math.round(densidadKm2 / 100);
+const comercios = mercado?.comercios_500m ?? 0;
+const turismo = mercado?.turismo_500m ?? 0;
+const transporte = mercado?.transporte_500m ?? 0;
+const totalPuntosFlujo = mercado?.atractores_500m ?? (comercios + turismo + transporte);
+const nivelCirculacion = mercado?.nivel_circulacion ?? (
+  totalPuntosFlujo >= 80 ? 'Muy Alta' : totalPuntosFlujo >= 35 ? 'Alta' : totalPuntosFlujo >= 12 ? 'Media' : 'Baja'
+);
 
 function clasificarOportunidad(pts: number) {
-  if (pts >= 25) return { nivel: 'Muy alta', detalle: 'Mucha población vecina y poca oferta cafetera' };
-  if (pts >= 12) return { nivel: 'Alta', detalle: 'Buena relación entre clientes potenciales y locales' };
-  if (pts >= 4)  return { nivel: 'Equilibrada', detalle: 'Oferta acorde al público residente del radio' };
-  return { nivel: 'Zona saturada', detalle: 'Alta competencia para los residentes estables' };
+  if (pts >= 25) return { nivel: 'Muy alta', detalle: 'Fuerte demanda residencial/turística frente a la oferta' };
+  if (pts >= 12) return { nivel: 'Alta', detalle: 'Buen margen de público potencial por cada cafetería' };
+  if (pts >= 4)  return { nivel: 'Equilibrada', detalle: 'Oferta acorde al movimiento y vecinos del radio' };
+  return { nivel: 'Zona saturada', detalle: 'Alta densidad de cafeterías para el flujo del radio' };
 }
 
 function clasificarCompetencia(comp: number, prom: number) {
@@ -186,6 +194,11 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
       color: var(--coffee-500);
       line-height: 1.4;
     }
+    .market-badges {
+      display: flex;
+      gap: .4rem;
+      flex-wrap: wrap;
+    }
     .market-badge {
       background: rgba(232,106,51,.12);
       color: var(--accent);
@@ -219,7 +232,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
     }
     .market-value {
       font-family: var(--font-display);
-      font-size: 1.4rem;
+      font-size: 1.35rem;
       font-weight: 800;
       color: var(--coffee-900);
       line-height: 1.15;
@@ -314,15 +327,26 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
             <div>
               <h2 class="market-title">Radiografía comercial · Radio 500 m (~6 cuadras)</h2>
               <p class="market-subtitle">
-                Benchmark de entorno para evaluar apertura de locales, saturación y público de cercanía en <b>{cafe.ciudad}</b>.
+                Benchmark de entorno para evaluar apertura de locales, saturación y flujo turístico en <b>{cafe.ciudad}</b>.
               </p>
             </div>
-            <span class="market-badge">Entorno: {mercado.nivel_socioeconomico}</span>
+            <div class="market-badges">
+              <span class="market-badge">Circulación: {nivelCirculacion}</span>
+              <span class="market-badge">Entorno: {mercado.nivel_socioeconomico}</span>
+            </div>
           </div>
 
           <div class="market-grid">
             <div class="market-card">
-              <span class="market-label">Residentes en 500 m</span>
+              <span class="market-label">Circulación y turismo</span>
+              <span class="market-value">{nivelCirculacion} <small>({totalPuntosFlujo} polos)</small></span>
+              <span class="market-context">
+                <b>{comercios}</b> comercios/gastro · <b>{turismo}</b> hoteles/turismo · <b>{transporte}</b> paradas/polos diarios.
+              </span>
+            </div>
+
+            <div class="market-card">
+              <span class="market-label">Residentes fijos (500 m)</span>
               <span class="market-value">{mercado.poblacion_500m.toLocaleString('es-AR')} <small>hab.</small></span>
               <span class="market-context">
                 {promPobCiudad > 0
@@ -341,15 +365,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
               <span class="market-label">Índice de oportunidad</span>
               <span class="market-value">{mercado.indice_oportunidad} <small>· {evalOportunidad.nivel}</small></span>
               <span class="market-context">
-                <b>~{vecinosPorCafe.toLocaleString('es-AR')} vecinos</b> por cada cafetería activa. {evalOportunidad.detalle}.
-              </span>
-            </div>
-
-            <div class="market-card">
-              <span class="market-label">Densidad residencial</span>
-              <span class="market-value">{densidadKm2.toLocaleString('es-AR')} <small>hab/km²</small></span>
-              <span class="market-context">
-                Equivale a <b>~{habPorManzana} vecinos por manzana</b> en un área caminable de 5-7 min.
+                <b>~{vecinosPorCafe.toLocaleString('es-AR')} vecinos</b> por local activo + flujo peatonal. {evalOportunidad.detalle}.
               </span>
             </div>
           </div>
@@ -357,14 +373,14 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
           <div class="market-guide">
             <strong>¿A qué apunta este análisis y cómo leerlo?</strong>
             <ul>
-              <li><b>Objetivo:</b> Ayudar a emprendedores y dueños de cafeterías a medir el equilibrio entre clientes potenciales del barrio y locales competidores registrados en Cofiteca.</li>
+              <li><b>Objetivo:</b> Ayudar a emprendedores y dueños de cafeterías a medir el equilibrio entre residentes estables, tránsito comercial/turístico y locales competidores registrados en Cofiteca.</li>
+              <li><b>Cómo se mide la circulación:</b> Suma la densidad real de comercios/gastronomía, alojamientos o puntos turísticos (hoteles, playas, museos) y nodos de transporte/estudio en 6 cuadras a la redonda.</li>
               <li><b>Escala del índice:</b> Menos de <b>4 pts</b> indica zona muy competida; <b>4 a 12 pts</b> equilibrio comercial; más de <b>12 pts</b> alta demanda potencial por local.</li>
-              <li><b>Dato clave en zonas comerciales/turísticas:</b> Los habitantes provienen del Censo 2022 (residentes fijos). En polos gastronómicos o turísticos, el público de paso suma consumo adicional que no figura en el padrón residencial.</li>
             </ul>
           </div>
 
           <div class="market-footer">
-            <span>Fuentes: INDEC Censo 2022 (radios urbanos) y base geográfica Cofiteca</span>
+            <span>Fuentes: INDEC Censo 2022, OpenStreetMap (turismo y comercio) y base Cofiteca</span>
             <span>Actualizado: {mercado.fecha_actualizacion}</span>
           </div>
         </section>
