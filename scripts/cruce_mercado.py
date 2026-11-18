@@ -13,11 +13,8 @@ import urllib3.util.connection as urllib3_cn
 
 urllib3_cn.allowed_gai_family = lambda: socket.AF_INET
 
-# ==============================================================================
-# PEGÁ ENTRE COMILLAS TUS DOS ENLACES DE GOOGLE DRIVE (RADIOS Y DEPARTAMENTOS):
 URL_DRIVE_RADIOS = "https://drive.google.com/file/d/1KiOw4aettgbjLZJIwms86yVp-lPXcBXQ/view?usp=drivesdk"
 URL_DRIVE_DEPTOS = "https://drive.google.com/file/d/1_BthlwEU2QMKtUlzwDv1AEsF4mB6SB9E/view?usp=drivesdk"
-# ==============================================================================
 
 URL_DATOS_MERCADO_CSV = (
     "https://docs.google.com/spreadsheets/d/e/"
@@ -44,40 +41,34 @@ def cargar_locales():
 
 
 def descargar_desde_drive(url_drive, ruta_destino):
-    if not url_drive.startswith("http"):
-        return False
     os.makedirs(os.path.dirname(ruta_destino), exist_ok=True)
     if os.path.exists(ruta_destino) and os.path.getsize(ruta_destino) > 10000:
         return True
 
     match = re.search(r"(?:/d/|id=)([a-zA-Z0-9_-]+)", url_drive)
     if not match:
-        print(f"No se pudo extraer ID del enlace: {url_drive}")
         return False
 
     file_id = match.group(1)
-    print(f"Descargando capa censal en la nube -> {ruta_destino}...")
-
-    # 1. Descarga directa sin límite de tamaño en Google Drive
+    print(f"Descargando {ruta_destino} desde Google Drive...")
     url_directa = f"https://drive.usercontent.google.com/download?id={file_id}&export=download&confirm=t"
     try:
-        with requests.get(url_directa, stream=True, timeout=120) as r:
+        with requests.get(url_directa, stream=True, timeout=90) as r:
             if r.status_code == 200 and "text/html" not in r.headers.get("Content-Type", ""):
                 with open(ruta_destino, "wb") as f:
                     for chunk in r.iter_content(chunk_size=1024 * 256):
                         if chunk:
                             f.write(chunk)
                 if os.path.exists(ruta_destino) and os.path.getsize(ruta_destino) > 10000:
-                    print(f"Descarga completada ({os.path.getsize(ruta_destino) // (1024*1024)} MB).")
+                    print(f"Descargado OK ({os.path.getsize(ruta_destino) // (1024*1024)} MB).")
                     return True
     except Exception as e:
-        print(f"Aviso en descarga directa: {e}")
+        print(f"Aviso descarga directa: {e}")
 
-    # 2. Respaldo compatible con cualquier versión de gdown
     try:
-        gdown.download(id=file_id, output=ruta_destino, quiet=False)
+        gdown.download(id=file_id, output=ruta_destino, quiet=True)
     except Exception as e:
-        print(f"Error descargando con gdown: {e}")
+        print(f"Aviso gdown: {e}")
 
     return os.path.exists(ruta_destino) and os.path.getsize(ruta_destino) > 10000
 
@@ -111,18 +102,18 @@ def detectar_columna_hogares(columnas):
 
 
 def calcular_censo_500m(gdf_buffers_3857, ruta_gpkg):
-    """Intersecta los círculos de 500m con los polígonos de poblaciones.org."""
-    gdf_c = gpd.read_file(ruta_gpkg).to_crs(epsg=3857)
-    print(f"Columnas detectadas en {ruta_gpkg}: {list(gdf_c.columns)}")
+    if gdf_buffers_3857.empty:
+        return {}, {}
+
+    bbox_4326 = tuple(gdf_buffers_3857.to_crs(epsg=4326).total_bounds)
+    gdf_c = gpd.read_file(ruta_gpkg, bbox=bbox_4326).to_crs(epsg=3857)
+    print(f"Leído {ruta_gpkg} ({len(gdf_c)} polígonos). Columnas: {list(gdf_c.columns)}")
 
     col_pob = detectar_columna_poblacion(gdf_c.columns)
     col_hog = detectar_columna_hogares(gdf_c.columns)
-
     if not col_pob:
-        print(f"No se encontró columna de población en {ruta_gpkg}")
         return {}, {}
 
-    # Pre-filtro espacial ultrarrápido: descarta polígonos lejanos sin cafeterías
     indices_cercanos = gdf_c.sjoin(gdf_buffers_3857[["geometry"]], how="inner", predicate="intersects").index.unique()
     gdf_c = gdf_c.loc[indices_cercanos].copy()
     if gdf_c.empty:
@@ -151,16 +142,17 @@ def obtener_atractores_osm(df_locales):
         with open(RUTA_CACHE_OSM, "r", encoding="utf-8") as f:
             pois = json.load(f)
 
+    # Agrupa en bloques amplios (3x3 grados) para hacer pocas consultas rápidas
     grillas = df_locales.assign(
-        lat_g=df_locales["latitud"].round(0),
-        lon_g=df_locales["longitud"].round(0),
+        lat_g=(df_locales["latitud"] // 3) * 3,
+        lon_g=(df_locales["longitud"] // 3) * 3,
     )[["lat_g", "lon_g"]].drop_duplicates()
 
     for _, row in grillas.iterrows():
-        s, w = row["lat_g"] - 0.55, row["lon_g"] - 0.55
-        n, e = row["lat_g"] + 0.55, row["lon_g"] + 0.55
+        s, w = row["lat_g"] - 0.1, row["lon_g"] - 0.1
+        n, e = row["lat_g"] + 3.1, row["lon_g"] + 3.1
         query = f"""
-        [out:json][timeout:12];
+        [out:json][timeout:10];
         (
           node["railway"~"station|subway_entrance"]({s},{w},{n},{e});
           node["amenity"~"university|college|coworking_space|hospital"]({s},{w},{n},{e});
@@ -171,7 +163,7 @@ def obtener_atractores_osm(df_locales):
         """
         for url in OVERPASS_URLS:
             try:
-                resp = requests.post(url, data={"data": query}, timeout=14)
+                resp = requests.post(url, data={"data": query}, timeout=12)
                 if resp.status_code == 200:
                     for el in resp.json().get("elements", []):
                         lat = el.get("lat") or el.get("center", {}).get("lat")
@@ -181,7 +173,7 @@ def obtener_atractores_osm(df_locales):
                     break
             except Exception:
                 continue
-        time.sleep(0.3)
+        time.sleep(0.2)
 
     if pois:
         os.makedirs("datos_censales", exist_ok=True)
@@ -230,11 +222,9 @@ def main():
     gdf_buffers = gdf_locales[["slug_local", "geometry"]].copy()
     gdf_buffers["geometry"] = gdf_buffers.geometry.buffer(500)
 
-    # 1. Competencia en 500m
     cruce_comp = gpd.sjoin(gdf_buffers, gdf_locales[["slug_local", "geometry"]], how="left", predicate="intersects")
     conteo_comp = (cruce_comp.groupby("slug_local_left").size() - 1).clip(lower=0)
 
-    # 2. Atractores diurnos (OpenStreetMap)
     gdf_pois = obtener_atractores_osm(df_locales)
     if not gdf_pois.empty:
         cruce_pois = gpd.sjoin(gdf_buffers, gdf_pois, how="inner", predicate="intersects")
@@ -242,14 +232,16 @@ def main():
     else:
         conteo_pois = pd.Series(dtype=int)
 
-    # 3. Censo 2022 (Radios urbanos como principal, Departamentos como respaldo)
     pob_radios, hog_radios = {}, {}
     if descargar_desde_drive(URL_DRIVE_RADIOS, RUTA_RADIOS):
         pob_radios, hog_radios = calcular_censo_500m(gdf_buffers, RUTA_RADIOS)
 
+    # Solo consulta departamentos para los locales que no cayeron en radios urbanos
+    slugs_sin_pob = [s for s in df_locales["slug_local"] if pob_radios.get(s, 0) == 0]
     pob_deptos, hog_deptos = {}, {}
-    if descargar_desde_drive(URL_DRIVE_DEPTOS, RUTA_DEPTOS):
-        pob_deptos, hog_deptos = calcular_censo_500m(gdf_buffers, RUTA_DEPTOS)
+    if slugs_sin_pob and descargar_desde_drive(URL_DRIVE_DEPTOS, RUTA_DEPTOS):
+        gdf_faltantes = gdf_buffers[gdf_buffers["slug_local"].isin(slugs_sin_pob)]
+        pob_deptos, hog_deptos = calcular_censo_500m(gdf_faltantes, RUTA_DEPTOS)
 
     res = df_locales[["slug_local", "latitud", "longitud"]].copy()
     res["competidores_500m"] = res["slug_local"].map(conteo_comp).fillna(0).astype(int)
@@ -287,7 +279,7 @@ def main():
         "fecha_actualizacion",
     ]
     res[cols_sheets].to_csv("public/data/mercado.csv", index=False)
-    print(f"Cruce censal 2022 finalizado: {len(res)} locales procesados.")
+    print(f"Cruce finalizado en tiempo récord: {len(res)} locales.")
 
 
 if __name__ == "__main__":
