@@ -8,12 +8,23 @@ interface DatosMercado {
   pea_porcentaje: number;
   competidores_500m: number;
   indice_oportunidad: number;
+  oportunidad_baja?: number;
+  oportunidad_alta?: number;
   nivel_socioeconomico: string;
   atractores_500m: number;
   nivel_circulacion?: string;
   comercios_500m?: number;
   turismo_500m?: number;
   transporte_500m?: number;
+  plaza_turistica?: string;
+  turistas_anuales_plaza?: number;
+  ocupacion_alta_pct?: number;
+  ocupacion_baja_pct?: number;
+  estadia_promedio_noches?: number;
+  ratio_estacionalidad?: number;
+  temporada_pico?: string;
+  mes_valle?: string;
+  perfil_turistico?: string;
   fecha_actualizacion: string;
 }
 
@@ -56,14 +67,41 @@ const nivelCirculacion = mercado?.nivel_circulacion ?? (
   totalPuntosFlujo >= 80 ? 'Muy Alta' : totalPuntosFlujo >= 35 ? 'Alta' : totalPuntosFlujo >= 12 ? 'Media' : 'Baja'
 );
 
-function diagnosticarZona(m: DatosMercado, circ: string) {
+const ocupAlta = mercado?.ocupacion_alta_pct ?? 60;
+const ocupBaja = mercado?.ocupacion_baja_pct ?? 50;
+const ratioEst = mercado?.ratio_estacionalidad ?? Number((ocupAlta / Math.max(1, ocupBaja)).toFixed(1));
+const turistasAnuales = mercado?.turistas_anuales_plaza ?? 0;
+const estadiaNoches = mercado?.estadia_promedio_noches ?? 0;
+const opBaja = mercado?.oportunidad_baja ?? mercado?.indice_oportunidad ?? 0;
+const opAlta = mercado?.oportunidad_alta ?? mercado?.indice_oportunidad ?? 0;
+
+function clasificarEstacionalidadHistorica(ratio: number) {
+  if (ratio >= 3.2) return 'Estacionalidad Extrema';
+  if (ratio >= 1.8) return 'Estacionalidad Media-Alta';
+  if (ratio >= 1.3) return 'Estacionalidad Moderada';
+  return 'Demanda Anual Pareja';
+}
+
+function diagnosticarIntegral(m: DatosMercado, circ: string, ratio: number) {
   const esCluster = m.competidores_500m >= 6;
   const altoFlujo = circ === 'Muy Alta' || circ === 'Alta';
 
+  if (ratio >= 3.2 && !esCluster) {
+    return {
+      etiqueta: 'Plaza turística con margen',
+      resumen: `Salto histórico de ×${ratio} en temporada alta con poca competencia fija (${m.competidores_500m} locales); exige estructura liviana para sostener el piso invernal.`
+    };
+  }
+  if (ratio >= 3.2 && esCluster) {
+    return {
+      etiqueta: 'Polo turístico muy competido',
+      resumen: `Fuerte concentración de locales disputando el pico turístico (×${ratio}), con caída marcada de ocupación en meses valle.`
+    };
+  }
   if (esCluster && altoFlujo) {
     return {
       etiqueta: 'Polo gastronómico consolidado',
-      resumen: 'Altísimo tránsito comercial/turístico y público cafetero habitual, pero con fuerte competencia directa (exige propuesta diferencial).'
+      resumen: 'Altísimo tránsito comercial/turístico y demanda probada todo el año, pero con fuerte competencia directa (exige diferencial).'
     };
   }
   if (!esCluster && altoFlujo) {
@@ -74,8 +112,8 @@ function diagnosticarZona(m: DatosMercado, circ: string) {
   }
   if (!esCluster && m.poblacion_500m >= 5000) {
     return {
-      etiqueta: 'Oportunidad barrial',
-      resumen: 'Buena masa de vecinos estables con poca competencia cercana; ideal para fidelización diaria y take-away.'
+      etiqueta: 'Oportunidad barrial anual',
+      resumen: 'Buena masa de vecinos estables todo el año con poca competencia cercana; ideal para fidelización diaria.'
     };
   }
   if (esCluster) {
@@ -86,13 +124,16 @@ function diagnosticarZona(m: DatosMercado, circ: string) {
   }
   return {
     etiqueta: 'Zona de nicho / emergente',
-    resumen: 'Menor densidad urbana y comercial; funciona mejor como local de destino o punto de paso puntual.'
+    resumen: 'Menor densidad urbana y comercial; funciona mejor como local de destino o punto de paso.'
   };
 }
 
-function describirPerfilResidencial(pob: number, diffPct: number, circ: string) {
+function describirPerfilResidencial(diffPct: number, circ: string, ratio: number) {
+  if (ratio >= 3.2) {
+    return `Base fija de invierno. En temporada alta la ocupación histórica salta de ${ocupBaja}% a ${ocupAlta}% (×${ratio}).`;
+  }
   if (diffPct <= -15 && (circ === 'Muy Alta' || circ === 'Alta')) {
-    return `${diffPct}% vs. prom. ${cafe.ciudad} · Perfil comercial/turístico (casas bajas y locales; el público principal es de paso y turismo).`;
+    return `${diffPct}% vs. prom. ${cafe.ciudad} · Perfil comercial/turístico (casas bajas y locales; predomina el público de paso).`;
   }
   if (diffPct >= 15) {
     return `+${diffPct}% vs. prom. ${cafe.ciudad} · Perfil residencial denso (edificios y fuerte base de vecinos fijos).`;
@@ -108,8 +149,9 @@ function clasificarCompetencia(comp: number, prom: number) {
   return `Baja vs. prom. ${cafe.ciudad} (${prom} locales).`;
 }
 
-const diagnostico = mercado ? diagnosticarZona(mercado, nivelCirculacion) : null;
-const textoResidencial = mercado ? describirPerfilResidencial(mercado.poblacion_500m, diffPobPct, nivelCirculacion) : '';
+const etiquetaEstacionalidad = clasificarEstacionalidadHistorica(ratioEst);
+const diagnostico = mercado ? diagnosticarIntegral(mercado, nivelCirculacion, ratioEst) : null;
+const textoResidencial = mercado ? describirPerfilResidencial(diffPobPct, nivelCirculacion, ratioEst) : '';
 const textoCompetencia = mercado ? clasificarCompetencia(mercado.competidores_500m, promCompCiudad) : '';
 
 const esquema: Record<string, any> = {
@@ -246,7 +288,7 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
     }
     .market-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: .75rem;
     }
     .market-card {
@@ -267,24 +309,48 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
     }
     .market-value {
       font-family: var(--font-display);
-      font-size: 1.35rem;
+      font-size: 1.3rem;
       font-weight: 800;
       color: var(--coffee-900);
       line-height: 1.15;
     }
     .market-value small {
       font-family: var(--font-body);
-      font-size: .82rem;
+      font-size: .8rem;
       font-weight: 700;
       color: var(--accent);
     }
     .market-context {
       font-size: .78rem;
       color: var(--coffee-700);
+      line-height: 1.45;
+    }
+    .history-box {
+      margin-top: .85rem;
+      padding: .95rem 1rem;
+      border-radius: var(--radius-sm);
+      background: #fffdf9;
+      border: 1px solid rgba(232,106,51,.35);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: .85rem;
+    }
+    .history-box strong {
+      display: block;
+      font-size: .73rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--accent);
+      margin-bottom: .2rem;
+    }
+    .history-box p {
+      margin: 0;
+      font-size: .82rem;
+      color: var(--coffee-900);
       line-height: 1.4;
     }
     .market-guide {
-      margin-top: 1rem;
+      margin-top: .85rem;
       padding: .9rem 1rem;
       border-radius: var(--radius-sm);
       background: rgba(196,167,125,.14);
@@ -362,54 +428,73 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
             <div>
               <h2 class="market-title">Radiografía comercial · Radio 500 m (~6 cuadras)</h2>
               <p class="market-subtitle">
-                Benchmark de entorno para evaluar apertura de locales, saturación y flujo turístico en <b>{cafe.ciudad}</b>.
+                Cruce de censo residencial, flujo comercial y serie turística histórica en <b>{mercado.plaza_turistica || ciudadDisplay}</b>.
               </p>
             </div>
             <div class="market-badges">
-              <span class="market-badge">Circulación: {nivelCirculacion}</span>
+              <span class="market-badge">{etiquetaEstacionalidad} (×{ratioEst})</span>
               <span class="market-badge">{diagnostico.etiqueta}</span>
             </div>
           </div>
 
           <div class="market-grid">
             <div class="market-card">
-              <span class="market-label">Circulación y turismo</span>
-              <span class="market-value">{nivelCirculacion} <small>({totalPuntosFlujo} polos)</small></span>
-              <span class="market-context">
-                <b>{comercios}</b> comercios/gastro · <b>{turismo}</b> hoteles/turismo · <b>{transporte}</b> paradas/polos diarios.
-              </span>
-            </div>
-
-            <div class="market-card">
-              <span class="market-label">Residentes fijos (500 m)</span>
-              <span class="market-value">{mercado.poblacion_500m.toLocaleString('es-AR')} <small>hab.</small></span>
+              <span class="market-label">Piso Invierno (Residentes)</span>
+              <span class="market-value">{mercado.poblacion_500m.toLocaleString('es-AR')} <small>hab. fijos</small></span>
               <span class="market-context">{textoResidencial}</span>
             </div>
 
             <div class="market-card">
-              <span class="market-label">Competencia cercana</span>
-              <span class="market-value">{mercado.competidores_500m} <small>locales</small></span>
-              <span class="market-context">{textoCompetencia}</span>
+              <span class="market-label">Curva Turística Histórica</span>
+              <span class="market-value">{ocupAlta}% <small>alta vs. {ocupBaja}% baja</small></span>
+              <span class="market-context">
+                {turistasAnuales > 0
+                  ? `~${(turistasAnuales / 1000000).toFixed(1)}M visitantes/año · Estadía prom. ${estadiaNoches} noches.`
+                  : 'Ocupación histórica de alojamiento en la plaza.'}
+              </span>
             </div>
 
             <div class="market-card">
-              <span class="market-label">Diagnóstico e índice ({mercado.indice_oportunidad} pts)</span>
-              <span class="market-value" style="font-size: 1.1rem;">{diagnostico.etiqueta}</span>
-              <span class="market-context">{diagnostico.resumen}</span>
+              <span class="market-label">Circulación en 500 m</span>
+              <span class="market-value">{nivelCirculacion} <small>({totalPuntosFlujo} polos)</small></span>
+              <span class="market-context">
+                <b>{comercios}</b> comercios/gastro · <b>{turismo}</b> hoteles/turismo · <b>{transporte}</b> paradas/polos.
+              </span>
+            </div>
+
+            <div class="market-card">
+              <span class="market-label">Competencia y Escenarios</span>
+              <span class="market-value">{mercado.competidores_500m} <small>locales</small></span>
+              <span class="market-context">
+                {textoCompetencia} <b>Índice: {opBaja} pts</b> (baja) / <b>{opAlta} pts</b> (pico).
+              </span>
+            </div>
+          </div>
+
+          <div class="history-box">
+            <div>
+              <strong>Calendario histórico de la plaza</strong>
+              <p>
+                <b>Pico:</b> {mercado.temporada_pico || 'Verano y feriados'}<br />
+                <b>Valle:</b> {mercado.mes_valle || 'Mayo - Junio'} ({mercado.perfil_turistico || 'Plaza mixta'})
+              </p>
+            </div>
+            <div>
+              <strong>Diagnóstico integral ({diagnostico.etiqueta})</strong>
+              <p>{diagnostico.resumen}</p>
             </div>
           </div>
 
           <div class="market-guide">
-            <strong>¿A qué apunta este análisis y cómo leerlo?</strong>
+            <strong>¿Cómo interpretar el cruce con el turismo histórico?</strong>
             <ul>
-              <li><b>Objetivo:</b> Medir el equilibrio entre residentes estables, tránsito comercial/turístico y cafeterías competidoras registradas en Cofiteca dentro de 6 cuadras.</li>
-              <li><b>Clúster vs. barrio:</b> En polos como Palermo o Güemes, tener muchos competidores juntos confirma que hay demanda probada, pero exige diferenciación fuerte; en zonas residenciales con pocos cafés prima la captación de vecinos diarios.</li>
-              <li><b>Escala del índice:</b> Combina población fija + densidad comercial/turística dividida por la oferta cafetera activa (más de <b>12 pts</b> indica margen de expansión; menos de <b>6 pts</b> indica alta competencia por local).</li>
+              <li><b>Piso de supervivencia vs. Techo de temporada:</b> En destinos como Pinamar, Villa Gesell o Chapadmalal, el dato del Censo 2022 muestra quién sostiene el local en invierno, mientras que la ocupación histórica ({ocupBaja}% a {ocupAlta}%) muestra cuánto se multiplica la demanda en verano[span_2](start_span)[span_2](end_span).</li>
+              <li><b>Doble escenario del índice:</b> El primer valor mide la oportunidad en meses tranquilos y el segundo en temporada alta, ajustado por la cantidad de cafeterías competidoras registradas en Cofiteca[span_3](start_span)[span_3](end_span).</li>
             </ul>
           </div>
 
           <div class="market-footer">
-            <span>Fuentes: INDEC Censo 2022, OpenStreetMap Argentina (Geofabrik) y base Cofiteca</span>
+            <span>Fuentes: INDEC Censo 2022, SINTA / EOH Turismo Histórico, OpenStreetMap y Cofiteca</span>
             <span>Actualizado: {mercado.fecha_actualizacion}</span>
           </div>
         </section>
