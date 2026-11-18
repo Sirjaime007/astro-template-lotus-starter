@@ -1,6 +1,17 @@
 ---
 // src/pages/cafe/[slug].astro
 import { cafesExpanded, cafesCercanos, type CafeExpanded } from '../../lib/cafes';
+import mercadoRaw from '../../data/mercado.json';
+
+interface DatosMercado {
+  poblacion_500m: number;
+  pea_porcentaje: number;
+  competidores_500m: number;
+  indice_oportunidad: number;
+  nivel_socioeconomico: string;
+  atractores_500m: number;
+  fecha_actualizacion: string;
+}
 
 export function getStaticPaths() {
   return cafesExpanded.map(c => ({
@@ -13,6 +24,9 @@ const { cafe } = Astro.props as { cafe: CafeExpanded };
 const cercanos = cafesCercanos(cafe);
 const ciudadDisplay = cafe.ciudadReal || cafe.ciudad;
 const urlMapa = `/?c=${encodeURIComponent(cafe.ciudad)}&q=${encodeURIComponent(cafe.nombre)}`;
+
+const mercado = (mercadoRaw as Record<string, DatosMercado>)[cafe.slug] ?? null;
+const densidadKm2 = mercado ? Math.round(mercado.poblacion_500m / 0.7854) : 0;
 
 const esquema: Record<string, any> = {
   "@context": "https://schema.org",
@@ -86,12 +100,89 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
     .hero .address { font-size: 1.05rem; color: var(--coffee-700); margin: 0 0 1.2rem; line-height: 1.5; }
     .hero .address b { color: var(--coffee-900); }
     .hero .actions { display: flex; gap: .6rem; flex-wrap: wrap; }
-    .hero .actions a { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 44px; padding: 11px 20px; border-radius: var(--radius-sm); font-weight: 600; font-size: .85rem; text-decoration: none; cursor: pointer; transition: .2s; border: 1px solid; }
-    @media (max-width: 600px) { .hero .actions a { flex: 1 1 100%; } }
+    .hero .actions a,
+    .hero .actions button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 44px; padding: 11px 20px; border-radius: var(--radius-sm); font-family: var(--font-body); font-weight: 600; font-size: .85rem; text-decoration: none; cursor: pointer; transition: .2s; border: 1px solid; }
+    @media (max-width: 600px) {
+      .hero .actions a,
+      .hero .actions button { flex: 1 1 100%; }
+    }
     .btn-primary { background: var(--coffee-900); color: white; border-color: var(--coffee-900); }
     .btn-primary:hover { background: var(--coffee-700); border-color: var(--coffee-700); }
     .btn-outline { background: transparent; color: var(--coffee-900); border-color: var(--coffee-900); }
     .btn-outline:hover { background: var(--coffee-900); color: white; }
+    .btn-market { background: var(--cream-50); color: var(--coffee-900); border-color: var(--tan-500); }
+    .btn-market:hover,
+    .btn-market[aria-expanded="true"] { background: var(--accent); color: white; border-color: var(--accent); }
+
+    .market-panel {
+      margin-top: 1.1rem;
+      padding: 1.25rem;
+      border-radius: var(--radius-md);
+      background: var(--cream-50);
+      border: 1px solid rgba(196,167,125,.45);
+      box-shadow: var(--shadow-sm);
+    }
+    .market-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .6rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      padding-bottom: .75rem;
+      border-bottom: 1px solid rgba(196,167,125,.3);
+    }
+    .market-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--coffee-900);
+      margin: 0;
+    }
+    .market-badge {
+      background: rgba(232,106,51,.12);
+      color: var(--accent);
+      border: 1px solid rgba(232,106,51,.3);
+      padding: .25rem .7rem;
+      border-radius: 999px;
+      font-size: .78rem;
+      font-weight: 600;
+    }
+    .market-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: .75rem;
+    }
+    .market-card {
+      background: var(--cream-100);
+      padding: .85rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(196,167,125,.3);
+      display: flex;
+      flex-direction: column;
+      gap: .2rem;
+    }
+    .market-value {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--coffee-900);
+      line-height: 1.1;
+    }
+    .market-label {
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--coffee-500);
+    }
+    .market-footer {
+      margin-top: .85rem;
+      font-size: .74rem;
+      color: var(--coffee-500);
+      display: flex;
+      justify-content: space-between;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
 
     .map-frame { width: 100%; aspect-ratio: 16/9; border-radius: var(--radius-md); overflow: hidden; border: 1px solid rgba(196,167,125,.4); box-shadow: var(--shadow-md); margin-bottom: 2.5rem; }
     @media (max-width: 600px) { .map-frame { aspect-ratio: 4/3; } }
@@ -127,7 +218,54 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
         )}
         <a href={`https://www.google.com/maps/search/?api=1&query=${cafe.lat},${cafe.lon}`} target="_blank" rel="noopener noreferrer" class="btn-outline">Cómo llegar</a>
         <a href={urlMapa} class="btn-outline">Ver en el mapa interactivo</a>
+        {mercado && (
+          <button id="btn-mercado" type="button" class="btn-market" aria-expanded="false" aria-controls="panel-mercado">
+            📊 Datos de mercado
+          </button>
+        )}
       </div>
+
+      {mercado && (
+        <section id="panel-mercado" class="market-panel" hidden>
+          <div class="market-header">
+            <h2 class="market-title">Inteligencia comercial · Radio 500 m</h2>
+            <span class="market-badge">Perfil zonal: {mercado.nivel_socioeconomico}</span>
+          </div>
+
+          <div class="market-grid">
+            <div class="market-card">
+              <span class="market-value">{mercado.poblacion_500m.toLocaleString('es-AR')}</span>
+              <span class="market-label">Habitantes (Censo 2022)</span>
+            </div>
+            <div class="market-card">
+              <span class="market-value">{mercado.competidores_500m}</span>
+              <span class="market-label">Cafeterías a 500 m</span>
+            </div>
+            <div class="market-card">
+              <span class="market-value">{mercado.indice_oportunidad} pts</span>
+              <span class="market-label">Índice de oportunidad</span>
+            </div>
+            <div class="market-card">
+              {mercado.atractores_500m > 0 ? (
+                <>
+                  <span class="market-value">{mercado.atractores_500m}</span>
+                  <span class="market-label">Atractores diurnos</span>
+                </>
+              ) : (
+                <>
+                  <span class="market-value">{densidadKm2.toLocaleString('es-AR')}</span>
+                  <span class="market-label">Densidad (hab/km²)</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div class="market-footer">
+            <span>Fuente: INDEC Censo 2022 / poblaciones.org</span>
+            <span>Actualizado: {mercado.fecha_actualizacion}</span>
+          </div>
+        </section>
+      )}
     </header>
 
     <div class="map-frame">
@@ -153,5 +291,16 @@ if (cafe.instagram) esquema.sameAs = [cafe.instagram];
       </section>
     )}
   </main>
+
+  <script>
+    const btnMercado = document.getElementById('btn-mercado');
+    const panelMercado = document.getElementById('panel-mercado');
+    btnMercado?.addEventListener('click', () => {
+      if (!panelMercado) return;
+      const abierto = !panelMercado.hidden;
+      panelMercado.hidden = abierto;
+      btnMercado.setAttribute('aria-expanded', String(!abierto));
+    });
+  </script>
 </body>
 </html>
