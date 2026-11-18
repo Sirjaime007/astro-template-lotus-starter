@@ -27,6 +27,7 @@ URL_DATOS_MERCADO_CSV = (
 RUTA_RADIOS = "datos_censales/radios_2022.gpkg"
 RUTA_DEPTOS = "datos_censales/deptos_2022.gpkg"
 RUTA_CACHE_OSM = "datos_censales/pois_osm_v2.json"
+RUTA_CACHE_RUTAS = "datos_censales/rutas_osm_v1.json"
 
 HISTORICO_TURISMO = {
     "chapadmalal": {
@@ -37,7 +38,7 @@ HISTORICO_TURISMO = {
         "estadia_noches": 4.8,
         "temporada_pico": "Dic a Mar + fines de semana largos",
         "mes_valle": "May a Sep",
-        "perfil_turistico": "Balneario / Surf / Escapadas",
+        "perfil_turistico": "Balneario / Surf / Corredor Ruta 11",
     },
     "mar_del_plata": {
         "plaza": "Mar del Plata (Urbana)",
@@ -97,7 +98,7 @@ HISTORICO_TURISMO = {
         "estadia_noches": 4.3,
         "temporada_pico": "Jul-Sep (Nieve) y Ene-Feb (Verano)",
         "mes_valle": "May y Nov",
-        "perfil_turistico": "Doble temporada internacional y nacional",
+        "perfil_turistico": "Doble temporada + circuitos cordilleranos",
     },
     "patagonia_austral": {
         "plaza": "Patagonia Austral (Ushuaia / El Calafate)",
@@ -117,7 +118,7 @@ HISTORICO_TURISMO = {
         "estadia_noches": 3.8,
         "temporada_pico": "Ene-Feb, Jul y fines de semana largos",
         "mes_valle": "May-Jun",
-        "perfil_turistico": "Turismo interno y escapadas de fin de semana",
+        "perfil_turistico": "Turismo interno y rutas serranas",
     },
     "tandil_escapadas": {
         "plaza": "Tandil / Escapadas Cercanas",
@@ -147,7 +148,7 @@ HISTORICO_TURISMO = {
         "estadia_noches": 2.8,
         "temporada_pico": "Jul, Semana Santa y Sep-Nov",
         "mes_valle": "Feb-Mar",
-        "perfil_turistico": "Circuito cultural y enoturismo",
+        "perfil_turistico": "Circuito cultural, pasos y enoturismo",
     },
     "mendoza": {
         "plaza": "Gran Mendoza / Enoturismo",
@@ -157,7 +158,7 @@ HISTORICO_TURISMO = {
         "estadia_noches": 3.2,
         "temporada_pico": "Mar (Vendimia), Jul y Oct-Nov",
         "mes_valle": "Jun",
-        "perfil_turistico": "Enoturismo anual + actividad urbana",
+        "perfil_turistico": "Enoturismo anual + corredor bioceánico",
     },
     "caba": {
         "plaza": "Ciudad Autónoma de Buenos Aires",
@@ -208,6 +209,7 @@ PERFILES_ECONOMICOS = {
         "indice_ticket": 1.45,
         "gasto_turista_usd": 98,
         "costo_alquiler": "Muy Alto",
+        "bonus_diurno": 12500,
         "ecuacion_rentabilidad": "Ticket máximo y público internacional/ejecutivo, pero alquiler muy alto exige volumen sostenido.",
     },
     "caba_palermo_norte": {
@@ -216,6 +218,7 @@ PERFILES_ECONOMICOS = {
         "indice_ticket": 1.30,
         "gasto_turista_usd": 80,
         "costo_alquiler": "Alto",
+        "bonus_diurno": 4500,
         "ecuacion_rentabilidad": "Fuerte consumo de especialidad y turismo receptivo; requiere alta rotación para amortizar alquiler.",
     },
     "caba_la_boca_sur": {
@@ -224,6 +227,7 @@ PERFILES_ECONOMICOS = {
         "indice_ticket": 0.90,
         "gasto_turista_usd": 42,
         "costo_alquiler": "Medio-Bajo",
+        "bonus_diurno": 2200,
         "ecuacion_rentabilidad": "Turista excursionista diurno de estadía corta; conviene propuesta ágil y costos fijos bajos.",
     },
     "caba_barrial_medio": {
@@ -232,6 +236,7 @@ PERFILES_ECONOMICOS = {
         "indice_ticket": 1.12,
         "gasto_turista_usd": 56,
         "costo_alquiler": "Medio-Alto",
+        "bonus_diurno": 2500,
         "ecuacion_rentabilidad": "Equilibrio saludable entre consumo habitual de vecinos y valor de alquiler intermedio.",
     },
     "pinamar_carilo": {
@@ -240,6 +245,7 @@ PERFILES_ECONOMICOS = {
         "indice_ticket": 1.40,
         "gasto_turista_usd": 88,
         "costo_alquiler": "Alto (estacional)",
+        "bonus_diurno": 800,
         "ecuacion_rentabilidad": "Turista de alto poder adquisitivo en verano; clave negociar alquiler anual flexible.",
     },
     "gesell_pampas": {
@@ -248,6 +254,7 @@ PERFILES_ECONOMICOS = {
         "indice_ticket": 1.15,
         "gasto_turista_usd": 62,
         "costo_alquiler": "Medio-Alto (estacional)",
+        "bonus_diurno": 600,
         "ecuacion_rentabilidad": "Buen margen en temporada alta y escapadas; exige estructura liviana en invierno.",
     },
     "mdp_guemes_sur": {
@@ -256,6 +263,7 @@ PERFILES_ECONOMICOS = {
         "indice_ticket": 1.22,
         "gasto_turista_usd": 68,
         "costo_alquiler": "Alto",
+        "bonus_diurno": 1800,
         "ecuacion_rentabilidad": "Público de mayor gasto promedio en la ciudad y cultura de café de especialidad consolidada.",
     },
     "mdp_urbano_masivo": {
@@ -264,6 +272,7 @@ PERFILES_ECONOMICOS = {
         "indice_ticket": 1.00,
         "gasto_turista_usd": 48,
         "costo_alquiler": "Medio",
+        "bonus_diurno": 2200,
         "ecuacion_rentabilidad": "Turismo masivo heterogéneo + base residente anual con alquileres más accesibles.",
     },
     "mendoza_enoturismo": {
@@ -272,6 +281,7 @@ PERFILES_ECONOMICOS = {
         "indice_ticket": 1.28,
         "gasto_turista_usd": 85,
         "costo_alquiler": "Medio-Alto",
+        "bonus_diurno": 2000,
         "ecuacion_rentabilidad": "Turista internacional/nacional de alto gasto frente a costos inmobiliarios más moderados que CABA.",
     },
     "patagonia_turistica": {
@@ -280,6 +290,7 @@ PERFILES_ECONOMICOS = {
         "indice_ticket": 1.38,
         "gasto_turista_usd": 92,
         "costo_alquiler": "Alto",
+        "bonus_diurno": 1500,
         "ecuacion_rentabilidad": "Ticket elevado en nieve y verano que compensa costos logísticos y de alquiler.",
     },
     "gran_ciudad_interior": {
@@ -288,6 +299,7 @@ PERFILES_ECONOMICOS = {
         "indice_ticket": 1.08,
         "gasto_turista_usd": 52,
         "costo_alquiler": "Medio",
+        "bonus_diurno": 2500,
         "ecuacion_rentabilidad": "Excelente relación ingreso/costo por flujo diario constante y alquileres razonables.",
     },
     "plaza_regional": {
@@ -296,6 +308,7 @@ PERFILES_ECONOMICOS = {
         "indice_ticket": 0.96,
         "gasto_turista_usd": 45,
         "costo_alquiler": "Bajo a Medio",
+        "bonus_diurno": 1000,
         "ecuacion_rentabilidad": "Punto de equilibrio bajo; ideal para operación propia y clientela recurrente.",
     },
 }
@@ -325,6 +338,16 @@ CLASES_TRANSPORTE = {
     "theatre", "cinema", "nightclub", "stadium", "sports_centre", "park",
 }
 
+JERARQUIA_RUTAS = {
+    "motorway": (1, 14000),
+    "motorway_link": (1, 12000),
+    "trunk": (2, 10500),
+    "trunk_link": (2, 9500),
+    "primary": (3, 7500),
+    "primary_link": (3, 6800),
+    "secondary": (4, 4800),
+}
+
 
 def log(msg):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}", flush=True)
@@ -335,6 +358,7 @@ def cargar_locales():
     df = pd.read_csv(URL_DATOS_MERCADO_CSV)
     cols_keep = [c for c in ["slug_local", "latitud", "longitud", "ciudad", "barrio"] if c in df.columns]
     df = df[cols_keep].dropna(subset=["slug_local", "latitud", "longitud"]).copy()
+    df["slug_local"] = df["slug_local"].astype(str).str.strip().str.lower()
     df["latitud"] = pd.to_numeric(df["latitud"].astype(str).str.replace(",", "."), errors="coerce")
     df["longitud"] = pd.to_numeric(df["longitud"].astype(str).str.replace(",", "."), errors="coerce")
     df = df.dropna(subset=["latitud", "longitud"]).drop_duplicates(subset=["slug_local"])
@@ -412,9 +436,8 @@ def detectar_perfil_economico(row):
         str(row.get("barrio", "")),
     ]).lower()
 
-    # CABA sub-zonas diferenciadas
     if -34.71 <= lat <= -34.52 and -58.54 <= lon <= -58.33:
-        if "puerto-madero" in texto or (-34.625 <= lat <= -34.595 and -58.368 <= lon <= -58.352):
+        if "puerto-madero" in texto or (-34.628 <= lat <= -34.593 and -58.370 <= lon <= -58.348):
             return PERFILES_ECONOMICOS["caba_puerto_madero"]
         if any(k in texto for k in ["la-boca", "barracas"]) or (-34.648 <= lat <= -34.626 and -58.375 <= lon <= -58.355):
             return PERFILES_ECONOMICOS["caba_la_boca_sur"]
@@ -424,7 +447,6 @@ def detectar_perfil_economico(row):
             return PERFILES_ECONOMICOS["caba_palermo_norte"]
         return PERFILES_ECONOMICOS["caba_barrial_medio"]
 
-    # Costa Atlántica
     if "pinamar" in texto or "carilo" in texto or (-37.22 <= lat <= -37.05 and -57.00 <= lon <= -56.80):
         return PERFILES_ECONOMICOS["pinamar_carilo"]
     if "gesell" in texto or "pampas" in texto or (-37.38 <= lat < -37.22 and -57.10 <= lon <= -56.95):
@@ -434,7 +456,6 @@ def detectar_perfil_economico(row):
     if "mar-del-plata" in texto or (-38.105 < lat <= -37.90 and -57.66 <= lon <= -57.50):
         return PERFILES_ECONOMICOS["mdp_urbano_masivo"]
 
-    # Mendoza, Patagonia, Grandes Ciudades
     if "mendoza" in texto or (-33.70 <= lat <= -32.80 and -69.30 <= lon <= -68.70):
         return PERFILES_ECONOMICOS["mendoza_enoturismo"]
     if any(k in texto for k in ["bariloche", "angostura", "san-martin-de-los-andes", "ushuaia", "calafate"]) or (
@@ -518,19 +539,33 @@ def calcular_censo_500m(gdf_buffers_3857, ruta_gpkg):
     return pares.groupby("slug_local")["pob_prop"].sum().round().astype(int).to_dict()
 
 
-def obtener_circulacion_geofabrik(gdf_buffers_3857):
-    log("3/5 Cargando capa comercial, turística y transporte de Argentina...")
-    if os.path.exists(RUTA_CACHE_OSM) and os.path.getsize(RUTA_CACHE_OSM) > 10000:
+def obtener_circulacion_y_rutas_geofabrik(gdf_buffers_3857):
+    log("3/5 Cargando capa comercial, turística, transporte y rutas de Argentina...")
+    tiene_pois = os.path.exists(RUTA_CACHE_OSM) and os.path.getsize(RUTA_CACHE_OSM) > 10000
+    tiene_rutas = os.path.exists(RUTA_CACHE_RUTAS) and os.path.getsize(RUTA_CACHE_RUTAS) > 100
+
+    gdf_pois = gpd.GeoDataFrame(columns=["cat", "geometry"], crs="EPSG:3857")
+    rutas_por_slug = {}
+
+    if tiene_pois:
         with open(RUTA_CACHE_OSM, "r", encoding="utf-8") as f:
             registros = json.load(f)
         if registros:
-            log(f"    -> Caché cargada: {len(registros)} polos cercanos.")
+            log(f"    -> Caché POIs cargada: {len(registros)} polos.")
             df_pois = pd.DataFrame(registros)
-            return gpd.GeoDataFrame(
+            gdf_pois = gpd.GeoDataFrame(
                 df_pois[["cat"]],
                 geometry=gpd.points_from_xy(df_pois["lon"], df_pois["lat"]),
                 crs="EPSG:4326",
             ).to_crs(epsg=3857)
+
+    if tiene_rutas:
+        with open(RUTA_CACHE_RUTAS, "r", encoding="utf-8") as f:
+            rutas_por_slug = json.load(f)
+        log(f"    -> Caché rutas cargada: {len(rutas_por_slug)} locales con traza vial.")
+
+    if tiene_pois and tiene_rutas:
+        return gdf_pois, rutas_por_slug
 
     ruta_zip = "/tmp/argentina_osm.zip"
     log("    -> Descargando capa OpenStreetMap Argentina (Geofabrik)...")
@@ -543,68 +578,158 @@ def obtener_circulacion_geofabrik(gdf_buffers_3857):
                         f.write(chunk)
     except Exception as e:
         log(f"    -> Error descargando Geofabrik: {e}")
-        return gpd.GeoDataFrame(columns=["cat", "geometry"], crs="EPSG:3857")
+        return gdf_pois, rutas_por_slug
 
     mb = os.path.getsize(ruta_zip) / (1024 * 1024)
-    log(f"    -> Paquete descargado ({mb:.1f} MB). Extrayendo comercios, turismo y transporte...")
+    log(f"    -> Paquete descargado ({mb:.1f} MB). Procesando POIs y rutas principales...")
 
-    capas_validas = []
     with zipfile.ZipFile(ruta_zip, "r") as zf:
-        shps = [
-            n for n in zf.namelist()
-            if n.endswith(".shp") and ("pois" in n or "transport" in n)
-        ]
+        todos_shps = [n for n in zf.namelist() if n.endswith(".shp")]
 
-    for shp in shps:
-        try:
-            gdf_capa = gpd.read_file(f"zip://{ruta_zip}!{shp}")
-            if "fclass" not in gdf_capa.columns or gdf_capa.empty:
-                continue
+    if not tiene_pois:
+        shps_pois = [n for n in todos_shps if ("pois" in n or "transport" in n)]
+        capas_validas = []
+        for shp in shps_pois:
+            try:
+                gdf_capa = gpd.read_file(f"zip://{ruta_zip}!{shp}")
+                if "fclass" not in gdf_capa.columns or gdf_capa.empty:
+                    continue
+                gdf_capa["fclass"] = gdf_capa["fclass"].astype(str).str.lower()
+                gdf_capa["cat"] = np.select(
+                    [
+                        gdf_capa["fclass"].isin(CLASES_TURISMO),
+                        gdf_capa["fclass"].isin(CLASES_COMERCIO),
+                        gdf_capa["fclass"].isin(CLASES_TRANSPORTE),
+                    ],
+                    ["turismo", "comercio", "transporte"],
+                    default="",
+                )
+                gdf_capa = gdf_capa[gdf_capa["cat"] != ""][["cat", "geometry"]].copy()
+                if gdf_capa.empty:
+                    continue
+                gdf_capa = gdf_capa.to_crs(epsg=3857)
+                gdf_capa["geometry"] = gdf_capa.geometry.centroid
+                capas_validas.append(gdf_capa)
+            except Exception as e:
+                log(f"    -> Aviso leyendo {shp}: {e}")
 
-            gdf_capa["fclass"] = gdf_capa["fclass"].astype(str).str.lower()
-            gdf_capa["cat"] = np.select(
-                [
-                    gdf_capa["fclass"].isin(CLASES_TURISMO),
-                    gdf_capa["fclass"].isin(CLASES_COMERCIO),
-                    gdf_capa["fclass"].isin(CLASES_TRANSPORTE),
-                ],
-                ["turismo", "comercio", "transporte"],
-                default="",
-            )
-            gdf_capa = gdf_capa[gdf_capa["cat"] != ""][["cat", "geometry"]].copy()
-            if gdf_capa.empty:
-                continue
+        if capas_validas:
+            gdf_todos = pd.concat(capas_validas, ignore_index=True)
+            cruce_filtrado = gpd.sjoin(gdf_todos, gdf_buffers_3857[["geometry"]], how="inner", predicate="intersects")
+            gdf_pois = gdf_todos.loc[cruce_filtrado.index.unique()].copy()
 
-            gdf_capa = gdf_capa.to_crs(epsg=3857)
-            gdf_capa["geometry"] = gdf_capa.geometry.centroid
-            capas_validas.append(gdf_capa)
-        except Exception as e:
-            log(f"    -> Aviso leyendo {shp}: {e}")
+            gdf_4326 = gdf_pois.to_crs(epsg=4326)
+            registros = [
+                {"lat": round(geom.y, 6), "lon": round(geom.x, 6), "cat": cat}
+                for geom, cat in zip(gdf_4326.geometry, gdf_4326["cat"])
+            ]
+            os.makedirs("datos_censales", exist_ok=True)
+            with open(RUTA_CACHE_OSM, "w", encoding="utf-8") as f:
+                json.dump(registros, f)
+            log(f"    -> {len(gdf_pois)} polos guardados en caché.")
+
+    if not tiene_rutas:
+        shps_roads = [n for n in todos_shps if "roads" in n]
+        capas_rutas = []
+        for shp in shps_roads:
+            try:
+                gdf_r = gpd.read_file(f"zip://{ruta_zip}!{shp}")
+                if "fclass" not in gdf_r.columns or gdf_r.empty:
+                    continue
+                gdf_r["fclass"] = gdf_r["fclass"].astype(str).str.lower()
+                gdf_r = gdf_r[gdf_r["fclass"].isin(JERARQUIA_RUTAS.keys())].copy()
+                if gdf_r.empty:
+                    continue
+                cols_r = [c for c in ["fclass", "name", "ref", "geometry"] if c in gdf_r.columns]
+                gdf_r = gdf_r[cols_r].to_crs(epsg=3857)
+                capas_rutas.append(gdf_r)
+            except Exception as e:
+                log(f"    -> Aviso leyendo rutas {shp}: {e}")
+
+        if capas_rutas:
+            gdf_rutas_all = pd.concat(capas_rutas, ignore_index=True)
+            cruce_r = gpd.sjoin(gdf_buffers_3857[["slug_local", "geometry"]], gdf_rutas_all, how="inner", predicate="intersects")
+            for slug, grupo in cruce_r.groupby("slug_local"):
+                mejor_prio = 99
+                mejor_flujo = 0
+                etiqueta_ruta = ""
+                for _, fila in grupo.iterrows():
+                    fc = str(fila.get("fclass", ""))
+                    prio, flujo_base = JERARQUIA_RUTAS.get(fc, (99, 0))
+                    ref = str(fila.get("ref", "") or "").strip()
+                    nom = str(fila.get("name", "") or "").strip()
+                    if ref.lower() == "none":
+                        ref = ""
+                    if nom.lower() == "none":
+                        nom = ""
+                    label = " · ".join([x for x in [ref, nom] if x])
+                    if prio < mejor_prio or (prio == mejor_prio and label and not etiqueta_ruta):
+                        mejor_prio = prio
+                        mejor_flujo = flujo_base
+                        etiqueta_ruta = label or fc.replace("_", " ").title()
+                rutas_por_slug[slug] = {
+                    "prio": mejor_prio,
+                    "flujo_base": mejor_flujo,
+                    "nombre": etiqueta_ruta,
+                }
+
+        os.makedirs("datos_censales", exist_ok=True)
+        with open(RUTA_CACHE_RUTAS, "w", encoding="utf-8") as f:
+            json.dump(rutas_por_slug, f, ensure_ascii=False)
+        log(f"    -> {len(rutas_por_slug)} locales vinculados con vías principales.")
 
     if os.path.exists(ruta_zip):
         os.remove(ruta_zip)
 
-    if not capas_validas:
-        return gpd.GeoDataFrame(columns=["cat", "geometry"], crs="EPSG:3857")
-
-    gdf_todos = pd.concat(capas_validas, ignore_index=True)
-    cruce_filtrado = gpd.sjoin(gdf_todos, gdf_buffers_3857[["geometry"]], how="inner", predicate="intersects")
-    gdf_relevantes = gdf_todos.loc[cruce_filtrado.index.unique()].copy()
-
-    gdf_4326 = gdf_relevantes.to_crs(epsg=4326)
-    registros = [
-        {"lat": round(geom.y, 6), "lon": round(geom.x, 6), "cat": cat}
-        for geom, cat in zip(gdf_4326.geometry, gdf_4326["cat"])
-    ]
-    os.makedirs("datos_censales", exist_ok=True)
-    with open(RUTA_CACHE_OSM, "w", encoding="utf-8") as f:
-        json.dump(registros, f)
-
-    log(f"    -> {len(gdf_relevantes)} polos guardados en caché.")
-    return gdf_relevantes
+    return gdf_pois, rutas_por_slug
 
 
-def evaluar_modelo_integral(row):
+def detectar_corredor_ruta(row, info_osm_ruta):
+    lat, lon = row["latitud"], row["longitud"]
+    texto = " ".join([
+        str(row.get("slug_local", "")),
+        str(row.get("ciudad", "")),
+        str(row.get("barrio", "")),
+    ]).lower()
+
+    # Corredores turísticos, costeros y pasos de montaña conocidos
+    if "chapadmalal" in texto or (-38.26 <= lat <= -38.105 and -57.75 <= lon <= -57.54):
+        return True, "RP 11 · Corredor Costero Sur", 9200
+    if any(k in texto for k in ["bariloche", "bustillo", "llao", "catedral", "angostura", "siete-lagos", "san-martin-de-los-andes"]) or (
+        -41.25 <= lat <= -40.05 and -71.75 <= lon <= -71.10
+    ):
+        nombre_osm = info_osm_ruta.get("nombre", "") if info_osm_ruta else ""
+        etiqueta = nombre_osm if any(k in nombre_osm.lower() for k in ["40", "bustillo", "237", "231", "77"]) else "Av. Bustillo / RN 40 · Paso Cordillerano"
+        return True, etiqueta, 11500
+    if any(k in texto for k in ["altas-cumbres", "cuadrado", "carlos-paz", "calamuchita", "cumbre", "falda", "cosquin"]) or (
+        -32.20 <= lat <= -30.90 and -64.75 <= lon <= -64.35
+    ):
+        return True, info_osm_ruta.get("nombre") or "Corredor Serrano / Camino de Montaña", 8400
+    if any(k in texto for k in ["potrerillos", "uspallata", "cacheuta", "valle-de-uco", "tunuyan", "tupungato"]) or (
+        -33.75 <= lat <= -32.55 and -69.60 <= lon <= -68.95
+    ):
+        return True, info_osm_ruta.get("nombre") or "RN 7 / Corredor Alta Montaña y Bodegas", 9800
+    if any(k in texto for k in ["purmamarca", "tilcara", "humahuaca", "cafayate", "tafi"]) or (
+        -26.90 <= lat <= -23.10 and -66.10 <= lon <= -65.20
+    ):
+        return True, info_osm_ruta.get("nombre") or "RN 9 / RN 68 · Paso Quebrada y Valles", 7600
+    if any(k in texto for k in ["pinamar", "carilo", "gesell", "pampas", "san-bernardo", "lucila"]):
+        return True, info_osm_ruta.get("nombre") or "RP 11 · Corredor Atlántico", 8800
+
+    # Si OSM detectó una ruta/autopista/avenida troncal (prio 1 a 3) y la zona no es hiper-céntrica de CABA
+    if info_osm_ruta and info_osm_ruta.get("prio", 99) <= 3:
+        es_caba_centro = (-34.63 <= lat <= -34.56 and -58.46 <= lon <= -58.36)
+        if not es_caba_centro:
+            return True, info_osm_ruta.get("nombre") or "Ruta / Arteria Principal", int(info_osm_ruta.get("flujo_base", 7500))
+
+    if info_osm_ruta and info_osm_ruta.get("prio", 99) == 4:
+        return False, info_osm_ruta.get("nombre", ""), int(info_osm_ruta.get("flujo_base", 4500))
+
+    return False, "", 0
+
+
+def evaluar_modelo_integral(row, rutas_por_slug):
+    slug = row["slug_local"]
     pob = row["poblacion_500m"]
     com = row["comercios_500m"]
     tur = row["turismo_500m"]
@@ -613,9 +738,14 @@ def evaluar_modelo_integral(row):
 
     hist = detectar_plaza_historica(row)
     econ = detectar_perfil_economico(row)
+    info_osm_ruta = rutas_por_slug.get(slug, {})
+    es_ruta, ruta_nombre, flujo_ruta_diario = detectar_corredor_ruta(row, info_osm_ruta)
+
     ratio_est = round(hist["ocupacion_alta_pct"] / max(1, hist["ocupacion_baja_pct"]), 1)
 
-    flujo_score = com + (tur * 4) + (tra * 2)
+    aporte_ruta_score = round(flujo_ruta_diario / 220.0) if es_ruta else round(flujo_ruta_diario / 500.0)
+    flujo_score = com + (tur * 4) + (tra * 2) + aporte_ruta_score
+
     if flujo_score >= 120:
         circulacion = "Muy Alta"
     elif flujo_score >= 45:
@@ -625,17 +755,21 @@ def evaluar_modelo_integral(row):
     else:
         circulacion = "Baja"
 
-    pea_est = round(min(76.0, max(55.0, 56.0 + (tra * 0.4) + (com * 0.08))), 1)
+    # Público diurno activo estimado (residentes + comercio/transporte/turismo + tránsito de ruta/paso)
+    aporte_ruta_personas = int(round(flujo_ruta_diario * (0.45 if es_ruta else 0.15)))
+    publico_diurno = int(round(
+        pob + (com * 45) + (tra * 150) + (tur * 90) + econ["bonus_diurno"] + aporte_ruta_personas
+    ))
 
-    # Demanda ajustada por el ticket relativo de la zona
+    pea_est = round(min(76.0, max(55.0, 56.0 + (tra * 0.4) + (com * 0.08))), 1)
     ticket_mult = econ["indice_ticket"]
 
     factor_baja = hist["ocupacion_baja_pct"] / 60.0
-    demanda_baja = ((pob / 100.0) + ((com + tra * 2) * 0.65) + (tur * 2.5 * factor_baja)) * ticket_mult
+    demanda_baja = ((publico_diurno / 140.0) + ((com + tra * 2) * 0.55) + (tur * 2.5 * factor_baja)) * ticket_mult
     oportunidad_baja = round(demanda_baja / (comp + 1), 1)
 
     factor_alta = (hist["ocupacion_alta_pct"] / 50.0) * (1.0 + min(1.5, hist["turistas_anuales"] / 5000000.0))
-    demanda_alta = ((pob / 100.0) + (flujo_score * 0.75 * factor_alta)) * ticket_mult
+    demanda_alta = ((publico_diurno / 140.0) + (flujo_score * 0.70 * factor_alta)) * ticket_mult
     oportunidad_alta = round(demanda_alta / (comp + 1), 1)
 
     indice_compuesto = round((oportunidad_baja * 0.6) + (oportunidad_alta * 0.4), 1)
@@ -661,6 +795,10 @@ def evaluar_modelo_integral(row):
         econ["gasto_turista_usd"],
         econ["costo_alquiler"],
         econ["ecuacion_rentabilidad"],
+        publico_diurno,
+        bool(es_ruta),
+        ruta_nombre,
+        int(flujo_ruta_diario),
     ])
 
 
@@ -681,7 +819,7 @@ def main():
     cruce_comp = gpd.sjoin(gdf_buffers, gdf_locales[["slug_local", "geometry"]], how="left", predicate="intersects")
     conteo_comp = (cruce_comp.groupby("slug_local_left").size() - 1).clip(lower=0)
 
-    gdf_pois = obtener_circulacion_geofabrik(gdf_buffers)
+    gdf_pois, rutas_por_slug = obtener_circulacion_y_rutas_geofabrik(gdf_buffers)
     conteo_com = pd.Series(dtype=int)
     conteo_tur = pd.Series(dtype=int)
     conteo_tra = pd.Series(dtype=int)
@@ -703,7 +841,7 @@ def main():
         gdf_faltantes = gdf_buffers[gdf_buffers["slug_local"].isin(slugs_sin_pob)]
         pob_deptos = calcular_censo_500m(gdf_faltantes, RUTA_DEPTOS)
 
-    log("5/5 Exportando modelo integral (Censo + Flujo + Turismo + Gasto/Costo Zona)...")
+    log("5/5 Exportando modelo integral...")
     res = df_locales.copy()
     res["competidores_500m"] = res["slug_local"].map(conteo_comp).fillna(0).astype(int)
     res["comercios_500m"] = res["slug_local"].map(conteo_com).fillna(0).astype(int)
@@ -715,7 +853,7 @@ def main():
         lambda s: pob_radios[s] if pob_radios.get(s, 0) > 0 else pob_deptos.get(s, 0)
     ).astype(int)
 
-    evaluacion = res.apply(evaluar_modelo_integral, axis=1)
+    evaluacion = res.apply(lambda r: evaluar_modelo_integral(r, rutas_por_slug), axis=1)
     res["nivel_circulacion"] = evaluacion[0]
     res["pea_porcentaje"] = evaluacion[1]
     res["nivel_socioeconomico"] = evaluacion[2]
@@ -736,6 +874,10 @@ def main():
     res["gasto_turista_usd"] = evaluacion[17]
     res["costo_alquiler_zona"] = evaluacion[18]
     res["ecuacion_rentabilidad"] = evaluacion[19]
+    res["publico_diurno_500m"] = evaluacion[20].astype(int)
+    res["es_corredor_ruta"] = evaluacion[21].astype(bool)
+    res["ruta_cercana"] = evaluacion[22].astype(str)
+    res["flujo_ruta_diario"] = evaluacion[23].astype(int)
     res["fecha_actualizacion"] = datetime.now().strftime("%Y-%m-%d")
 
     os.makedirs("src/data", exist_ok=True)
@@ -766,9 +908,13 @@ def main():
         "indice_ticket",
         "gasto_turista_usd",
         "costo_alquiler_zona",
+        "publico_diurno_500m",
+        "es_corredor_ruta",
+        "ruta_cercana",
+        "flujo_ruta_diario",
     ]
     res[cols_sheets].to_csv("public/data/mercado.csv", index=False)
-    log(f"¡COMPLETADO! {len(res)} locales exportados con matriz de gasto y costo por zona.")
+    log(f"¡COMPLETADO! {len(res)} locales exportados.")
 
 
 if __name__ == "__main__":
