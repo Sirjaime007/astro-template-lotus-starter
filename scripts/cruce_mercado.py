@@ -4,7 +4,6 @@ import json
 import zipfile
 import socket
 import unicodedata
-from urllib.parse import quote
 from datetime import datetime
 import numpy as np
 import pandas as pd
@@ -15,28 +14,29 @@ import urllib3.util.connection as urllib3_cn
 
 urllib3_cn.allowed_gai_family = lambda: socket.AF_INET
 
-SHEET_ID = "10vUOhRr7IAXIRrkBphxEP4ApXYBgrnuxJq6G"
+PUB_ID = "2PACX-1vSFR6-_mxHeIRopuVzI4bskv8hSyqvnjjy0pRdJ8cNCI2vtsQlcLCDzJD5m8StLzceZL3Zn3Pmh_bbn"
 URL_DRIVE_RADIOS = "https://drive.google.com/file/d/1KiOw4aettgbjLZJIwms86yVp-lPXcBXQ/view?usp=drivesdk"
 URL_DRIVE_DEPTOS = "https://drive.google.com/file/d/1_BthlwEU2QMKtUlzwDv1AEsF4mB6SB9E/view?usp=drivesdk"
 URL_GEOFABRIK_AR = "https://download.geofabrik.de/south-america/argentina-latest-free.shp.zip"
 URL_SINTA_EOH_CSV = "https://datos.yvera.gob.ar/dataset/0314b342-9c2d-4c5c-88c1-443054192a3b/resource/7e867c46-214d-4551-8e62-751d9f944b57/download/eoh-localidades.csv"
 
-# (Nombre visible en la web, Nombre exacto de la pestaña en Google Sheets)
 HOJAS_REGIONES = [
-    ("Mar del Plata", "Mar del Plata"),
-    ("Córdoba", "Cordoba"),
-    ("La Plata", "La Plata"),
-    ("CABA y Gran Buenos Aires", "CABA Y GBA"),
-    ("Mendoza", "Mendoza"),
-    ("Santa Fe", "Santa Fe"),
-    ("Interior de BS AS", "Interior BS AS"),
-    ("Neuquén y Río Negro", "Neuquen  y Rio Negro"),
-    ("Salta y Jujuy", "Salta y Jujuy"),
-    ("Catamarca, Tucuman y Santiago del Estero", "Catamarca Tucuman Santiago de E"),
-    ("Corrientes, Misiones, Entre Rios, Formosa y Chaco", "Corrientes Misiones Entre Rios "),
-    ("San Juan, San Luis, La Rioja y La Pampa", "LA RIOJA SAN JUAN SAN LUIS LA P"),
-    ("Chubut, Santa Cruz y Tierra del Fuego", "CHUBUT RIO NEGRO TIERRA DEL FUE"),
+    ("Mar del Plata", "1241219956"),
+    ("Córdoba", "233389903"),
+    ("La Plata", "1349312598"),
+    ("CABA y Gran Buenos Aires", "1786522164"),
+    ("Mendoza", "1874393135"),
+    ("Santa Fe", "105395890"),
+    ("Interior de BS AS", "976652490"),
+    ("Neuquén y Río Negro", "1815065645"),
+    ("Salta y Jujuy", "1957429891"),
+    ("Catamarca, Tucuman y Santiago del Estero", "71722959"),
+    ("Corrientes, Misiones, Entre Rios, Formosa y Chaco", "939337218"),
+    ("San Juan, San Luis, La Rioja y La Pampa", "478641816"),
+    ("Chubut, Santa Cruz y Tierra del Fuego", "1550596244"),
 ]
+
+GID_DATOS_MERCADO = "802012693"
 
 RUTA_RADIOS = "datos_censales/radios_2022.gpkg"
 RUTA_DEPTOS = "datos_censales/deptos_2022.gpkg"
@@ -398,19 +398,19 @@ def parsear_coords(val):
     return None, None
 
 
-def leer_hoja_gviz(nombre_pestana):
-    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={quote(nombre_pestana)}"
+def leer_hoja_publicada(gid):
+    url = f"https://docs.google.com/spreadsheets/d/e/{PUB_ID}/pub?gid={gid}&single=true&output=csv"
     return pd.read_csv(url)
 
 
 def cargar_locales():
-    log("1/5 Descargando locales directamente desde Google Sheets (13 regiones)...")
+    log("1/5 Descargando locales desde Google Sheets...")
     registros = []
     slugs_vistos = {}
 
-    for region_nombre, pestana_sheet in HOJAS_REGIONES:
+    for region_nombre, gid in HOJAS_REGIONES:
         try:
-            df_h = leer_hoja_gviz(pestana_sheet)
+            df_h = leer_hoja_publicada(gid)
             if df_h.empty:
                 continue
 
@@ -464,12 +464,11 @@ def cargar_locales():
                     "barrio": barrio,
                 })
         except Exception as e:
-            log(f"    -> Aviso leyendo hoja '{pestana_sheet}': {e}")
+            log(f"    -> Aviso leyendo '{region_nombre}': {e}")
 
-    # Respaldo leyendo directamente la pestaña Datos_Mercado si hiciera falta
     if not registros:
-        log("    -> Usando pestaña Datos_Mercado como respaldo...")
-        df = leer_hoja_gviz("Datos_Mercado")
+        log("    -> Usando hoja Datos_Mercado como respaldo...")
+        df = leer_hoja_publicada(GID_DATOS_MERCADO)
         cols_keep = [c for c in ["slug_local", "latitud", "longitud", "ciudad", "barrio"] if c in df.columns]
         df = df[cols_keep].dropna(subset=["slug_local", "latitud", "longitud"]).copy()
         df["slug_local"] = df["slug_local"].astype(str).str.strip().str.lower()
@@ -481,7 +480,7 @@ def cargar_locales():
             c = slugs_vistos.get(s, 0) + 1
             slugs_vistos[s] = c
             df.at[idx, "slug_local"] = s if c == 1 else f"{s}-{c}"
-        log(f"    -> {len(df)} locales válidos cargados.")
+        log(f"    -> {len(df)} locales válidos cargados desde Datos_Mercado.")
         return df
 
     df_total = pd.DataFrame(registros)
