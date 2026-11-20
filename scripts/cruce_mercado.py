@@ -469,9 +469,17 @@ def cargar_locales():
     if not registros:
         log("    -> Usando hoja Datos_Mercado como respaldo...")
         df = leer_hoja_publicada(GID_DATOS_MERCADO)
-        cols_keep = [c for c in ["slug_local", "latitud", "longitud", "ciudad", "barrio"] if c in df.columns]
-        df = df[cols_keep].dropna(subset=["slug_local", "latitud", "longitud"]).copy()
+        if not {"slug_local", "latitud", "longitud"}.issubset(df.columns):
+            df = pd.read_csv(
+                f"https://docs.google.com/spreadsheets/d/e/{PUB_ID}/pub?gid={GID_DATOS_MERCADO}&single=true&output=csv",
+                header=None,
+            )
+            df = df.iloc[:, :5].copy()
+            df.columns = ["slug_local", "latitud", "longitud", "ciudad", "barrio"][: df.shape[1]]
+
+        df = df.dropna(subset=["slug_local", "latitud", "longitud"]).copy()
         df["slug_local"] = df["slug_local"].astype(str).str.strip().str.lower()
+        df = df[df["slug_local"] != "slug_local"].copy()
         df["latitud"] = pd.to_numeric(df["latitud"].astype(str).str.replace(",", "."), errors="coerce")
         df["longitud"] = pd.to_numeric(df["longitud"].astype(str).str.replace(",", "."), errors="coerce")
         df = df.dropna(subset=["latitud", "longitud"]).reset_index(drop=True)
