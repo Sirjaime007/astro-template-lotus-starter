@@ -968,8 +968,13 @@ def main():
         gdf_faltantes = gdf_buffers[gdf_buffers["slug_local"].isin(slugs_sin_pob)]
         pob_deptos = calcular_censo_500m(gdf_faltantes, RUTA_DEPTOS)
 
-    log("5/5 Exportando modelo integral...")
+        log("5/5 Exportando modelo integral...")
     res = df_locales.copy()
+    if "ciudad" not in res.columns:
+        res["ciudad"] = ""
+    if "barrio" not in res.columns:
+        res["barrio"] = ""
+
     res["competidores_500m"] = res["slug_local"].map(conteo_comp).fillna(0).astype(int)
     res["comercios_500m"] = res["slug_local"].map(conteo_com).fillna(0).astype(int)
     res["turismo_500m"] = res["slug_local"].map(conteo_tur).fillna(0).astype(int)
