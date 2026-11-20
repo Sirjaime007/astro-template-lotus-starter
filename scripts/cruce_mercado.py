@@ -36,7 +36,7 @@ HOJAS_REGIONES = [
     ("Chubut, Santa Cruz y Tierra del Fuego", "1550596244"),
 ]
 
-GID_DATOS_MERCADO = "802012693"
+GID_DATOS_MERCADO = "1552155233"
 
 RUTA_RADIOS = "datos_censales/radios_2022.gpkg"
 RUTA_DEPTOS = "datos_censales/deptos_2022.gpkg"
