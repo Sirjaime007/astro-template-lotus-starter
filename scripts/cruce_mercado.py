@@ -3,6 +3,7 @@ import re
 import json
 import zipfile
 import socket
+import unicodedata
 from datetime import datetime
 import numpy as np
 import pandas as pd
@@ -18,11 +19,27 @@ URL_DRIVE_DEPTOS = "https://drive.google.com/file/d/1_BthlwEU2QMKtUlzwDv1AEsF4mB
 URL_GEOFABRIK_AR = "https://download.geofabrik.de/south-america/argentina-latest-free.shp.zip"
 URL_SINTA_EOH_CSV = "https://datos.yvera.gob.ar/dataset/0314b342-9c2d-4c5c-88c1-443054192a3b/resource/7e867c46-214d-4551-8e62-751d9f944b57/download/eoh-localidades.csv"
 
-URL_DATOS_MERCADO_CSV = (
-    "https://docs.google.com/spreadsheets/d/e/"
-    "2PACX-1vSFR6-_mxHeIRopuVzI4bskv8hSyqvnjjy0pRdJ8cNCI2vtsQlcLCDzJD5m8StLzceZL3Zn3Pmh_bbn/"
-    "pub?gid=802012693&single=true&output=csv"
-)
+# Lee directamente las 13 hojas de regiones de tu planilla (sin depender de fórmulas en Datos_Mercado)
+BASE_PUB_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFR6-_mxHeIRopuVzI4bskv8hSyqvnjjy0pRdJ8cNCI2vtsQlcLCDzJD5m8StLzceZL3Zn3Pmh_bbn/pub?single=true&output=csv&gid="
+
+HOJAS_REGIONES = [
+    ("Mar del Plata", "1241219956"),
+    ("Córdoba", "233389903"),
+    ("La Plata", "1349312598"),
+    ("CABA y Gran Buenos Aires", "1786522164"),
+    ("Mendoza", "1874393135"),
+    ("Santa Fe", "105395890"),
+    ("Interior de BS AS", "976652490"),
+    ("Neuquén y Río Negro", "1815065645"),
+    ("Salta y Jujuy", "1957429891"),
+    ("Catamarca, Tucuman y Santiago del Estero", "71722959"),
+    ("Corrientes, Misiones, Entre Rios, Formosa y Chaco", "939337218"),
+    ("San Juan, San Luis, La Rioja y La Pampa", "478641816"),
+    ("Chubut, Santa Cruz y Tierra del Fuego", "1550596244"),
+]
+
+# Respaldo por si alguna hoja cambiara de GID
+URL_DATOS_MERCADO_CSV = BASE_PUB_CSV + "802012693"
 
 RUTA_RADIOS = "datos_censales/radios_2022.gpkg"
 RUTA_DEPTOS = "datos_censales/deptos_2022.gpkg"
@@ -353,17 +370,123 @@ def log(msg):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}", flush=True)
 
 
+def slugify_texto(txt):
+    s = unicodedata.normalize("NFD", str(txt or "")).encode("ascii", "ignore").decode("utf-8").lower()
+    s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+    return s
+
+
+def encontrar_col(columnas, palabras):
+    for c in columnas:
+        cl = unicodedata.normalize("NFD", str(c)).encode("ascii", "ignore").decode("utf-8").lower().strip()
+        if any(p in cl for p in palabras):
+            return c
+    return None
+
+
+def parsear_coords(val):
+    if pd.isna(val):
+        return None, None
+    s = str(val).strip()
+    m = re.search(r"(-?\d{1,2}[.,]\d+)\s*[,;\s/]+\s*(-?\d{1,3}[.,]\d+)", s)
+    if not m:
+        return None, None
+    try:
+        lat = float(m.group(1).replace(",", "."))
+        lon = float(m.group(2).replace(",", "."))
+        if -56.0 <= lat <= -21.0 and -74.0 <= lon <= -53.0:
+            return lat, lon
+    except ValueError:
+        pass
+    return None, None
+
+
 def cargar_locales():
-    log("1/5 Descargando locales desde Google Sheets...")
-    df = pd.read_csv(URL_DATOS_MERCADO_CSV)
-    cols_keep = [c for c in ["slug_local", "latitud", "longitud", "ciudad", "barrio"] if c in df.columns]
-    df = df[cols_keep].dropna(subset=["slug_local", "latitud", "longitud"]).copy()
-    df["slug_local"] = df["slug_local"].astype(str).str.strip().str.lower()
-    df["latitud"] = pd.to_numeric(df["latitud"].astype(str).str.replace(",", "."), errors="coerce")
-    df["longitud"] = pd.to_numeric(df["longitud"].astype(str).str.replace(",", "."), errors="coerce")
-    df = df.dropna(subset=["latitud", "longitud"]).drop_duplicates(subset=["slug_local"])
-    log(f"    -> {len(df)} locales válidos cargados.")
-    return df
+    log("1/5 Descargando locales directamente desde las hojas de regiones...")
+    registros = []
+    slugs_vistos = {}
+
+    for region_nombre, gid in HOJAS_REGIONES:
+        url = BASE_PUB_CSV + gid
+        try:
+            df_h = pd.read_csv(url)
+            if df_h.empty:
+                continue
+
+            col_nombre = encontrar_col(df_h.columns, ["nombre", "cafeteria", "local", "cafe"])
+            col_coords = encontrar_col(df_h.columns, ["coordenada", "ubicacion_mapa", "gps", "latlong"])
+            col_lat = encontrar_col(df_h.columns, ["latitud", "lat"])
+            col_lon = encontrar_col(df_h.columns, ["longitud", "lon", "lng"])
+            col_zona = encontrar_col(df_h.columns, ["zona", "barrio", "partido", "localidad"])
+
+            if not col_nombre:
+                continue
+
+            for _, fila in df_h.iterrows():
+                nombre = str(fila.get(col_nombre, "") or "").strip()
+                if not nombre or nombre.lower() in ("nan", "none"):
+                    continue
+
+                lat, lon = None, None
+                if col_coords:
+                    lat, lon = parsear_coords(fila.get(col_coords))
+                if (lat is None or lon is None) and col_lat and col_lon:
+                    try:
+                        la = float(str(fila.get(col_lat, "")).replace(",", ".").strip())
+                        lo = float(str(fila.get(col_lon, "")).replace(",", ".").strip())
+                        if -56.0 <= la <= -21.0 and -74.0 <= lo <= -53.0:
+                            lat, lon = la, lo
+                    except ValueError:
+                        pass
+
+                if lat is None or lon is None:
+                    continue
+
+                base_slug = f"{slugify_texto(nombre)}-{slugify_texto(region_nombre)}"
+                if not base_slug or base_slug == "-":
+                    base_slug = f"local-{len(registros) + 1}"
+
+                # Si hay dos sucursales con el mismo nombre en la región, conserva ambas sin borrar ni desfasar
+                count = slugs_vistos.get(base_slug, 0) + 1
+                slugs_vistos[base_slug] = count
+                slug_final = base_slug if count == 1 else f"{base_slug}-{count}"
+
+                barrio = str(fila.get(col_zona, "") or "").strip() if col_zona else ""
+                if barrio.lower() in ("nan", "none"):
+                    barrio = ""
+
+                registros.append({
+                    "slug_local": slug_final,
+                    "nombre": nombre,
+                    "latitud": lat,
+                    "longitud": lon,
+                    "ciudad": region_nombre,
+                    "barrio": barrio,
+                })
+        except Exception as e:
+            log(f"    -> Aviso leyendo hoja '{region_nombre}': {e}")
+
+    # Fallback automático a Datos_Mercado si por algún motivo no cargó ninguna región
+    if not registros:
+        log("    -> Usando hoja Datos_Mercado como respaldo...")
+        df = pd.read_csv(URL_DATOS_MERCADO_CSV)
+        cols_keep = [c for c in ["slug_local", "latitud", "longitud", "ciudad", "barrio"] if c in df.columns]
+        df = df[cols_keep].dropna(subset=["slug_local", "latitud", "longitud"]).copy()
+        df["slug_local"] = df["slug_local"].astype(str).str.strip().str.lower()
+        df["latitud"] = pd.to_numeric(df["latitud"].astype(str).str.replace(",", "."), errors="coerce")
+        df["longitud"] = pd.to_numeric(df["longitud"].astype(str).str.replace(",", "."), errors="coerce")
+        df = df.dropna(subset=["latitud", "longitud"]).reset_index(drop=True)
+        for idx, r in df.iterrows():
+            s = r["slug_local"]
+            c = slugs_vistos.get(s, 0) + 1
+            slugs_vistos[s] = c
+            df.at[idx, "slug_local"] = s if c == 1 else f"{s}-{c}"
+        log(f"    -> {len(df)} locales válidos cargados.")
+        return df
+
+    df_total = pd.DataFrame(registros)
+    log(f"    -> {len(df_total)} locales válidos cargados de las 13 regiones.")
+    return df_total
 
 
 def actualizar_desde_sinta_si_disponible():
@@ -518,7 +641,7 @@ def calcular_censo_500m(gdf_buffers_3857, ruta_gpkg):
         return {}
 
     log(f"    -> Leyendo polígonos de {ruta_gpkg}...")
-    gdf_c = gpd.read_file(ruta_gpkg).to_crs(epsg=3857)
+    gdf_c = gpd.read_file(ruta_gpkg, layer="features").to_crs(epsg=3857)
     col_pob = detectar_columna_poblacion(gdf_c.columns)
     if not col_pob:
         return {}
@@ -692,7 +815,6 @@ def detectar_corredor_ruta(row, info_osm_ruta):
         str(row.get("barrio", "")),
     ]).lower()
 
-    # Corredores turísticos, costeros y pasos de montaña conocidos
     if "chapadmalal" in texto or (-38.26 <= lat <= -38.105 and -57.75 <= lon <= -57.54):
         return True, "RP 11 · Corredor Costero Sur", 9200
     if any(k in texto for k in ["bariloche", "bustillo", "llao", "catedral", "angostura", "siete-lagos", "san-martin-de-los-andes"]) or (
@@ -716,7 +838,6 @@ def detectar_corredor_ruta(row, info_osm_ruta):
     if any(k in texto for k in ["pinamar", "carilo", "gesell", "pampas", "san-bernardo", "lucila"]):
         return True, info_osm_ruta.get("nombre") or "RP 11 · Corredor Atlántico", 8800
 
-    # Si OSM detectó una ruta/autopista/avenida troncal (prio 1 a 3) y la zona no es hiper-céntrica de CABA
     if info_osm_ruta and info_osm_ruta.get("prio", 99) <= 3:
         es_caba_centro = (-34.63 <= lat <= -34.56 and -58.46 <= lon <= -58.36)
         if not es_caba_centro:
@@ -755,7 +876,6 @@ def evaluar_modelo_integral(row, rutas_por_slug):
     else:
         circulacion = "Baja"
 
-    # Público diurno activo estimado (residentes + comercio/transporte/turismo + tránsito de ruta/paso)
     aporte_ruta_personas = int(round(flujo_ruta_diario * (0.45 if es_ruta else 0.15)))
     publico_diurno = int(round(
         pob + (com * 45) + (tra * 150) + (tur * 90) + econ["bonus_diurno"] + aporte_ruta_personas
@@ -885,6 +1005,11 @@ def main():
     res.set_index("slug_local").to_json("src/data/mercado.json", orient="index", force_ascii=False, indent=2)
 
     cols_sheets = [
+        "slug_local",
+        "latitud",
+        "longitud",
+        "ciudad",
+        "barrio",
         "poblacion_500m",
         "pea_porcentaje",
         "competidores_500m",
