@@ -353,7 +353,7 @@ const datosJSON = JSON.stringify({
     }
     .mkt-reset-btn:hover { background: var(--coffee-900); color: white; }
 
-    /* Tarjetas de Zonas Recomendadas (Criterio claro) */
+    /* Tarjetas de Zonas Recomendadas */
     .mkt-opp-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr));
@@ -665,29 +665,35 @@ const datosJSON = JSON.stringify({
         if (intento < 200) setTimeout(function () { iniciarBuscadorSeguro(intento + 1); }, 50);
         return;
       }
-      const mapEl = document.getElementById('cofiteca-map');
-      const dataEl = document.getElementById('cofi-data');
+      var mapEl = document.getElementById('cofiteca-map');
+      var dataEl = document.getElementById('cofi-data');
       if (!mapEl || !dataEl || mapEl._cofiInit) return;
       mapEl._cofiInit = true;
 
-      const $ = id => document.getElementById(id);
-      const norm = s => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-      const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+      var $ = function (id) { return document.getElementById(id); };
+      var norm = function (s) { return (s == null ? '' : String(s)).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); };
+      var esc = function (s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
+        });
+      };
 
-      const datos = JSON.parse(dataEl.textContent);
-      const mercadoLista = datos.mercado || [];
-      const baseDatos = datos.cafes.map((c, idx) => ({
-        id: c.id, nombre: c.n, ubicacion: c.u, instagram: c.s, lat: c.a, lon: c.o,
-        ciudad: datos.regiones[c.r], zona: c.z >= 0 ? datos.zonas[c.z] : '', ciudadReal: c.c >= 0 ? datos.ciudadesReales[c.c] : '', slug: c.slug,
-        mkt: mercadoLista[idx] || { t: 1.08, g: 'Medio-Alto', o: 10.5, k: 2, c: 'Media', a: 18 }
-      }));
-      baseDatos.forEach(c => { c._q = norm([c.nombre, c.ubicacion, c.zona, c.ciudadReal, c.ciudad].join(' ')); });
+      var datos = JSON.parse(dataEl.textContent);
+      var mercadoLista = datos.mercado || [];
+      var baseDatos = datos.cafes.map(function (c, idx) {
+        return {
+          id: c.id, nombre: c.n, ubicacion: c.u, instagram: c.s, lat: c.a, lon: c.o,
+          ciudad: datos.regiones[c.r], zona: c.z >= 0 ? datos.zonas[c.z] : '', ciudadReal: c.c >= 0 ? datos.ciudadesReales[c.c] : '', slug: c.slug,
+          mkt: mercadoLista[idx] || { t: 1.08, g: 'Medio-Alto', o: 10.5, k: 2, c: 'Media', a: 18 }
+        };
+      });
+      baseDatos.forEach(function (c) { c._q = norm([c.nombre, c.ubicacion, c.zona, c.ciudadReal, c.ciudad].join(' ')); });
 
-      const tostadoresDatos = datos.tostadores;
-      const rankingDatos = datos.ranking;
-      const meta = datos.meta;
+      var tostadoresDatos = datos.tostadores;
+      var rankingDatos = datos.ranking;
+      var meta = datos.meta;
 
-      const POB_REGIONES_RAW = {
+      var POB_REGIONES_RAW = {
         'CABA y Gran Buenos Aires': 13986889,
         'Córdoba': 3840905,
         'Santa Fe': 3544908,
@@ -703,7 +709,7 @@ const datosJSON = JSON.stringify({
         'Chubut, Santa Cruz y Tierra del Fuego': 1115579
       };
 
-      const POB_ZONAS_RAW = {
+      var POB_ZONAS_RAW = {
         'Palermo': 249016, 'Belgrano': 138942, 'Recoleta': 165494, 'Caballito': 183396,
         'Almagro': 138942, 'Balvanera': 152198, 'Villa Urquiza': 104351, 'Villa Crespo': 95847,
         'Núñez': 58134, 'Colegiales': 57101, 'Chacarita': 30223, 'Villa Devoto': 72189,
@@ -755,12 +761,11 @@ const datosJSON = JSON.stringify({
         'Santa Rosa': 119310, 'General Pico': 67800
       };
 
-      const POB_REGIONES = new Map(Object.entries(POB_REGIONES_RAW).map(([k, v]) => [norm(k), v]));
-      const POB_ZONAS = new Map(Object.entries(POB_ZONAS_RAW).map(([k, v]) => [norm(k), v]));
-      const POB_PAIS_TOTAL = Object.values(POB_REGIONES_RAW).reduce((a, b) => a + b, 0);
+      var POB_REGIONES = new Map(Object.entries(POB_REGIONES_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
+      var POB_ZONAS = new Map(Object.entries(POB_ZONAS_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
+      var POB_PAIS_TOTAL = Object.values(POB_REGIONES_RAW).reduce(function (a, b) { return a + b; }, 0);
 
-      // Capitales de provincia, grandes ciudades (Mar del Plata, La Plata, Rosario, etc.) y plazas con alto flujo turístico
-      const REGIONES_OBJETIVO = new Set([
+      var REGIONES_OBJETIVO = new Set([
         'caba y gran buenos aires',
         'mar del plata',
         'la plata',
@@ -776,76 +781,76 @@ const datosJSON = JSON.stringify({
         'interior de bs as'
       ]);
 
-      const PLAZAS_TURISTICAS_INTERIOR = /(pinamar|carilo|gesell|tandil|miramar|necochea|bahia blanca|san nicolas|zarate|campana|lujan|junin|pergamino|olavarria)/;
+      var PLAZAS_TURISTICAS_INTERIOR = /(pinamar|carilo|gesell|tandil|miramar|necochea|bahia blanca|san nicolas|zarate|campana|lujan|junin|pergamino|olavarria)/;
 
       function esPlazaRecomendable(c) {
-        const regNorm = norm(c.ciudad);
+        var regNorm = norm(c.ciudad);
         if (!REGIONES_OBJETIVO.has(regNorm)) return false;
         if (regNorm === 'interior de bs as') {
-          return PLAZAS_TURISTICAS_INTERIOR.test(norm(`${c.zona} ${c.ciudadReal} ${c.ubicacion}`));
+          return PLAZAS_TURISTICAS_INTERIOR.test(norm(c.zona + ' ' + c.ciudadReal + ' ' + c.ubicacion));
         }
         return true;
       }
 
-      const rankMap = new Map();
+      var rankMap = new Map();
       (function () {
-        const nombres = new Map();
-        ['arg', 'sud', 'mun'].forEach(tipo => {
-          (rankingDatos[tipo] || []).forEach(it => {
-            const k = norm(it.nombre);
-            const cur = nombres.get(k);
+        var nombres = new Map();
+        ['arg', 'sud', 'mun'].forEach(function (tipo) {
+          (rankingDatos[tipo] || []).forEach(function (it) {
+            var k = norm(it.nombre);
+            var cur = nombres.get(k);
             if (!cur || it.rank < cur) nombres.set(k, it.rank);
           });
         });
-        baseDatos.forEach(c => {
-          const r = nombres.get(norm(c.nombre));
+        baseDatos.forEach(function (c) {
+          var r = nombres.get(norm(c.nombre));
           if (r) rankMap.set(c.id, r);
         });
       })();
 
-      const FAV_KEY = 'cofi-favs';
-      let favoritos = new Set();
-      try { favoritos = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch {}
-      const RECIENTES_KEY = 'cofi-recientes';
-      let recientes = [];
-      try { recientes = JSON.parse(localStorage.getItem(RECIENTES_KEY) || '[]'); } catch {}
+      var FAV_KEY = 'cofi-favs';
+      var favoritos = new Set();
+      try { favoritos = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch (e) {}
+      var RECIENTES_KEY = 'cofi-recientes';
+      var recientes = [];
+      try { recientes = JSON.parse(localStorage.getItem(RECIENTES_KEY) || '[]'); } catch (e) {}
 
-      const PAGINA = 24;
-      const ZOOM_ETIQUETAS = 15;
-      const ESTILO_BASE = { radius: 7, color: '#ffffff', fillColor: '#e86a33', fillOpacity: 1, weight: 2 };
-      const ESTILO_BUSQUEDA = { radius: 10, color: '#ffffff', fillColor: '#1a0f0a', fillOpacity: 1, weight: 3 };
-      const ESTILO_ACTIVO = { radius: 12, color: '#ffffff', fillColor: '#1a0f0a', fillOpacity: 1, weight: 3 };
-      const VISTA_ARGENTINA = [-38.41, -63.61];
-      const zoomInicial = () => window.innerWidth < 700 ? 3.5 : 4;
-      const IMG_FALLBACK = 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=600';
-      const ESTILO_MAPA = 'https://tiles.openfreemap.org/styles/positron';
-      const ATRIBUCION = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
+      var PAGINA = 24;
+      var ZOOM_ETIQUETAS = 15;
+      var ESTILO_BASE = { radius: 7, color: '#ffffff', fillColor: '#e86a33', fillOpacity: 1, weight: 2 };
+      var ESTILO_BUSQUEDA = { radius: 10, color: '#ffffff', fillColor: '#1a0f0a', fillOpacity: 1, weight: 3 };
+      var ESTILO_ACTIVO = { radius: 12, color: '#ffffff', fillColor: '#1a0f0a', fillOpacity: 1, weight: 3 };
+      var VISTA_ARGENTINA = [-38.41, -63.61];
+      var zoomInicial = function () { return window.innerWidth < 700 ? 3.5 : 4; };
+      var IMG_FALLBACK = 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=600';
+      var ESTILO_MAPA = 'https://tiles.openfreemap.org/styles/positron';
+      var ATRIBUCION = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
 
-      let mapaCofiteca = null, markerCluster = null;
-      let mapaRanking = null, markerClusterRanking = null;
-      let mapaMercado = null, capaPuntosMercado = null, capaOportunidadMercado = null;
-      let marcadoresOppPorIdx = [];
-      let tostadoresRenderizados = false, rankingIniciado = false, mercadoIniciado = false;
+      var mapaCofiteca = null, markerCluster = null;
+      var mapaRanking = null, markerClusterRanking = null;
+      var mapaMercado = null, capaPuntosMercado = null, capaOportunidadMercado = null;
+      var marcadoresOppPorIdx = [];
+      var tostadoresRenderizados = false, rankingIniciado = false, mercadoIniciado = false;
 
-      const markersPorId = new Map();
-      let idsEnMapa = new Set();
-      let marcadoresActuales = [];
-      let marcadoresConEtiqueta = [];
+      var markersPorId = new Map();
+      var idsEnMapa = new Set();
+      var marcadoresActuales = [];
+      var marcadoresConEtiqueta = [];
 
-      let origen = null, markerOrigen = null;
-      let markerActivoId = null, haloActivo = null;
-      let listaActual = [], idsEnLista = new Set(), mostrados = PAGINA, idDestacado = null;
-      let soloFavoritos = false;
-      let busquedaActiva = false;
+      var origen = null, markerOrigen = null;
+      var markerActivoId = null, haloActivo = null;
+      var listaActual = [], idsEnLista = new Set(), mostrados = PAGINA, idDestacado = null;
+      var soloFavoritos = false;
+      var busquedaActiva = false;
 
-      const estiloBase = id => (busquedaActiva && idsEnLista.has(id)) ? ESTILO_BUSQUEDA : ESTILO_BASE;
+      var estiloBase = function (id) { return (busquedaActiva && idsEnLista.has(id)) ? ESTILO_BUSQUEDA : ESTILO_BASE; };
 
-      let swalPromise = null;
+      var swalPromise = null;
       function ensureSwal() {
         if (window.Swal) return Promise.resolve();
         if (swalPromise) return swalPromise;
-        swalPromise = new Promise((res, rej) => {
-          const s = document.createElement('script');
+        swalPromise = new Promise(function (res, rej) {
+          var s = document.createElement('script');
           s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
           s.onload = res; s.onerror = rej;
           document.head.appendChild(s);
@@ -854,22 +859,22 @@ const datosJSON = JSON.stringify({
       }
 
       function calcularD(lat1, lon1, lat2, lon2) {
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+        var dLat = (lat2 - lat1) * Math.PI / 180;
+        var dLon = (lon2 - lon1) * Math.PI / 180;
+        var a = Math.pow(Math.sin(dLat / 2), 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.pow(Math.sin(dLon / 2), 2);
         return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       }
       function textoDistancia(dist) {
-        const cuadras = Math.round(dist * 10);
+        var cuadras = Math.round(dist * 10);
         if (cuadras === 0) return '¡A menos de 1 cuadra!';
         if (cuadras <= 30) return 'A ' + cuadras + ' cuadra' + (cuadras !== 1 ? 's' : '');
         return 'A ' + dist.toFixed(1).replace('.', ',') + ' km';
       }
-      const urlComoLlegar = c => 'https://www.google.com/maps/search/?api=1&query=' + c.lat + ',' + c.lon;
+      var urlComoLlegar = function (c) { return 'https://www.google.com/maps/search/?api=1&query=' + c.lat + ',' + c.lon; };
 
       // ---------- Favoritos / recientes ----------
       function persistirFavs() {
-        try { localStorage.setItem(FAV_KEY, JSON.stringify([...favoritos])); } catch {}
+        try { localStorage.setItem(FAV_KEY, JSON.stringify(Array.from(favoritos))); } catch (e) {}
         $('fav-count').textContent = favoritos.size ? '(' + favoritos.size + ')' : '';
       }
       window.cofiToggleFav = function (id, btn) {
@@ -885,21 +890,21 @@ const datosJSON = JSON.stringify({
         window.cofiFiltrar(true);
       };
       function registrarVisto(id) {
-        recientes = [id, ...recientes.filter(x => x !== id)].slice(0, 8);
-        try { localStorage.setItem(RECIENTES_KEY, JSON.stringify(recientes)); } catch {}
+        recientes = [id].concat(recientes.filter(function (x) { return x !== id; })).slice(0, 8);
+        try { localStorage.setItem(RECIENTES_KEY, JSON.stringify(recientes)); } catch (e) {}
       }
       function renderRecientes() {
-        const wrap = $('recientes-wrap');
+        var wrap = $('recientes-wrap');
         if (!recientes.length) { wrap.classList.add('hidden'); return; }
         wrap.classList.remove('hidden');
-        const cont = $('recientes-list');
-        const frag = document.createDocumentFragment();
-        recientes.slice(0, 6).forEach(id => {
-          const c = baseDatos[id]; if (!c) return;
-          const btn = document.createElement('button');
+        var cont = $('recientes-list');
+        var frag = document.createDocumentFragment();
+        recientes.slice(0, 6).forEach(function (id) {
+          var c = baseDatos[id]; if (!c) return;
+          var btn = document.createElement('button');
           btn.className = 'reciente-chip';
           btn.textContent = '☕ ' + c.nombre;
-          btn.onclick = () => verEnMapa(id);
+          btn.onclick = function () { verEnMapa(id); };
           frag.appendChild(btn);
         });
         cont.replaceChildren(frag);
@@ -907,12 +912,12 @@ const datosJSON = JSON.stringify({
 
       // ---------- Métricas ----------
       window.cofiActualizarMetricas = function () {
-        const esRanking = $('btn-tab-ranking').classList.contains('active');
-        let cafes = 0, tost = 0, prov = 0, ciu = 0;
+        var esRanking = $('btn-tab-ranking').classList.contains('active');
+        var cafes = 0, tost = 0, prov = 0, ciu = 0;
         if (esRanking) {
-          const tipo = $('select-ranking-tipo').value;
-          const data = rankingDatos[tipo] || [];
-          const cuenta = (campo, vacio) => new Set(data.map(d => d[campo]).filter(v => v && v !== vacio)).size;
+          var tipo = $('select-ranking-tipo').value;
+          var data = rankingDatos[tipo] || [];
+          var cuenta = function (campo, vacio) { return new Set(data.map(function (d) { return d[campo]; }).filter(function (v) { return v && v !== vacio; })).size; };
           cafes = data.length;
           if (tipo === 'arg') { $('label-provincias').innerText = 'Provincias'; prov = cuenta('provincia', 'Desconocida'); }
           else { $('label-provincias').innerText = 'Países'; prov = cuenta('pais', 'Desconocido'); }
@@ -931,14 +936,14 @@ const datosJSON = JSON.stringify({
       };
 
       window.cofiSwitchTab = function (tab) {
-        ['mapa', 'ranking', 'tostadores', 'mercado'].forEach(t => {
+        ['mapa', 'ranking', 'tostadores', 'mercado'].forEach(function (t) {
           $('vista-' + t).classList.toggle('hidden', t !== tab);
           $('btn-tab-' + t).classList.toggle('active', t === tab);
         });
         window.cofiActualizarMetricas();
 
         if (tab === 'mapa' && mapaCofiteca) {
-          setTimeout(() => { mapaCofiteca.invalidateSize(); aplicarFiltros(false); }, 100);
+          setTimeout(function () { mapaCofiteca.invalidateSize(); aplicarFiltros(false); }, 100);
         }
         if (tab === 'tostadores' && !tostadoresRenderizados) { window.cofiRenderizarTostadores(); tostadoresRenderizados = true; }
         if (tab === 'ranking') {
@@ -948,7 +953,7 @@ const datosJSON = JSON.stringify({
             window.cofiFiltrarRanking();
             rankingIniciado = true;
           } else if (mapaRanking) {
-            setTimeout(() => mapaRanking.invalidateSize(), 100);
+            setTimeout(function () { mapaRanking.invalidateSize(); }, 100);
           }
         }
         if (tab === 'mercado') {
@@ -956,55 +961,51 @@ const datosJSON = JSON.stringify({
             initMapaMercado();
             mercadoIniciado = true;
           } else if (mapaMercado) {
-            setTimeout(() => mapaMercado.invalidateSize(), 100);
+            setTimeout(function () { mapaMercado.invalidateSize(); }, 100);
           }
           window.cofiRenderMercado(true);
         }
         sincronizarURL();
       };
 
-      // ---------- Pestaña Mercado (Dinámica según Región/Ciudad y Barrio/Zona) ----------
+      // ---------- Pestaña Mercado ----------
       function obtenerZonasRecomendadasDinamicas(ciu, zon) {
-        const esNacional = ciu === 'Todas';
+        var esNacional = ciu === 'Todas';
 
-        // 1. Filtrar según los mismos selectores de Región/Ciudad y Barrio/Zona
-        let pool = baseDatos.filter(c => {
+        var pool = baseDatos.filter(function (c) {
           if (esNacional) return esPlazaRecomendable(c);
           if (c.ciudad !== ciu) return false;
           if (zon !== 'Todas' && c.zona !== zon) return false;
           return true;
         });
 
-        if (!pool.length) pool = baseDatos.filter(c => esNacional ? true : c.ciudad === ciu);
+        if (!pool.length) pool = baseDatos.filter(function (c) { return esNacional ? true : c.ciudad === ciu; });
 
-        // 2. Priorizar menor saturación (<= 3 competidores en 500m), relajando si el barrio es muy denso
-        let candidatos = pool.filter(c => c.mkt.k <= 3);
+        var candidatos = pool.filter(function (c) { return c.mkt.k <= 3; });
         if (candidatos.length < 3) candidatos = pool;
 
-        // 3. Calcular puntaje de oportunidad real por microzona
-        const evaluados = candidatos.map(c => {
-          const nombreBarrio = (c.zona && c.zona !== '-' && c.zona !== 'Sin Zona')
+        var evaluados = candidatos.map(function (c) {
+          var nombreBarrio = (c.zona && c.zona !== '-' && c.zona !== 'Sin Zona')
             ? c.zona
             : (c.ciudadReal || c.ciudad);
-          const plazaNombre = c.ciudadReal && c.ciudadReal !== c.ciudad
-            ? `${c.ciudadReal} (${c.ciudad.replace(' y Gran Buenos Aires', '')})`
+          var plazaNombre = c.ciudadReal && c.ciudadReal !== c.ciudad
+            ? c.ciudadReal + ' (' + c.ciudad.replace(' y Gran Buenos Aires', '') + ')'
             : c.ciudad;
 
-          const pobZ = POB_ZONAS.get(norm(nombreBarrio)) || POB_REGIONES.get(norm(c.ciudad)) || 60000;
-          const esTuristica = /(pinamar|carilo|gesell|bariloche|angostura|san martin de los andes|ushuaia|calafate|iguazu|cafayate|carlos paz|calamuchita|merlo|chapadmalal|playa grande|guemes|mendoza|salta|jujuy)/.test(
-            norm(`${c.ciudad} ${c.ciudadReal} ${nombreBarrio}`)
+          var pobZ = POB_ZONAS.get(norm(nombreBarrio)) || POB_REGIONES.get(norm(c.ciudad)) || 60000;
+          var esTuristica = /(pinamar|carilo|gesell|bariloche|angostura|san martin de los andes|ushuaia|calafate|iguazu|cafayate|carlos paz|calamuchita|merlo|chapadmalal|playa grande|guemes|mendoza|salta|jujuy)/.test(
+            norm(c.ciudad + ' ' + c.ciudadReal + ' ' + nombreBarrio)
           );
 
-          const publico = esTuristica
+          var publico = esTuristica
             ? 'Turismo receptivo/interno, escapadas y consumo de especialidad'
             : pobZ >= 120000
               ? 'Público residencial habitual, home-office y vecinos de cercanía'
               : 'Flujo comercial barrial, oficinas, estudiantes y visitantes';
 
-          // Recalcular score equilibrando demanda, ticket y baja competencia
-          const factorComp = 1 + (c.mkt.k * 0.45);
-          const rawScore = ((10.5 + (c.mkt.a * 0.12)) * c.mkt.t) / factorComp;
-          const score = Number(Math.min(19.2, Math.max(6.8, Math.max(c.mkt.o, rawScore))).toFixed(1));
+          var factorComp = 1 + (c.mkt.k * 0.45);
+          var rawScore = ((10.5 + (c.mkt.a * 0.12)) * c.mkt.t) / factorComp;
+          var score = Number(Math.min(19.2, Math.max(6.8, Math.max(c.mkt.o, rawScore))).toFixed(1));
 
           return {
             latitud: c.lat,
@@ -1021,16 +1022,16 @@ const datosJSON = JSON.stringify({
             publico_objetivo: publico,
             claveUnica: esNacional ? norm(c.ciudad) : norm(nombreBarrio)
           };
-        }).sort((a, b) => b.score_potencial - a.score_potencial);
+        }).sort(function (a, b) { return b.score_potencial - a.score_potencial; });
 
-        // 4. Evitar duplicar exactamente la misma esquina o el mismo barrio/ciudad cuando hay variedad
-        const top = [];
-        const clavesUsadas = new Set();
-        const maxItems = esNacional ? 6 : 4;
-        const distMinima = esNacional ? 0.25 : 0.006; // ~25km a nivel país, ~600m dentro de una misma ciudad
+        var top = [];
+        var clavesUsadas = new Set();
+        var maxItems = esNacional ? 6 : 4;
+        var distMinima = esNacional ? 0.25 : 0.006;
 
-        for (const cand of evaluados) {
-          const muyCerca = top.some(s => Math.hypot(cand.latitud - s.latitud, cand.longitud - s.longitud) < distMinima);
+        for (var i = 0; i < evaluados.length; i++) {
+          var cand = evaluados[i];
+          var muyCerca = top.some(function (s) { return Math.hypot(cand.latitud - s.latitud, cand.longitud - s.longitud) < distMinima; });
           if (muyCerca) continue;
           if (zon === 'Todas' && clavesUsadas.has(cand.claveUnica) && evaluados.length > maxItems * 2) continue;
 
@@ -1039,10 +1040,9 @@ const datosJSON = JSON.stringify({
           if (top.length >= maxItems) break;
         }
 
-        // Si en un barrio específico quedaron menos de 3 por distancia, completar con los mejores puntos del filtro
         if (top.length < Math.min(3, evaluados.length)) {
-          for (const cand of evaluados) {
-            if (!top.includes(cand)) top.push(cand);
+          for (var j = 0; j < evaluados.length; j++) {
+            if (top.indexOf(evaluados[j]) === -1) top.push(evaluados[j]);
             if (top.length >= Math.min(4, evaluados.length)) break;
           }
         }
@@ -1055,14 +1055,14 @@ const datosJSON = JSON.stringify({
         L.maplibreGL({ style: ESTILO_MAPA, attribution: ATRIBUCION }).addTo(mapaMercado);
         capaPuntosMercado = L.layerGroup().addTo(mapaMercado);
         capaOportunidadMercado = L.layerGroup().addTo(mapaMercado);
-        setTimeout(() => mapaMercado.invalidateSize(), 200);
+        setTimeout(function () { mapaMercado.invalidateSize(); }, 200);
       }
 
       window.cofiActualizarMercadoZonas = function () {
-        const ciu = $('select-mercado-ciudad').value;
-        const base = ciu === 'Todas' ? baseDatos : baseDatos.filter(c => c.ciudad === ciu);
-        const zonas = [...new Set(base.map(c => c.zona))].filter(z => z && z !== '-' && z !== 'Sin Zona').sort((a, b) => a.localeCompare(b, 'es'));
-        $('select-mercado-zona').innerHTML = '<option value="Todas">Todos los Barrios / Zonas</option>' + zonas.map(z => '<option value="' + esc(z) + '">' + esc(z) + '</option>').join('');
+        var ciu = $('select-mercado-ciudad').value;
+        var base = ciu === 'Todas' ? baseDatos : baseDatos.filter(function (c) { return c.ciudad === ciu; });
+        var zonas = Array.from(new Set(base.map(function (c) { return c.zona; }))).filter(function (z) { return z && z !== '-' && z !== 'Sin Zona'; }).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+        $('select-mercado-zona').innerHTML = '<option value="Todas">Todos los Barrios / Zonas</option>' + zonas.map(function (z) { return '<option value="' + esc(z) + '">' + esc(z) + '</option>'; }).join('');
       };
 
       window.cofiSeleccionarCiudadMercado = function (ciu) {
@@ -1072,7 +1072,7 @@ const datosJSON = JSON.stringify({
       };
 
       window.cofiSeleccionarZonaMercado = function (zon) {
-        const sel = $('select-mercado-zona');
+        var sel = $('select-mercado-zona');
         sel.value = (sel.value === zon) ? 'Todas' : zon;
         window.cofiRenderMercado(true);
       };
@@ -1084,7 +1084,7 @@ const datosJSON = JSON.stringify({
       };
 
       window.cofiEnfocarOportunidad = function (idx) {
-        const item = marcadoresOppPorIdx[idx];
+        var item = marcadoresOppPorIdx[idx];
         if (!item || !mapaMercado) return;
         document.querySelector('#vista-mercado .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
         mapaMercado.setView([item.lat, item.lon], 15);
@@ -1093,24 +1093,24 @@ const datosJSON = JSON.stringify({
 
       function calcularPerCapita(nLocales, poblacion) {
         if (!poblacion || poblacion <= 0 || nLocales <= 0) return null;
-        const habPorCafe = Math.round(poblacion / nLocales);
-        const cada100k = Number(((nLocales / poblacion) * 100000).toFixed(1));
-        return { poblacion, habPorCafe, cada100k };
+        var habPorCafe = Math.round(poblacion / nLocales);
+        var cada100k = Number(((nLocales / poblacion) * 100000).toFixed(1));
+        return { poblacion: poblacion, habPorCafe: habPorCafe, cada100k: cada100k };
       }
 
       function resumirGrupoMercado(items, poblacion) {
-        const n = items.length || 1;
-        const promTicket = Number((items.reduce((s, x) => s + x.mkt.t, 0) / n).toFixed(2));
-        const promOp = Number((items.reduce((s, x) => s + x.mkt.o, 0) / n).toFixed(1));
-        const promComp = Number((items.reduce((s, x) => s + x.mkt.k, 0) / n).toFixed(1));
+        var n = items.length || 1;
+        var promTicket = Number((items.reduce(function (s, x) { return s + x.mkt.t; }, 0) / n).toFixed(2));
+        var promOp = Number((items.reduce(function (s, x) { return s + x.mkt.o; }, 0) / n).toFixed(1));
+        var promComp = Number((items.reduce(function (s, x) { return s + x.mkt.k; }, 0) / n).toFixed(1));
 
-        let nivelGasto = 'Medio-Alto';
+        var nivelGasto = 'Medio-Alto';
         if (promTicket >= 1.32) nivelGasto = 'Muy Alto';
         else if (promTicket >= 1.18) nivelGasto = 'Alto';
         else if (promTicket < 1.04) nivelGasto = 'Medio';
 
-        const perCap = calcularPerCapita(items.length, poblacion);
-        return { n: items.length, promTicket, nivelGasto, promOp, promComp, perCap };
+        var perCap = calcularPerCapita(items.length, poblacion);
+        return { n: items.length, promTicket: promTicket, nivelGasto: nivelGasto, promOp: promOp, promComp: promComp, perCap: perCap };
       }
 
       function obtenerColorTendencia(capa, stats) {
@@ -1143,11 +1143,11 @@ const datosJSON = JSON.stringify({
             '</div>';
           return;
         }
-        const titulos = {
+        var titulos = {
           ticket: 'Nivel de Gasto por Local',
           densidad: 'Saturación · Cafés / Habitante'
         };
-        const escalas = {
+        var escalas = {
           ticket: [
             ['#1b7f5c', 'Muy Alto (≥ ×1.32)'],
             ['#e86a33', 'Alto (×1.18 – ×1.31)'],
@@ -1164,57 +1164,57 @@ const datosJSON = JSON.stringify({
         $('mkt-legend').innerHTML =
           '<div class="mkt-legend-title">' + titulos[capa] + '</div>' +
           '<div class="mkt-legend-items">' +
-            escalas[capa].map(([hex, txt]) =>
-              '<div class="mkt-legend-row"><span class="mkt-dot" style="background:' + hex + '"></span><span>' + txt + '</span></div>'
-            ).join('') +
+            escalas[capa].map(function (par) {
+              return '<div class="mkt-legend-row"><span class="mkt-dot" style="background:' + par[0] + '"></span><span>' + par[1] + '</span></div>';
+            }).join('') +
           '</div>';
       }
 
       window.cofiRenderMercado = function (recentrar) {
-        const ciu = $('select-mercado-ciudad').value;
-        const zon = $('select-mercado-zona').value;
-        const capa = $('select-mercado-capa').value;
-        const esNacional = ciu === 'Todas';
+        var ciu = $('select-mercado-ciudad').value;
+        var zon = $('select-mercado-zona').value;
+        var capa = $('select-mercado-capa').value;
+        var esNacional = ciu === 'Todas';
 
-        const scopeItems = esNacional
+        var scopeItems = esNacional
           ? baseDatos
-          : baseDatos.filter(c => c.ciudad === ciu && (zon === 'Todas' || c.zona === zon));
+          : baseDatos.filter(function (c) { return c.ciudad === ciu && (zon === 'Todas' || c.zona === zon); });
 
-        let pobScope = null;
-        let notaPob = '';
+        var pobScope = null;
+        var notaPob = '';
         if (esNacional) {
           pobScope = POB_PAIS_TOTAL;
           notaPob = 'Base total país Censo 2022 (~46,0M hab.).';
         } else if (zon !== 'Todas') {
-          const pobBarrio = POB_ZONAS.get(norm(zon));
+          var pobBarrio = POB_ZONAS.get(norm(zon));
           if (pobBarrio) {
             pobScope = pobBarrio;
-            notaPob = `Población censal de ${zon}: ${pobBarrio.toLocaleString('es-AR')} hab.`;
+            notaPob = 'Población censal de ' + zon + ': ' + pobBarrio.toLocaleString('es-AR') + ' hab.';
           } else {
-            const itemsCiu = baseDatos.filter(c => c.ciudad === ciu);
-            const pobCiu = POB_REGIONES.get(norm(ciu));
-            const perCapCiu = calcularPerCapita(itemsCiu.length, pobCiu);
+            var itemsCiu = baseDatos.filter(function (c) { return c.ciudad === ciu; });
+            var pobCiu = POB_REGIONES.get(norm(ciu));
+            var perCapCiu = calcularPerCapita(itemsCiu.length, pobCiu);
             notaPob = perCapCiu
-              ? `Sin censo de barrio · Total ${ciu}: 1 café c/ ${perCapCiu.habPorCafe.toLocaleString('es-AR')} hab.`
+              ? 'Sin censo de barrio · Total ' + ciu + ': 1 café c/ ' + perCapCiu.habPorCafe.toLocaleString('es-AR') + ' hab.'
               : 'Sin desagregación censal individual para este barrio.';
           }
         } else {
           pobScope = POB_REGIONES.get(norm(ciu)) || null;
-          notaPob = pobScope ? `Población Censo 2022: ${pobScope.toLocaleString('es-AR')} hab.` : '';
+          notaPob = pobScope ? 'Población Censo 2022: ' + pobScope.toLocaleString('es-AR') + ' hab.' : '';
         }
 
-        const agg = resumirGrupoMercado(scopeItems.length ? scopeItems : baseDatos, pobScope);
-        const colorKpiTicket = obtenerColorTendencia('ticket', agg);
-        const colorKpiPot = obtenerColorTendencia('potencial', agg);
-        const colorKpiDen = obtenerColorTendencia('densidad', agg);
+        var agg = resumirGrupoMercado(scopeItems.length ? scopeItems : baseDatos, pobScope);
+        var colorKpiTicket = obtenerColorTendencia('ticket', agg);
+        var colorKpiPot = obtenerColorTendencia('potencial', agg);
+        var colorKpiDen = obtenerColorTendencia('densidad', agg);
 
-        const pctTicket = Math.min(100, Math.round(((agg.promTicket - 0.8) / 0.7) * 100));
-        const pctPot = Math.min(100, Math.round((agg.promOp / 20) * 100));
-        const pctDen = agg.perCap ? Math.min(100, Math.round((agg.perCap.cada100k / 45) * 100)) : 20;
+        var pctTicket = Math.min(100, Math.round(((agg.promTicket - 0.8) / 0.7) * 100));
+        var pctPot = Math.min(100, Math.round((agg.promOp / 20) * 100));
+        var pctDen = agg.perCap ? Math.min(100, Math.round((agg.perCap.cada100k / 45) * 100)) : 20;
 
-        const htmlPerCapVal = agg.perCap
-          ? `1 café c/ ${agg.perCap.habPorCafe.toLocaleString('es-AR')} <small>hab. (${agg.perCap.cada100k} / 100k)</small>`
-          : `Sin dato de barrio`;
+        var htmlPerCapVal = agg.perCap
+          ? '1 café c/ ' + agg.perCap.habPorCafe.toLocaleString('es-AR') + ' <small>hab. (' + agg.perCap.cada100k + ' / 100k)</small>'
+          : 'Sin dato de barrio';
 
         $('mkt-kpis').innerHTML =
           '<div class="mkt-kpi-card">' +
@@ -1236,47 +1236,48 @@ const datosJSON = JSON.stringify({
             '<span class="mkt-kpi-sub">' + esc(notaPob) + '</span>' +
           '</div>';
 
-        const etiquetaPlazaActual = esNacional
+        var etiquetaPlazaActual = esNacional
           ? 'Capitales y Plazas Turísticas'
-          : (zon !== 'Todas' ? `${zon} · ${ciu}` : ciu);
+          : (zon !== 'Todas' ? zon + ' · ' + ciu : ciu);
 
         renderLeyendaMercado(capa, etiquetaPlazaActual);
 
-        const gruposMap = new Map();
+        var gruposMap = new Map();
         if (esNacional) {
-          baseDatos.forEach(c => {
+          baseDatos.forEach(function (c) {
             if (!gruposMap.has(c.ciudad)) gruposMap.set(c.ciudad, []);
             gruposMap.get(c.ciudad).push(c);
           });
         } else {
-          baseDatos.filter(c => c.ciudad === ciu).forEach(c => {
-            const z = (c.zona && c.zona !== '-' && c.zona !== 'Sin Zona') ? c.zona : 'Otras zonas';
+          baseDatos.filter(function (c) { return c.ciudad === ciu; }).forEach(function (c) {
+            var z = (c.zona && c.zona !== '-' && c.zona !== 'Sin Zona') ? c.zona : 'Otras zonas';
             if (!gruposMap.has(z)) gruposMap.set(z, []);
             gruposMap.get(z).push(c);
           });
         }
 
-        const listaGrupos = [...gruposMap.entries()]
-          .map(([nombre, items]) => {
-            const pobG = esNacional ? POB_REGIONES.get(norm(nombre)) : POB_ZONAS.get(norm(nombre));
-            const st = resumirGrupoMercado(items, pobG);
-            const col = obtenerColorTendencia(capa === 'potencial' ? 'ticket' : capa, st);
-            return { nombre, ...st, color: col.hex, colorLabel: col.label };
+        var listaGrupos = Array.from(gruposMap.entries())
+          .map(function (entry) {
+            var nombre = entry[0], items = entry[1];
+            var pobG = esNacional ? POB_REGIONES.get(norm(nombre)) : POB_ZONAS.get(norm(nombre));
+            var st = resumirGrupoMercado(items, pobG);
+            var col = obtenerColorTendencia(capa === 'potencial' ? 'ticket' : capa, st);
+            return Object.assign({ nombre: nombre, color: col.hex, colorLabel: col.label }, st);
           })
-          .sort((a, b) => b.n - a.n);
+          .sort(function (a, b) { return b.n - a.n; });
 
-        const zonasRec = obtenerZonasRecomendadasDinamicas(ciu, zon);
+        var zonasRec = obtenerZonasRecomendadasDinamicas(ciu, zon);
 
         if (mapaMercado && capaPuntosMercado && capaOportunidadMercado) {
           capaPuntosMercado.clearLayers();
           capaOportunidadMercado.clearLayers();
           marcadoresOppPorIdx = [];
 
-          const puntosMostrar = scopeItems.length ? scopeItems : baseDatos;
+          var puntosMostrar = scopeItems.length ? scopeItems : baseDatos;
 
           if (capa === 'potencial') {
-            puntosMostrar.forEach(c => {
-              const dot = L.circleMarker([c.lat, c.lon], {
+            puntosMostrar.forEach(function (c) {
+              var dot = L.circleMarker([c.lat, c.lon], {
                 radius: esNacional ? 3.5 : 5,
                 color: '#ffffff',
                 weight: 1,
@@ -1284,18 +1285,18 @@ const datosJSON = JSON.stringify({
                 fillOpacity: 0.55
               });
               dot.bindPopup(
-                `<div class="popup-cafe">` +
-                  `<b>${esc(c.nombre)}</b>` +
-                  `<small>${esc(c.zona || c.ciudadReal || c.ciudad)}</small><br>` +
-                  `Competencia actual · Ticket ×${c.mkt.t.toFixed(2)}` +
-                `</div>`
+                '<div class="popup-cafe">' +
+                  '<b>' + esc(c.nombre) + '</b>' +
+                  '<small>' + esc(c.zona || c.ciudadReal || c.ciudad) + '</small><br>' +
+                  'Competencia actual · Ticket ×' + c.mkt.t.toFixed(2) +
+                '</div>'
               );
               capaPuntosMercado.addLayer(dot);
             });
 
-            zonasRec.forEach((z, idx) => {
+            zonasRec.forEach(function (z, idx) {
               if (!esNacional) {
-                const radioFino = L.circle([z.latitud, z.longitud], {
+                var radioFino = L.circle([z.latitud, z.longitud], {
                   radius: 320,
                   color: '#1b7f5c',
                   weight: 2,
@@ -1306,55 +1307,55 @@ const datosJSON = JSON.stringify({
                 capaOportunidadMercado.addLayer(radioFino);
               }
 
-              const pinIcon = L.divIcon({
-                html: `<div style="background:#1b7f5c;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:2.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35);">#${idx + 1}</div>`,
+              var pinIcon = L.divIcon({
+                html: '<div style="background:#1b7f5c;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:2.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35);">#' + (idx + 1) + '</div>',
                 className: 'custom-opp-pin',
                 iconSize: [30, 30],
                 iconAnchor: [15, 15]
               });
 
-              const markerOpp = L.marker([z.latitud, z.longitud], { icon: pinIcon }).bindPopup(
-                `<div class="popup-cafe" style="text-align:left;min-width:225px;">` +
-                  `<div style="font-size:.68rem;font-weight:800;color:#1b7f5c;text-transform:uppercase;letter-spacing:.04em;">` +
-                    `★ Oportunidad #${idx + 1} · ${z.score_potencial} pts` +
-                  `</div>` +
-                  `<b style="text-align:left;margin-top:2px;">${esc(z.corredor)}</b>` +
-                  `<small style="display:block;color:#5c3d2e;margin-bottom:6px;">${esc(z.plaza)}</small>` +
-                  `<b>¿Por qué abrir acá?</b><br>` +
-                  `• <b>Demanda:</b> ${z.atractores_cercanos} comercios/polos activos (${esc(z.circulacion)})<br>` +
-                  `• <b>Baja saturación:</b> solo ${z.competidores_cercanos} café(s) en 650 m<br>` +
-                  `• <b>Gasto promedio:</b> ${esc(z.nivel_gasto)} (×${z.indice_ticket})<br>` +
-                  `• <b>Público:</b> ${esc(z.publico_objetivo)}` +
-                `</div>`
+              var markerOpp = L.marker([z.latitud, z.longitud], { icon: pinIcon }).bindPopup(
+                '<div class="popup-cafe" style="text-align:left;min-width:225px;">' +
+                  '<div style="font-size:.68rem;font-weight:800;color:#1b7f5c;text-transform:uppercase;letter-spacing:.04em;">' +
+                    '★ Oportunidad #' + (idx + 1) + ' · ' + z.score_potencial + ' pts' +
+                  '</div>' +
+                  '<b style="text-align:left;margin-top:2px;">' + esc(z.corredor) + '</b>' +
+                  '<small style="display:block;color:#5c3d2e;margin-bottom:6px;">' + esc(z.plaza) + '</small>' +
+                  '<b>¿Por qué abrir acá?</b><br>' +
+                  '• <b>Demanda:</b> ' + z.atractores_cercanos + ' comercios/polos activos (' + esc(z.circulacion) + ')<br>' +
+                  '• <b>Baja saturación:</b> solo ' + z.competidores_cercanos + ' café(s) en 650 m<br>' +
+                  '• <b>Gasto promedio:</b> ' + esc(z.nivel_gasto) + ' (×' + z.indice_ticket + ')<br>' +
+                  '• <b>Público:</b> ' + esc(z.publico_objetivo) +
+                '</div>'
               );
               capaOportunidadMercado.addLayer(markerOpp);
               marcadoresOppPorIdx.push({ lat: z.latitud, lon: z.longitud, marker: markerOpp });
             });
           } else {
-            puntosMostrar.forEach(c => {
-              const pobZ = POB_ZONAS.get(norm(c.zona)) || POB_REGIONES.get(norm(c.ciudad));
-              const cantZ = (c.zona && gruposMap.has(c.zona)) ? gruposMap.get(c.zona).length : (gruposMap.get(c.ciudad)?.length || 1);
-              const perCapPunto = calcularPerCapita(cantZ, pobZ);
-              const stPunto = { promTicket: c.mkt.t, promOp: c.mkt.o, perCap: perCapPunto };
-              const colPunto = obtenerColorTendencia(capa, stPunto);
+            puntosMostrar.forEach(function (c) {
+              var pobZ = POB_ZONAS.get(norm(c.zona)) || POB_REGIONES.get(norm(c.ciudad));
+              var cantZ = (c.zona && gruposMap.has(c.zona)) ? gruposMap.get(c.zona).length : (gruposMap.get(c.ciudad) ? gruposMap.get(c.ciudad).length : 1);
+              var perCapPunto = calcularPerCapita(cantZ, pobZ);
+              var stPunto = { promTicket: c.mkt.t, promOp: c.mkt.o, perCap: perCapPunto };
+              var colPunto = obtenerColorTendencia(capa, stPunto);
 
-              const dot = L.circleMarker([c.lat, c.lon], {
+              var dot = L.circleMarker([c.lat, c.lon], {
                 radius: esNacional ? 5 : 7.5,
                 color: '#ffffff',
                 weight: 1.5,
                 fillColor: colPunto.hex,
                 fillOpacity: 0.95
               });
-              const habHtml = perCapPunto ? `<br>👥 Zona: <b>1 c/ ${perCapPunto.habPorCafe.toLocaleString('es-AR')} hab.</b>` : '';
+              var habHtml = perCapPunto ? '<br>👥 Zona: <b>1 c/ ' + perCapPunto.habPorCafe.toLocaleString('es-AR') + ' hab.</b>' : '';
               dot.bindPopup(
-                `<div class="popup-cafe">` +
-                  `<b>${esc(c.nombre)}</b>` +
-                  `<small>${esc(c.zona || c.ciudadReal || c.ciudad)}</small><br>` +
-                  `💳 Ticket: <b>×${c.mkt.t.toFixed(2)}</b> (${esc(c.mkt.g)})<br>` +
-                  `🚶 Circulación: <b>${esc(c.mkt.c || 'Media')}</b> · Comp. 500m: <b>${c.mkt.k}</b>` +
+                '<div class="popup-cafe">' +
+                  '<b>' + esc(c.nombre) + '</b>' +
+                  '<small>' + esc(c.zona || c.ciudadReal || c.ciudad) + '</small><br>' +
+                  '💳 Ticket: <b>×' + c.mkt.t.toFixed(2) + '</b> (' + esc(c.mkt.g) + ')<br>' +
+                  '🚶 Circulación: <b>' + esc(c.mkt.c || 'Media') + '</b> · Comp. 500m: <b>' + c.mkt.k + '</b>' +
                   habHtml +
-                  `<div class="popup-acciones"><a href="/cafe/${esc(c.slug)}" class="popup-link">Ver ficha completa</a></div>` +
-                `</div>`
+                  '<div class="popup-acciones"><a href="/cafe/' + esc(c.slug) + '" class="popup-link">Ver ficha completa</a></div>' +
+                '</div>'
               );
               capaPuntosMercado.addLayer(dot);
             });
@@ -1364,36 +1365,38 @@ const datosJSON = JSON.stringify({
             if (esNacional) {
               mapaMercado.setView(VISTA_ARGENTINA, zoomInicial());
             } else if (puntosMostrar.length) {
-              mapaMercado.fitBounds(L.latLngBounds(puntosMostrar.map(c => [c.lat, c.lon])), { padding: [45, 45], maxZoom: 15 });
+              mapaMercado.fitBounds(L.latLngBounds(puntosMostrar.map(function (c) { return [c.lat, c.lon]; })), { padding: [45, 45], maxZoom: 15 });
             }
           }
         }
 
-        const resetBtn = $('mkt-reset-btn');
-        const grid = $('mkt-zones-grid');
+        var resetBtn = $('mkt-reset-btn');
+        var grid = $('mkt-zones-grid');
 
         if (capa === 'potencial') {
           resetBtn.classList.toggle('hidden', esNacional);
           $('mkt-zones-title').textContent = esNacional
             ? 'Top oportunidades en capitales, grandes ciudades y plazas turísticas'
-            : `Zonas recomendadas en ${etiquetaPlazaActual}`;
+            : 'Zonas recomendadas en ' + etiquetaPlazaActual;
           grid.className = 'mkt-opp-grid';
-          grid.innerHTML = zonasRec.map((z, idx) => (
-            '<div class="mkt-opp-card">' +
-              '<div>' +
-                '<div class="mkt-opp-badge">★ Sugerencia #' + (idx + 1) + ' · Puntaje ' + z.score_potencial + ' / 20</div>' +
-                '<div class="mkt-opp-title">' + esc(z.corredor) + '</div>' +
-                '<div class="mkt-opp-sub">' + esc(z.plaza) + (z.direccionRef ? ' · Ref: ' + esc(z.direccionRef) : '') + '</div>' +
-                '<ul class="mkt-opp-criteria">' +
-                  '<li>🚶 <b>Tráfico comercial:</b> ' + esc(z.circulacion) + ' (' + z.atractores_cercanos + ' comercios/turismo en el radio)</li>' +
-                  '<li>☕ <b>Baja competencia:</b> solo ' + z.competidores_cercanos + ' cafetería(s) en 650 m a la redonda</li>' +
-                  '<li>💳 <b>Poder de gasto:</b> ' + esc(z.nivel_gasto) + ' (ticket promedio ×' + z.indice_ticket + ')</li>' +
-                  '<li>🎯 <b>Público objetivo:</b> ' + esc(z.publico_objetivo) + '</li>' +
-                '</ul>' +
-              '</div>' +
-              '<button type="button" class="mkt-opp-btn" onclick="cofiEnfocarOportunidad(' + idx + ')">Ver ubicación exacta en el mapa</button>' +
-            '</div>'
-          )).join('');
+          grid.innerHTML = zonasRec.map(function (z, idx) {
+            return (
+              '<div class="mkt-opp-card">' +
+                '<div>' +
+                  '<div class="mkt-opp-badge">★ Sugerencia #' + (idx + 1) + ' · Puntaje ' + z.score_potencial + ' / 20</div>' +
+                  '<div class="mkt-opp-title">' + esc(z.corredor) + '</div>' +
+                  '<div class="mkt-opp-sub">' + esc(z.plaza) + (z.direccionRef ? ' · Ref: ' + esc(z.direccionRef) : '') + '</div>' +
+                  '<ul class="mkt-opp-criteria">' +
+                    '<li>🚶 <b>Tráfico comercial:</b> ' + esc(z.circulacion) + ' (' + z.atractores_cercanos + ' comercios/turismo en el radio)</li>' +
+                    '<li>☕ <b>Baja competencia:</b> solo ' + z.competidores_cercanos + ' cafetería(s) en 650 m a la redonda</li>' +
+                    '<li>💳 <b>Poder de gasto:</b> ' + esc(z.nivel_gasto) + ' (ticket promedio ×' + z.indice_ticket + ')</li>' +
+                    '<li>🎯 <b>Público objetivo:</b> ' + esc(z.publico_objetivo) + '</li>' +
+                  '</ul>' +
+                '</div>' +
+                '<button type="button" class="mkt-opp-btn" onclick="cofiEnfocarOportunidad(' + idx + ')">Ver ubicación exacta en el mapa</button>' +
+              '</div>'
+            );
+          }).join('');
           return;
         }
 
@@ -1401,10 +1404,10 @@ const datosJSON = JSON.stringify({
         if (esNacional) {
           resetBtn.classList.add('hidden');
           $('mkt-zones-title').textContent = 'Comparativa por Ciudad / Región (clic para ver barrios)';
-          grid.innerHTML = listaGrupos.map(g => {
-            const perCapLine = g.perCap
-              ? `👥 1 café c/ ${g.perCap.habPorCafe.toLocaleString('es-AR')} hab. <span>(${g.perCap.cada100k}/100k)</span>`
-              : `👥 ${g.n} cafeterías en la región`;
+          grid.innerHTML = listaGrupos.map(function (g) {
+            var perCapLine = g.perCap
+              ? '👥 1 café c/ ' + g.perCap.habPorCafe.toLocaleString('es-AR') + ' hab. <span>(' + g.perCap.cada100k + '/100k)</span>'
+              : '👥 ' + g.n + ' cafeterías en la región';
             return (
               '<button type="button" class="mkt-zone-card" style="border-left-color:' + g.color + '" onclick="cofiSeleccionarCiudadMercado(\'' + esc(g.nombre) + '\')">' +
                 '<div class="mkt-zone-top">' +
@@ -1421,19 +1424,19 @@ const datosJSON = JSON.stringify({
           }).join('');
         } else {
           resetBtn.classList.remove('hidden');
-          $('mkt-zones-title').textContent = `Barrios y Zonas en ${ciu} (clic para enfocar)`;
-          const barriosMostrar = listaGrupos.filter(g => g.nombre !== 'Otras zonas');
+          $('mkt-zones-title').textContent = 'Barrios y Zonas en ' + ciu + ' (clic para enfocar)';
+          var barriosMostrar = listaGrupos.filter(function (g) { return g.nombre !== 'Otras zonas'; });
 
           if (!barriosMostrar.length) {
             grid.innerHTML = '<div style="font-size:.82rem;color:var(--coffee-500);">Esta región aún no tiene barrios subdivididos en la base.</div>';
             return;
           }
 
-          grid.innerHTML = barriosMostrar.map(g => {
-            const activo = zon === g.nombre ? ' active' : '';
-            const perCapLine = g.perCap
-              ? `👥 1 café c/ ${g.perCap.habPorCafe.toLocaleString('es-AR')} hab. <span>(${g.perCap.cada100k}/100k)</span>`
-              : `<span>Sin dato censal de barrio</span>`;
+          grid.innerHTML = barriosMostrar.map(function (g) {
+            var activo = zon === g.nombre ? ' active' : '';
+            var perCapLine = g.perCap
+              ? '👥 1 café c/ ' + g.perCap.habPorCafe.toLocaleString('es-AR') + ' hab. <span>(' + g.perCap.cada100k + '/100k)</span>'
+              : '<span>Sin dato censal de barrio</span>';
             return (
               '<button type="button" class="mkt-zone-card' + activo + '" style="border-left-color:' + g.color + '" onclick="cofiSeleccionarZonaMercado(\'' + esc(g.nombre) + '\')">' +
                 '<div class="mkt-zone-top">' +
@@ -1458,17 +1461,17 @@ const datosJSON = JSON.stringify({
         markerCluster = L.markerClusterGroup({ maxClusterRadius: 40, disableClusteringAtZoom: 14, spiderfyOnMaxZoom: true, showCoverageOnHover: false, chunkedLoading: true }).addTo(mapaCofiteca);
         mapaCofiteca.on('zoomend moveend', actualizarEtiquetas);
 
-        baseDatos.forEach(c => {
-          const m = L.circleMarker([c.lat, c.lon], { ...ESTILO_BASE });
+        baseDatos.forEach(function (c) {
+          var m = L.circleMarker([c.lat, c.lon], Object.assign({}, ESTILO_BASE));
           m._nombre = c.nombre;
-          m.bindPopup(() => popupHTML(baseDatos[c.id]), { maxWidth: 260 });
-          m.on('click', () => { registrarVisto(c.id); resaltarCard(c.id); renderRecientes(); });
-          m.on('popupopen', () => resaltarMarker(c.id));
+          m.bindPopup(function () { return popupHTML(baseDatos[c.id]); }, { maxWidth: 260 });
+          m.on('click', function () { registrarVisto(c.id); resaltarCard(c.id); renderRecientes(); });
+          m.on('popupopen', function () { resaltarMarker(c.id); });
           m.on('popupclose', quitarResaltadoMarker);
           markersPorId.set(c.id, m);
         });
-        setTimeout(() => mapaCofiteca.invalidateSize(), 200);
-        window.addEventListener('resize', () => {
+        setTimeout(function () { mapaCofiteca.invalidateSize(); }, 200);
+        window.addEventListener('resize', function () {
           if (mapaCofiteca) mapaCofiteca.invalidateSize();
           if (mapaRanking) mapaRanking.invalidateSize();
           if (mapaMercado) mapaMercado.invalidateSize();
@@ -1476,26 +1479,26 @@ const datosJSON = JSON.stringify({
       }
 
       function popupHTML(c) {
-        const ig = c.instagram ? '<a href="' + esc(c.instagram) + '" target="_blank" rel="noopener noreferrer" class="popup-btn">Instagram</a>' : '';
-        const enLista = idsEnLista.has(c.id) ? '<a href="#" class="popup-link" onclick="cofiVerEnLista(' + c.id + '); return false;">Ver en la lista ↓</a>' : '';
-        const detalle = '<a href="/cafe/' + esc(c.slug) + '" class="popup-link">Ver ficha completa</a>';
+        var ig = c.instagram ? '<a href="' + esc(c.instagram) + '" target="_blank" rel="noopener noreferrer" class="popup-btn">Instagram</a>' : '';
+        var enLista = idsEnLista.has(c.id) ? '<a href="#" class="popup-link" onclick="cofiVerEnLista(' + c.id + '); return false;">Ver en la lista ↓</a>' : '';
+        var detalle = '<a href="/cafe/' + esc(c.slug) + '" class="popup-link">Ver ficha completa</a>';
         return '<div class="popup-cafe"><b>' + esc(c.nombre) + '</b><small>' + esc(c.ubicacion) + '</small><div class="popup-acciones">' + ig + detalle + enLista + '</div></div>';
       }
 
       function quitarResaltadoMarker() {
         if (markerActivoId !== null) {
-          const m = markersPorId.get(markerActivoId);
-          if (m) m.setStyle({ ...estiloBase(markerActivoId) });
+          var m = markersPorId.get(markerActivoId);
+          if (m) m.setStyle(Object.assign({}, estiloBase(markerActivoId)));
           markerActivoId = null;
         }
         if (haloActivo) { mapaCofiteca.removeLayer(haloActivo); haloActivo = null; }
       }
       function resaltarMarker(id) {
         quitarResaltadoMarker();
-        const m = markersPorId.get(id);
+        var m = markersPorId.get(id);
         if (!m) return;
         markerActivoId = id;
-        m.setStyle({ ...ESTILO_ACTIVO });
+        m.setStyle(Object.assign({}, ESTILO_ACTIVO));
         haloActivo = L.circleMarker(m.getLatLng(), { radius: 22, weight: 0, fillColor: '#e86a33', fillOpacity: .3, interactive: false, className: 'cofi-halo' }).addTo(mapaCofiteca);
         if (m._map) m.bringToFront();
       }
@@ -1503,12 +1506,12 @@ const datosJSON = JSON.stringify({
       function actualizarEtiquetas() {
         if (!mapaCofiteca) return;
         if (mapaCofiteca.getZoom() < ZOOM_ETIQUETAS) {
-          marcadoresConEtiqueta.forEach(m => { m.unbindTooltip(); m._tt = false; });
+          marcadoresConEtiqueta.forEach(function (m) { m.unbindTooltip(); m._tt = false; });
           marcadoresConEtiqueta = [];
           return;
         }
-        const area = mapaCofiteca.getBounds().pad(0.2);
-        marcadoresActuales.forEach(m => {
+        var area = mapaCofiteca.getBounds().pad(0.2);
+        marcadoresActuales.forEach(function (m) {
           if (!m._tt && area.contains(m.getLatLng())) {
             m.bindTooltip(esc(m._nombre), { permanent: true, direction: 'top', className: 'cafe-label', offset: [0, -10] });
             m._tt = true;
@@ -1519,28 +1522,28 @@ const datosJSON = JSON.stringify({
 
       function dibujarMapa(lista, recentrar) {
         quitarResaltadoMarker();
-        marcadoresConEtiqueta.forEach(m => { m.unbindTooltip(); m._tt = false; });
+        marcadoresConEtiqueta.forEach(function (m) { m.unbindTooltip(); m._tt = false; });
         marcadoresConEtiqueta = [];
 
-        const nuevoSet = new Set(lista.map(c => c.id));
-        const idsQuitar = [], aAgregar = [];
-        for (const id of idsEnMapa) if (!nuevoSet.has(id)) idsQuitar.push(id);
-        for (const id of nuevoSet) if (!idsEnMapa.has(id)) aAgregar.push(markersPorId.get(id));
-        const aQuitar = idsQuitar.map(id => markersPorId.get(id));
+        var nuevoSet = new Set(lista.map(function (c) { return c.id; }));
+        var idsQuitar = [], aAgregar = [];
+        idsEnMapa.forEach(function (id) { if (!nuevoSet.has(id)) idsQuitar.push(id); });
+        nuevoSet.forEach(function (id) { if (!idsEnMapa.has(id)) aAgregar.push(markersPorId.get(id)); });
+        var aQuitar = idsQuitar.map(function (id) { return markersPorId.get(id); });
         if (aQuitar.length) markerCluster.removeLayers(aQuitar);
         if (aAgregar.length) markerCluster.addLayers(aAgregar);
         idsEnMapa = nuevoSet;
-        marcadoresActuales = lista.map(c => markersPorId.get(c.id));
+        marcadoresActuales = lista.map(function (c) { return markersPorId.get(c.id); });
 
-        idsQuitar.forEach(id => markersPorId.get(id).setStyle({ ...ESTILO_BASE }));
-        lista.forEach(c => markersPorId.get(c.id).setStyle({ ...estiloBase(c.id) }));
+        idsQuitar.forEach(function (id) { markersPorId.get(id).setStyle(Object.assign({}, ESTILO_BASE)); });
+        lista.forEach(function (c) { markersPorId.get(c.id).setStyle(Object.assign({}, estiloBase(c.id))); });
 
         if (recentrar) {
-          const ciu = $('select-ciudad').value, zon = $('select-zona').value;
+          var ciu = $('select-ciudad').value, zon = $('select-zona').value;
           if (ciu === 'Todas' && zon === 'Todas' && !busquedaActiva && !origen && !soloFavoritos) {
             mapaCofiteca.setView(VISTA_ARGENTINA, zoomInicial());
           } else if (lista.length) {
-            mapaCofiteca.fitBounds(L.latLngBounds(lista.map(c => [c.lat, c.lon])), { padding: [40, 40], maxZoom: 17 });
+            mapaCofiteca.fitBounds(L.latLngBounds(lista.map(function (c) { return [c.lat, c.lon]; })), { padding: [40, 40], maxZoom: 17 });
           }
         }
 
@@ -1552,23 +1555,23 @@ const datosJSON = JSON.stringify({
       // ---------- Lista ----------
       function setLista(lista) {
         listaActual = lista;
-        idsEnLista = new Set(lista.map(c => c.id));
+        idsEnLista = new Set(lista.map(function (c) { return c.id; }));
         mostrados = PAGINA;
         idDestacado = null;
         renderizarLista();
       }
 
       function crearCard(c) {
-        const div = document.createElement('div');
+        var div = document.createElement('div');
         div.className = 'cafe-card' + (c.id === idDestacado ? ' destacada' : '');
         div.dataset.id = c.id;
 
-        const dist = c.dist !== undefined ? '<br><b>📍 ' + textoDistancia(c.dist) + '</b>' : '';
-        const ig = c.instagram ? '<a href="' + esc(c.instagram) + '" target="_blank" rel="noopener noreferrer">Instagram</a>' : '';
-        const rank = rankMap.get(c.id);
-        const badge = rank ? ' <span class="card-badge">#' + rank + ' top</span>' : '';
-        const favActivo = favoritos.has(c.id) ? 'is-fav' : '';
-        const favIcon = favoritos.has(c.id) ? '★' : '☆';
+        var dist = c.dist !== undefined ? '<br><b>📍 ' + textoDistancia(c.dist) + '</b>' : '';
+        var ig = c.instagram ? '<a href="' + esc(c.instagram) + '" target="_blank" rel="noopener noreferrer">Instagram</a>' : '';
+        var rank = rankMap.get(c.id);
+        var badge = rank ? ' <span class="card-badge">#' + rank + ' top</span>' : '';
+        var favActivo = favoritos.has(c.id) ? 'is-fav' : '';
+        var favIcon = favoritos.has(c.id) ? '★' : '☆';
 
         div.innerHTML =
           '<button class="fav-btn ' + favActivo + '" data-fav="' + c.id + '" aria-label="Favorito">' + favIcon + '</button>' +
@@ -1582,20 +1585,20 @@ const datosJSON = JSON.stringify({
             '<a href="' + urlComoLlegar(c) + '" target="_blank" rel="noopener noreferrer">Cómo llegar</a>' +
           '</div>';
 
-        div.querySelector('.fav-btn').addEventListener('click', e => {
+        div.querySelector('.fav-btn').addEventListener('click', function (e) {
           e.stopPropagation();
           window.cofiToggleFav(c.id, e.currentTarget);
         });
-        div.querySelector('[data-ver-mapa]').addEventListener('click', () => verEnMapa(c.id));
+        div.querySelector('[data-ver-mapa]').addEventListener('click', function () { verEnMapa(c.id); });
         return div;
       }
 
       function renderizarLista() {
-        const cont = $('cofi-resultados');
-        const frag = document.createDocumentFragment();
+        var cont = $('cofi-resultados');
+        var frag = document.createDocumentFragment();
 
         if (!listaActual.length) {
-          const empty = document.createElement('div');
+          var empty = document.createElement('div');
           empty.className = 'msg-vacio';
           empty.innerHTML =
             '<span class="emoji">☕</span>' +
@@ -1604,32 +1607,32 @@ const datosJSON = JSON.stringify({
             '<button onclick="cofiUsarMiGPS()">Cerca de mi ubicación</button>';
           frag.appendChild(empty);
         } else {
-          listaActual.slice(0, mostrados).forEach(c => frag.appendChild(crearCard(c)));
+          listaActual.slice(0, mostrados).forEach(function (c) { frag.appendChild(crearCard(c)); });
           if (listaActual.length > mostrados) {
-            const btn = document.createElement('button');
+            var btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'btn-ver-mas';
             btn.textContent = 'Ver más (' + (listaActual.length - mostrados) + ' restantes)';
-            btn.addEventListener('click', () => { mostrados += PAGINA; renderizarLista(); });
+            btn.addEventListener('click', function () { mostrados += PAGINA; renderizarLista(); });
             frag.appendChild(btn);
           }
         }
         cont.replaceChildren(frag);
 
-        const count = $('cofi-count');
+        var count = $('cofi-count');
         count.textContent = listaActual.length
           ? 'Mostrando ' + Math.min(mostrados, listaActual.length) + ' de ' + listaActual.length + ' locales'
           : '';
       }
 
       function verEnMapa(id) {
-        const c = baseDatos[id];
-        const m = markersPorId.get(id);
+        var c = baseDatos[id];
+        var m = markersPorId.get(id);
         registrarVisto(id);
         renderRecientes();
         resaltarCard(id);
         document.querySelector('#vista-mapa .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        if (markerCluster.hasLayer(m)) markerCluster.zoomToShowLayer(m, () => m.openPopup());
+        if (markerCluster.hasLayer(m)) markerCluster.zoomToShowLayer(m, function () { m.openPopup(); });
         else {
           mapaCofiteca.setView([c.lat, c.lon], 16);
           m.openPopup();
@@ -1638,43 +1641,44 @@ const datosJSON = JSON.stringify({
 
       function resaltarCard(id) {
         idDestacado = id;
-        document.querySelectorAll('#cofi-resultados .cafe-card.destacada').forEach(el => el.classList.remove('destacada'));
-        const el = document.querySelector('#cofi-resultados .cafe-card[data-id="' + id + '"]');
+        document.querySelectorAll('#cofi-resultados .cafe-card.destacada').forEach(function (el) { el.classList.remove('destacada'); });
+        var el = document.querySelector('#cofi-resultados .cafe-card[data-id="' + id + '"]');
         if (el) el.classList.add('destacada');
       }
 
       window.cofiVerEnLista = function (id) {
-        const idx = listaActual.findIndex(c => c.id === id);
+        var idx = listaActual.findIndex(function (c) { return c.id === id; });
         if (idx === -1) return;
         if (idx >= mostrados) { mostrados = idx + 1; renderizarLista(); }
         resaltarCard(id);
-        const el = document.querySelector('#cofi-resultados .cafe-card[data-id="' + id + '"]');
+        var el = document.querySelector('#cofi-resultados .cafe-card[data-id="' + id + '"]');
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       };
 
       // ---------- Filtros ----------
       window.cofiActualizarZonas = function () {
-        const ciu = $('select-ciudad').value;
-        const base = ciu === 'Todas' ? baseDatos : baseDatos.filter(c => c.ciudad === ciu);
-        const zonas = [...new Set(base.map(c => c.zona))].filter(z => z && z !== '-' && z !== 'Sin Zona').sort((a, b) => a.localeCompare(b, 'es'));
-        $('select-zona').innerHTML = '<option value="Todas">Zona / Barrio</option>' + zonas.map(z => '<option value="' + esc(z) + '">' + esc(z) + '</option>').join('');
+        var ciu = $('select-ciudad').value;
+        var base = ciu === 'Todas' ? baseDatos : baseDatos.filter(function (c) { return c.ciudad === ciu; });
+        var zonas = Array.from(new Set(base.map(function (c) { return c.zona; }))).filter(function (z) { return z && z !== '-' && z !== 'Sin Zona'; }).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+        $('select-zona').innerHTML = '<option value="Todas">Zona / Barrio</option>' + zonas.map(function (z) { return '<option value="' + esc(z) + '">' + esc(z) + '</option>'; }).join('');
       };
 
       function filtrarDatos() {
-        const ciu = $('select-ciudad').value;
-        const zon = $('select-zona').value;
-        const tokens = norm($('input-busqueda').value).trim().split(/\s+/).filter(Boolean);
+        var ciu = $('select-ciudad').value;
+        var zon = $('select-zona').value;
+        var tokens = norm($('input-busqueda').value).trim().split(/\s+/).filter(Boolean);
 
-        let filtrados = baseDatos.filter(c =>
-          (ciu === 'Todas' || c.ciudad === ciu) &&
-          (zon === 'Todas' || c.zona === zon) &&
-          (!soloFavoritos || favoritos.has(c.id)) &&
-          tokens.every(t => c._q.includes(t))
-        );
+        var filtrados = baseDatos.filter(function (c) {
+          return (ciu === 'Todas' || c.ciudad === ciu) &&
+            (zon === 'Todas' || c.zona === zon) &&
+            (!soloFavoritos || favoritos.has(c.id)) &&
+            tokens.every(function (t) { return c._q.indexOf(t) !== -1; });
+        });
 
         if (origen) {
-          filtrados = filtrados.slice().sort((a, b) =>
-            calcularD(origen.lat, origen.lon, a.lat, a.lon) - calcularD(origen.lat, origen.lon, b.lat, b.lon));
+          filtrados = filtrados.slice().sort(function (a, b) {
+            return calcularD(origen.lat, origen.lon, a.lat, a.lon) - calcularD(origen.lat, origen.lon, b.lat, b.lon);
+          });
         }
         return filtrados;
       }
@@ -1687,16 +1691,16 @@ const datosJSON = JSON.stringify({
 
       function aplicarFiltros(recentrar) {
         busquedaActiva = $('input-busqueda').value.trim().length > 0;
-        const filtrados = filtrarDatos();
+        var filtrados = filtrarDatos();
         setLista(filtrados);
         dibujarMapa(filtrados, recentrar);
         sincronizarURL();
       }
 
-      let debounceFiltro = null;
+      var debounceFiltro = null;
       window.cofiFiltrar = function (modo) {
         clearTimeout(debounceFiltro);
-        debounceFiltro = setTimeout(() => {
+        debounceFiltro = setTimeout(function () {
           if (modo === true) limpiarOrigen();
           aplicarFiltros(modo === true || modo === 'texto');
         }, 200);
@@ -1704,10 +1708,11 @@ const datosJSON = JSON.stringify({
       window.cofiQuitarOrigen = function () { limpiarOrigen(); aplicarFiltros(true); };
 
       function sincronizarURL() {
-        const p = new URLSearchParams(location.search);
-        const c = $('select-ciudad').value;
-        const q = $('input-busqueda').value.trim();
-        const tab = document.querySelector('.view-tab-btn.active').id.replace('btn-tab-', '');
+        var p = new URLSearchParams(location.search);
+        var c = $('select-ciudad').value;
+        var q = $('input-busqueda').value.trim();
+        var activeBtn = document.querySelector('.view-tab-btn.active');
+        var tab = activeBtn ? activeBtn.id.replace('btn-tab-', '') : 'mapa';
         if (c !== 'Todas') p.set('c', c); else p.delete('c');
         if (q) p.set('q', q); else p.delete('q');
         if (tab !== 'mapa') p.set('v', tab); else p.delete('v');
@@ -1715,15 +1720,15 @@ const datosJSON = JSON.stringify({
       }
 
       function hidratarDesdeURL() {
-        const p = new URLSearchParams(location.search);
-        const c = p.get('c'), q = p.get('q'), v = p.get('v');
+        var p = new URLSearchParams(location.search);
+        var c = p.get('c'), q = p.get('q'), v = p.get('v');
         if (c) {
-          const opt = Array.from($('select-ciudad').options).find(o => o.value === c);
+          var opt = Array.from($('select-ciudad').options).find(function (o) { return o.value === c; });
           if (opt) { $('select-ciudad').value = c; window.cofiActualizarZonas(); }
         }
         if (q) $('input-busqueda').value = q;
-        if (v && ['ranking', 'tostadores', 'mercado'].includes(v)) {
-          setTimeout(() => window.cofiSwitchTab(v), 50);
+        if (v && ['ranking', 'tostadores', 'mercado'].indexOf(v) !== -1) {
+          window.cofiSwitchTab(v);
         }
       }
 
@@ -1747,31 +1752,31 @@ const datosJSON = JSON.stringify({
         mapaRanking = L.map('ranking-map', { minZoom: 2, maxZoom: 19 }).setView(VISTA_ARGENTINA, 4);
         L.maplibreGL({ style: ESTILO_MAPA, attribution: ATRIBUCION }).addTo(mapaRanking);
         markerClusterRanking = L.markerClusterGroup({ maxClusterRadius: 35, disableClusteringAtZoom: 12, spiderfyOnMaxZoom: true }).addTo(mapaRanking);
-        setTimeout(() => mapaRanking.invalidateSize(), 200);
+        setTimeout(function () { mapaRanking.invalidateSize(); }, 200);
       }
 
       window.cofiActualizarRankingCiudades = function () {
-        const tipo = $('select-ranking-tipo').value;
-        const data = rankingDatos[tipo] || [];
-        const lugares = [...new Set(data.map(c => c.lugar))].sort((a, b) => a.localeCompare(b, 'es'));
-        const texto = tipo === 'arg' ? 'Todas las Ciudades' : 'Todos los Países';
-        $('select-ranking-ciudad').innerHTML = '<option value="Todas">' + texto + '</option>' + lugares.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+        var tipo = $('select-ranking-tipo').value;
+        var data = rankingDatos[tipo] || [];
+        var lugares = Array.from(new Set(data.map(function (c) { return c.lugar; }))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+        var texto = tipo === 'arg' ? 'Todas las Ciudades' : 'Todos los Países';
+        $('select-ranking-ciudad').innerHTML = '<option value="Todas">' + texto + '</option>' + lugares.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
       };
 
       window.cofiFiltrarRanking = function () {
         if (!markerClusterRanking) return;
-        const tipo = $('select-ranking-tipo').value;
-        const lugar = $('select-ranking-ciudad').value;
-        const filtrados = (rankingDatos[tipo] || []).filter(c => lugar === 'Todas' || c.lugar === lugar);
+        var tipo = $('select-ranking-tipo').value;
+        var lugar = $('select-ranking-ciudad').value;
+        var filtrados = (rankingDatos[tipo] || []).filter(function (c) { return lugar === 'Todas' || c.lugar === lugar; });
 
-        const markers = filtrados.map(c => {
-          const color = getRankingColor(c.rank);
-          const icon = L.divIcon({
+        var markers = filtrados.map(function (c) {
+          var color = getRankingColor(c.rank);
+          var icon = L.divIcon({
             html: '<div style="background-color:' + color + '; color:white; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-weight:800; border:2px solid white; box-shadow:0 3px 6px rgba(0,0,0,.3); font-size:13px; font-family:Inter,sans-serif;">' + esc(c.rank) + '</div>',
             className: 'custom-ranking-icon', iconSize: [28, 28], iconAnchor: [14, 14]
           });
-          const ig = c.ig ? '<div class="popup-acciones"><a href="' + esc(c.ig) + '" target="_blank" rel="noopener noreferrer" class="popup-btn">Instagram</a></div>' : '';
-          return L.marker([c.lat, c.lon], { icon }).bindPopup(
+          var ig = c.ig ? '<div class="popup-acciones"><a href="' + esc(c.ig) + '" target="_blank" rel="noopener noreferrer" class="popup-btn">Instagram</a></div>' : '';
+          return L.marker([c.lat, c.lon], { icon: icon }).bindPopup(
             '<div class="popup-cafe"><span class="rank-badge" style="background:' + color + ';">#' + esc(c.rank) + '</span><br><b>' + esc(c.nombre) + '</b><small>' + esc(c.ubicacion) + ' • ' + esc(c.lugar) + '</small>' + ig + '</div>',
             { maxWidth: 260 }
           );
@@ -1781,20 +1786,20 @@ const datosJSON = JSON.stringify({
         markerClusterRanking.addLayers(markers);
 
         if (filtrados.length) {
-          let zoom = 12;
+          var zoom = 12;
           if (lugar === 'Todas') zoom = tipo === 'mun' ? 2 : 4;
           else if (tipo !== 'arg') zoom = 5;
-          const lat = filtrados.reduce((s, c) => s + c.lat, 0) / filtrados.length;
-          const lon = filtrados.reduce((s, c) => s + c.lon, 0) / filtrados.length;
+          var lat = filtrados.reduce(function (s, c) { return s + c.lat; }, 0) / filtrados.length;
+          var lon = filtrados.reduce(function (s, c) { return s + c.lon; }, 0) / filtrados.length;
           mapaRanking.setView([lat, lon], zoom);
         }
 
-        const frag = document.createDocumentFragment();
-        filtrados.forEach(c => {
-          const color = getRankingColor(c.rank);
-          const div = document.createElement('div');
+        var frag = document.createDocumentFragment();
+        filtrados.forEach(function (c) {
+          var color = getRankingColor(c.rank);
+          var div = document.createElement('div');
           div.className = 'cafe-card';
-          const ig = c.ig ? '<a href="' + esc(c.ig) + '" target="_blank" rel="noopener noreferrer">Instagram</a>' : '';
+          var ig = c.ig ? '<a href="' + esc(c.ig) + '" target="_blank" rel="noopener noreferrer">Instagram</a>' : '';
           div.innerHTML =
             '<div><h3 style="padding-right:0"><span class="rank-badge" style="background:' + color + ';">#' + esc(c.rank) + '</span> ' + esc(c.nombre) + '</h3>' +
             '<p>' + esc(c.ubicacion) + ' • <b>' + esc(c.lugar) + '</b></p></div>' +
@@ -1806,20 +1811,20 @@ const datosJSON = JSON.stringify({
 
       // ---------- Tostadores ----------
       window.cofiRenderizarTostadores = function () {
-        const ciudad = $('select-ciudad-tostadores').value;
-        const filtrados = tostadoresDatos.filter(t => ciudad === 'Todas' || t.ciudad === ciudad);
-        const cont = $('lista-tostadores');
+        var ciudad = $('select-ciudad-tostadores').value;
+        var filtrados = tostadoresDatos.filter(function (t) { return ciudad === 'Todas' || t.ciudad === ciudad; });
+        var cont = $('lista-tostadores');
 
         if (!filtrados.length) {
           cont.innerHTML = '<p class="msg-vacio"><span class="emoji">🌱</span>Todavía no hay tostadores registrados en esta ciudad.</p>';
           return;
         }
-        const frag = document.createDocumentFragment();
-        filtrados.forEach(t => {
-          const div = document.createElement('div');
+        var frag = document.createDocumentFragment();
+        filtrados.forEach(function (t) {
+          var div = document.createElement('div');
           div.className = 'tostador-card';
-          const img = t.foto || IMG_FALLBACK;
-          let botones = '';
+          var img = t.foto || IMG_FALLBACK;
+          var botones = '';
           if (t.ig) botones += '<a href="' + esc(t.ig) + '" target="_blank" rel="noopener noreferrer" class="btn-outline-mad" style="margin-bottom:8px;display:flex;">Instagram</a>';
           if (t.tienda) botones += '<a href="' + esc(t.tienda) + '" target="_blank" rel="noopener noreferrer" class="btn-primary-mad" style="display:flex;">Tienda Online</a>';
           div.innerHTML =
@@ -1841,19 +1846,19 @@ const datosJSON = JSON.stringify({
         busquedaActiva = false;
         limpiarOrigen();
 
-        origen = { lat, lon, label };
+        origen = { lat: lat, lon: lon, label: label };
         markerOrigen = L.circleMarker([lat, lon], { radius: 9, color: '#1a0f0a', fillColor: '#fff', weight: 3, fillOpacity: 1 })
           .addTo(mapaCofiteca).bindPopup(esc(label)).openPopup();
 
-        const conDist = baseDatos.map(c => ({ ...c, dist: calcularD(lat, lon, c.lat, c.lon) }))
-          .sort((a, b) => a.dist - b.dist);
+        var conDist = baseDatos.map(function (c) { return Object.assign({}, c, { dist: calcularD(lat, lon, c.lat, c.lon) }); })
+          .sort(function (a, b) { return a.dist - b.dist; });
         setLista(conDist);
 
         dibujarMapa(baseDatos, false);
         mapaCofiteca.setView([lat, lon], 15);
         document.querySelector('#vista-mapa .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        const st = $('cofi-status');
+        var st = $('cofi-status');
         st.innerHTML = '📍 Más cercanos a <b>' + esc(label) + '</b>' +
           ' · <a onclick="cofiFiltrarRadio(1)">1 km</a>' +
           ' · <a onclick="cofiFiltrarRadio(5)">5 km</a>' +
@@ -1866,8 +1871,8 @@ const datosJSON = JSON.stringify({
 
       window.cofiFiltrarRadio = function (km) {
         if (!origen) return;
-        const dentro = baseDatos.map(c => ({ ...c, dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) }))
-          .filter(c => c.dist <= km).sort((a, b) => a.dist - b.dist);
+        var dentro = baseDatos.map(function (c) { return Object.assign({}, c, { dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) }); })
+          .filter(function (c) { return c.dist <= km; }).sort(function (a, b) { return a.dist - b.dist; });
         setLista(dentro);
         dibujarMapa(dentro, false);
         $('cofi-status').innerHTML = '📍 A menos de <b>' + km + ' km</b> de <b>' + esc(origen.label) + '</b>' +
@@ -1875,113 +1880,118 @@ const datosJSON = JSON.stringify({
       };
 
       window.cofiUsarMiGPS = function () {
-        if (!navigator.geolocation) { ensureSwal().then(() => Swal.fire('Error', 'Tu navegador no soporta GPS.', 'error')); return; }
+        if (!navigator.geolocation) { ensureSwal().then(function () { Swal.fire('Error', 'Tu navegador no soporta GPS.', 'error'); }); return; }
         navigator.geolocation.getCurrentPosition(
-          p => cofiProcesarOrigen(p.coords.latitude, p.coords.longitude, 'tu ubicación'),
-          () => ensureSwal().then(() => Swal.fire('Aviso', 'No pudimos obtener tu ubicación. Revisá los permisos.', 'warning')),
+          function (p) { cofiProcesarOrigen(p.coords.latitude, p.coords.longitude, 'tu ubicación'); },
+          function () { ensureSwal().then(function () { Swal.fire('Aviso', 'No pudimos obtener tu ubicación. Revisá los permisos.', 'warning'); }); },
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
         );
       };
 
-      window.cofiMedirDesdeDireccion = async function () {
-        await ensureSwal();
-        Swal.fire({
-          title: '¿Dónde estás?',
-          html: '<p style="font-size:.9rem;color:#5c3d2e;margin-bottom:15px;">Escribí tu calle y ciudad (Ej: Güemes, Mar del Plata)</p>' +
-                '<input id="swal-autocomplete-input" class="swal-custom-input" placeholder="Escribir..." autocomplete="off">' +
-                '<div id="autocomplete-results" style="text-align:left;margin-top:10px;max-height:200px;overflow-y:auto;"></div>',
-          showConfirmButton: false, showCancelButton: true, cancelButtonText: 'Cerrar',
-          customClass: { popup: 'swal-custom-popup', cancelButton: 'swal-custom-btn-cancel' },
-          didOpen: () => {
-            const input = $('swal-autocomplete-input');
-            const resultsContainer = $('autocomplete-results');
-            let timeout = null, solicitudId = 0;
-            input.focus();
-            input.addEventListener('input', () => {
-              clearTimeout(timeout);
-              const val = input.value.trim();
-              if (val.length < 4) { resultsContainer.innerHTML = ''; return; }
-              resultsContainer.innerHTML = '<div style="padding:10px;color:#1a0f0a;font-weight:bold;text-align:center;">Buscando...</div>';
-              timeout = setTimeout(async () => {
-                const miId = ++solicitudId;
-                try {
-                  const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(val) + '&countrycodes=ar&addressdetails=1&limit=6');
-                  const data = await res.json();
-                  if (miId !== solicitudId) return;
-                  resultsContainer.innerHTML = '';
-                  if (!data.length) { resultsContainer.innerHTML = '<div style="padding:10px;opacity:.7;text-align:center;">No encontramos la dirección.</div>'; return; }
-                  data.forEach(item => {
-                    const partes = [];
-                    if (item.address.road) partes.push(item.address.road + (item.address.house_number ? ' ' + item.address.house_number : ''));
-                    const localidad = item.address.city || item.address.town || item.address.village;
-                    if (localidad) partes.push(localidad);
-                    const nombreStr = partes.length ? partes.join(', ') : item.display_name.split(',').slice(0, 3).join(', ');
-                    const btn = document.createElement('button');
-                    btn.style.cssText = 'width:100%;text-align:left;background:rgba(255,255,255,.7);color:#1a0f0a;border:1px solid rgba(196,167,125,.5);padding:12px;border-radius:6px;cursor:pointer;margin-bottom:8px;font-family:Inter,sans-serif;font-size:.9rem;';
-                    btn.innerHTML = '📍 <b>' + esc(nombreStr) + '</b>';
-                    btn.onclick = () => { Swal.close(); cofiProcesarOrigen(parseFloat(item.lat), parseFloat(item.lon), nombreStr); };
-                    resultsContainer.appendChild(btn);
-                  });
-                } catch { if (miId === solicitudId) resultsContainer.innerHTML = '<div style="padding:10px;color:red;text-align:center;">Error con el mapa.</div>'; }
-              }, 800);
-            });
-          }
+      window.cofiMedirDesdeDireccion = function () {
+        ensureSwal().then(function () {
+          Swal.fire({
+            title: '¿Dónde estás?',
+            html: '<p style="font-size:.9rem;color:#5c3d2e;margin-bottom:15px;">Escribí tu calle y ciudad (Ej: Güemes, Mar del Plata)</p>' +
+                  '<input id="swal-autocomplete-input" class="swal-custom-input" placeholder="Escribir..." autocomplete="off">' +
+                  '<div id="autocomplete-results" style="text-align:left;margin-top:10px;max-height:200px;overflow-y:auto;"></div>',
+            showConfirmButton: false, showCancelButton: true, cancelButtonText: 'Cerrar',
+            customClass: { popup: 'swal-custom-popup', cancelButton: 'swal-custom-btn-cancel' },
+            didOpen: function () {
+              var input = $('swal-autocomplete-input');
+              var resultsContainer = $('autocomplete-results');
+              var timeout = null, solicitudId = 0;
+              input.focus();
+              input.addEventListener('input', function () {
+                clearTimeout(timeout);
+                var val = input.value.trim();
+                if (val.length < 4) { resultsContainer.innerHTML = ''; return; }
+                resultsContainer.innerHTML = '<div style="padding:10px;color:#1a0f0a;font-weight:bold;text-align:center;">Buscando...</div>';
+                timeout = setTimeout(function () {
+                  var miId = ++solicitudId;
+                  fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(val) + '&countrycodes=ar&addressdetails=1&limit=6')
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                      if (miId !== solicitudId) return;
+                      resultsContainer.innerHTML = '';
+                      if (!data.length) { resultsContainer.innerHTML = '<div style="padding:10px;opacity:.7;text-align:center;">No encontramos la dirección.</div>'; return; }
+                      data.forEach(function (item) {
+                        var partes = [];
+                        if (item.address.road) partes.push(item.address.road + (item.address.house_number ? ' ' + item.address.house_number : ''));
+                        var localidad = item.address.city || item.address.town || item.address.village;
+                        if (localidad) partes.push(localidad);
+                        var nombreStr = partes.length ? partes.join(', ') : item.display_name.split(',').slice(0, 3).join(', ');
+                        var btn = document.createElement('button');
+                        btn.style.cssText = 'width:100%;text-align:left;background:rgba(255,255,255,.7);color:#1a0f0a;border:1px solid rgba(196,167,125,.5);padding:12px;border-radius:6px;cursor:pointer;margin-bottom:8px;font-family:Inter,sans-serif;font-size:.9rem;';
+                        btn.innerHTML = '📍 <b>' + esc(nombreStr) + '</b>';
+                        btn.onclick = function () { Swal.close(); cofiProcesarOrigen(parseFloat(item.lat), parseFloat(item.lon), nombreStr); };
+                        resultsContainer.appendChild(btn);
+                      });
+                    })
+                    .catch(function () { if (miId === solicitudId) resultsContainer.innerHTML = '<div style="padding:10px;color:red;text-align:center;">Error con el mapa.</div>'; });
+                }, 800);
+              });
+            }
+          });
         });
       };
 
       // ---------- Formularios ----------
-      window.cofiAbrirReporte = async function () {
-        await ensureSwal();
-        const { value: formValues } = await Swal.fire({
-          title: 'Soporte',
-          customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
-          html: '<div style="text-align:left;">' +
-                '<select id="swal-tipo" class="swal-custom-input" style="margin-bottom:10px;"><option value="Dato Incorrecto">Corrección de datos</option><option value="Local Cerrado">Local cerrado</option></select>' +
-                '<input id="swal-local" class="swal-custom-input" placeholder="Nombre del local o tu teléfono" style="margin-bottom:10px;">' +
-                '<textarea id="swal-detalle" class="swal-custom-input" placeholder="Detalle de la solicitud..." style="height:80px;resize:none;"></textarea></div>',
-          showCancelButton: true, confirmButtonText: 'Enviar', cancelButtonText: 'Cancelar',
-          preConfirm: () => {
-            const local = $('swal-local').value.trim();
-            if (!local) { Swal.showValidationMessage('Ingresá una referencia válida'); return false; }
-            return { tipo: $('swal-tipo').value, local, detalle: $('swal-detalle').value.trim() };
-          }
-        });
-        if (formValues) window.cofiEnviarReporteEmail(formValues);
-      };
-
-      window.cofiAbrirSumate = async function () {
-        await ensureSwal();
-        const { value: formValues } = await Swal.fire({
-          title: 'Añadir Local',
-          customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
-          html: '<div style="text-align:left;">' +
-                '<select id="sumate-tipo" class="swal-custom-input" style="margin-bottom:10px;"><option value="Cafetería / Tostaduría">Cafetería / Tostaduría</option></select>' +
-                '<input id="sumate-nombre" class="swal-custom-input" placeholder="Nombre comercial" style="margin-bottom:10px;">' +
-                '<input id="sumate-link" class="swal-custom-input" placeholder="Link a Instagram o Web" style="margin-bottom:10px;"></div>',
-          showCancelButton: true, confirmButtonText: 'Enviar Solicitud', cancelButtonText: 'Cancelar',
-          preConfirm: () => {
-            const nombre = $('sumate-nombre').value.trim();
-            if (!nombre) { Swal.showValidationMessage('Ingresá el nombre comercial'); return false; }
-            return { tipo: 'ALTA NUEVA: ' + $('sumate-tipo').value, local: nombre, detalle: 'Link/IG: ' + $('sumate-link').value.trim() };
-          }
-        });
-        if (formValues) window.cofiEnviarReporteEmail(formValues);
-      };
-
-      window.cofiEnviarReporteEmail = async function (datosForm) {
-        try {
-          await fetch('/api/reporte?t=' + Date.now(), {
-            method: 'POST', mode: 'no-cors',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams(datosForm)
+      window.cofiAbrirReporte = function () {
+        ensureSwal().then(function () {
+          return Swal.fire({
+            title: 'Soporte',
+            customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
+            html: '<div style="text-align:left;">' +
+                  '<select id="swal-tipo" class="swal-custom-input" style="margin-bottom:10px;"><option value="Dato Incorrecto">Corrección de datos</option><option value="Local Cerrado">Local cerrado</option></select>' +
+                  '<input id="swal-local" class="swal-custom-input" placeholder="Nombre del local o tu teléfono" style="margin-bottom:10px;">' +
+                  '<textarea id="swal-detalle" class="swal-custom-input" placeholder="Detalle de la solicitud..." style="height:80px;resize:none;"></textarea></div>',
+            showCancelButton: true, confirmButtonText: 'Enviar', cancelButtonText: 'Cancelar',
+            preConfirm: function () {
+              var local = $('swal-local').value.trim();
+              if (!local) { Swal.showValidationMessage('Ingresá una referencia válida'); return false; }
+              return { tipo: $('swal-tipo').value, local: local, detalle: $('swal-detalle').value.trim() };
+            }
           });
-          Swal.fire({ title: 'Enviado', text: 'Tu solicitud fue recibida.', icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
-        } catch {
-          Swal.fire({ title: 'Error', text: 'Problemas de conexión con el servidor.', icon: 'error', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
-        }
+        }).then(function (res) {
+          if (res && res.value) window.cofiEnviarReporteEmail(res.value);
+        });
       };
 
-      document.addEventListener('keydown', e => {
+      window.cofiAbrirSumate = function () {
+        ensureSwal().then(function () {
+          return Swal.fire({
+            title: 'Añadir Local',
+            customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
+            html: '<div style="text-align:left;">' +
+                  '<select id="sumate-tipo" class="swal-custom-input" style="margin-bottom:10px;"><option value="Cafetería / Tostaduría">Cafetería / Tostaduría</option></select>' +
+                  '<input id="sumate-nombre" class="swal-custom-input" placeholder="Nombre comercial" style="margin-bottom:10px;">' +
+                  '<input id="sumate-link" class="swal-custom-input" placeholder="Link a Instagram o Web" style="margin-bottom:10px;"></div>',
+            showCancelButton: true, confirmButtonText: 'Enviar Solicitud', cancelButtonText: 'Cancelar',
+            preConfirm: function () {
+              var nombre = $('sumate-nombre').value.trim();
+              if (!nombre) { Swal.showValidationMessage('Ingresá el nombre comercial'); return false; }
+              return { tipo: 'ALTA NUEVA: ' + $('sumate-tipo').value, local: nombre, detalle: 'Link/IG: ' + $('sumate-link').value.trim() };
+            }
+          });
+        }).then(function (res) {
+          if (res && res.value) window.cofiEnviarReporteEmail(res.value);
+        });
+      };
+
+      window.cofiEnviarReporteEmail = function (datosForm) {
+        fetch('/api/reporte?t=' + Date.now(), {
+          method: 'POST', mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams(datosForm)
+        }).then(function () {
+          Swal.fire({ title: 'Enviado', text: 'Tu solicitud fue recibida.', icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
+        }).catch(function () {
+          Swal.fire({ title: 'Error', text: 'Problemas de conexión con el servidor.', icon: 'error', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
+        });
+      };
+
+      document.addEventListener('keydown', function (e) {
         if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'SELECT') {
           e.preventDefault();
           $('input-busqueda').focus();
@@ -1993,18 +2003,18 @@ const datosJSON = JSON.stringify({
       });
 
       // ---------- Arranque ----------
-      const ciudades = [...new Set(baseDatos.map(c => c.ciudad))].sort((a, b) => a.localeCompare(b, 'es'));
-      const opcionesCiudades = ciudades.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+      var ciudades = Array.from(new Set(baseDatos.map(function (c) { return c.ciudad; }))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+      var opcionesCiudades = ciudades.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
       $('select-ciudad').innerHTML = '<option value="Todas">Región / Ciudad</option>' + opcionesCiudades;
       $('select-mercado-ciudad').innerHTML = '<option value="Todas">Todo el país (Región / Ciudad)</option>' + opcionesCiudades;
 
-      const ciudadesTost = [...new Set(tostadoresDatos.map(t => t.ciudad))].sort((a, b) => a.localeCompare(b, 'es'));
-      $('select-ciudad-tostadores').innerHTML = '<option value="Todas">Todas las Ciudades</option>' + ciudadesTost.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+      var ciudadesTost = Array.from(new Set(tostadoresDatos.map(function (t) { return t.ciudad; }))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+      $('select-ciudad-tostadores').innerHTML = '<option value="Todas">Todas las Ciudades</option>' + ciudadesTost.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
 
-      const GRANDES = ['CABA y Gran Buenos Aires', 'Córdoba', 'Mar del Plata', 'Mendoza', 'La Plata'];
+      var GRANDES = ['CABA y Gran Buenos Aires', 'Córdoba', 'Mar del Plata', 'Mendoza', 'La Plata'];
       $('quick-chips').innerHTML = GRANDES
-        .filter(r => ciudades.includes(r))
-        .map(r => '<button class="quick-chip" onclick="cofiQuickRegion(\'' + esc(r) + '\')">' + esc(r.replace(' y Gran Buenos Aires', '')) + '</button>')
+        .filter(function (r) { return ciudades.indexOf(r) !== -1; })
+        .map(function (r) { return '<button class="quick-chip" onclick="cofiQuickRegion(\'' + esc(r) + '\')">' + esc(r.replace(' y Gran Buenos Aires', '')) + '</button>'; })
         .join('');
 
       window.cofiQuickRegion = function (r) {
@@ -2020,7 +2030,7 @@ const datosJSON = JSON.stringify({
       window.cofiActualizarMetricas();
       initMapa();
       hidratarDesdeURL();
-      const vieneConFiltro = $('input-busqueda').value.trim() !== '' || $('select-ciudad').value !== 'Todas';
+      var vieneConFiltro = $('input-busqueda').value.trim() !== '' || $('select-ciudad').value !== 'Todas';
       aplicarFiltros(vieneConFiltro);
     }
 
