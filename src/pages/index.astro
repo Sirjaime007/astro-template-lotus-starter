@@ -96,10 +96,6 @@ const datosJSON = JSON.stringify({
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-  <script is:inline defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script is:inline defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script is:inline defer src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"></script>
-  <script is:inline defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.js"></script>
 
   <style is:global>
     :root {
@@ -658,819 +654,1252 @@ const datosJSON = JSON.stringify({
   <script is:inline type="application/json" id="cofi-data" set:html={datosJSON}></script>
 
   <script is:inline>
-    function iniciarBuscadorSeguro(intento) {
-      intento = intento || 0;
-      if (typeof L === 'undefined' || typeof L.markerClusterGroup === 'undefined' ||
-          typeof L.maplibreGL === 'undefined' || typeof maplibregl === 'undefined') {
-        if (intento < 200) setTimeout(function () { iniciarBuscadorSeguro(intento + 1); }, 50);
-        return;
-      }
-      var mapEl = document.getElementById('cofiteca-map');
-      var dataEl = document.getElementById('cofi-data');
-      if (!mapEl || !dataEl || mapEl._cofiInit) return;
-      mapEl._cofiInit = true;
+    (function () {
+      function boot() {
+        var dataEl = document.getElementById('cofi-data');
+        var mapEl = document.getElementById('cofiteca-map');
+        if (!dataEl || !mapEl || mapEl._cofiBooted) return;
+        mapEl._cofiBooted = true;
 
-      var $ = function (id) { return document.getElementById(id); };
-      var norm = function (s) { return (s == null ? '' : String(s)).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); };
-      var esc = function (s) {
-        return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) {
-          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
-        });
-      };
-
-      var datos = JSON.parse(dataEl.textContent);
-      var mercadoLista = datos.mercado || [];
-      var baseDatos = datos.cafes.map(function (c, idx) {
-        return {
-          id: c.id, nombre: c.n, ubicacion: c.u, instagram: c.s, lat: c.a, lon: c.o,
-          ciudad: datos.regiones[c.r], zona: c.z >= 0 ? datos.zonas[c.z] : '', ciudadReal: c.c >= 0 ? datos.ciudadesReales[c.c] : '', slug: c.slug,
-          mkt: mercadoLista[idx] || { t: 1.08, g: 'Medio-Alto', o: 10.5, k: 2, c: 'Media', a: 18 }
+        var $ = function (id) { return document.getElementById(id); };
+        var norm = function (s) {
+          return (s == null ? '' : String(s))
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim();
         };
-      });
-      baseDatos.forEach(function (c) { c._q = norm([c.nombre, c.ubicacion, c.zona, c.ciudadReal, c.ciudad].join(' ')); });
-
-      var tostadoresDatos = datos.tostadores;
-      var rankingDatos = datos.ranking;
-      var meta = datos.meta;
-
-      var POB_REGIONES_RAW = {
-        'CABA y Gran Buenos Aires': 13986889,
-        'Córdoba': 3840905,
-        'Santa Fe': 3544908,
-        'Mendoza': 2043540,
-        'Mar del Plata': 667082,
-        'La Plata': 768470,
-        'Interior de BS AS': 5250000,
-        'Catamarca, Tucuman y Santiago del Estero': 3222288,
-        'Corrientes, Misiones, Entre Rios, Formosa y Chaco': 5654172,
-        'Salta y Jujuy': 2252962,
-        'Neuquén y Río Negro': 1461582,
-        'San Juan, San Luis, La Rioja y La Pampa': 2110646,
-        'Chubut, Santa Cruz y Tierra del Fuego': 1115579
-      };
-
-      var POB_ZONAS_RAW = {
-        'Palermo': 249016, 'Belgrano': 138942, 'Recoleta': 165494, 'Caballito': 183396,
-        'Almagro': 138942, 'Balvanera': 152198, 'Villa Urquiza': 104351, 'Villa Crespo': 95847,
-        'Núñez': 58134, 'Colegiales': 57101, 'Chacarita': 30223, 'Villa Devoto': 72189,
-        'Villa del Parque': 58912, 'Flores': 164310, 'San Telmo': 24812, 'Monserrat': 39914,
-        'San Nicolás': 33305, 'Retiro': 45002, 'Puerto Madero': 15932, 'Barracas': 98412,
-        'La Boca': 46819, 'Parque Patricios': 42190, 'Boedo': 48520, 'San Cristóbal': 50123,
-        'Constitución': 44107, 'Saavedra': 54312, 'Coghlan': 20415, 'Villa Ortúzar': 23910,
-        'Parque Chas': 19820, 'Agronomía': 15420, 'La Paternal': 21150, 'Villa Pueyrredón': 41210,
-        'Villa General Mitre': 36120, 'Villa Santa Rita': 34810, 'Monte Castro': 34512,
-        'Floresta': 39473, 'Vélez Sarsfield': 35963, 'Villa Luro': 33058, 'Liniers': 44234,
-        'Mataderos': 64932, 'Parque Chacabuco': 58412, 'Nueva Pompeya': 44120,
-        'Villa Lugano': 126374, 'Villa Soldati': 46779, 'Villa Riachuelo': 14960,
-        'Villa Real': 14278, 'Versalles': 14178,
-        'Vicente López': 282281, 'San Isidro': 297282, 'San Fernando': 171616, 'Tigre': 446949,
-        'San Martín': 450335, 'Tres de Febrero': 364176, 'Morón': 331183, 'Ituzaingó': 180232,
-        'Hurlingham': 185641, 'La Matanza': 1841247, 'Avellaneda': 367554, 'Lanús': 461267,
-        'Lomas de Zamora': 690323, 'Quilmes': 633391, 'Berazategui': 358712,
-        'Florencio Varela': 496433, 'Almirante Brown': 584827, 'Esteban Echeverría': 338480,
-        'Ezeiza': 201511, 'Pilar': 394754, 'Escobar': 256268, 'San Miguel': 328835,
-        'Malvinas Argentinas': 350674, 'José C. Paz': 326992, 'Moreno': 576632,
-        'Castelar': 107786,
-        'AREA CENTRO': 48500, 'GUEMES': 26400, 'LA PERLA': 31200, 'CHAUVIN': 24800,
-        'LOS TRONCOS': 16500, 'PLAYA GRANDE': 14200, 'PRIMERA JUNTA': 22100, 'SAN JOSE': 23400,
-        'CONSTITUCION': 38900, 'PARQUE LURO': 29500, 'ESTACION TERMINAL': 25600,
-        'BOSQUE PERALTA RAMOS': 12800, 'PLAYA CHAPADMALAL': 6400,
-        'CBA: Centro / Nva Cba / Güemes': 145000, 'CBA: Norte y Noroeste': 310000,
-        'CBA: Sur y Suroeste': 285000, 'Villa Carlos Paz': 71274,
-        'Villa General Belgrano / Calamuchita': 38500, 'Alta Gracia': 60373,
-        'Villa María': 96061, 'Río Cuarto': 180756, 'Cosquín': 25400, 'La Falda': 18200,
-        'Casco Urbano - Centro': 88000, 'Casco Urbano - Barrio Norte': 42000,
-        'Casco Urbano - La Loma': 46000, 'Casco Urbano - El Mondongo / Paseo del Bosque': 34000,
-        'Casco Urbano - Meridiano V / Estación Provincial': 31000, 'City Bell': 38200,
-        'Gonnet': 26400, 'Tolosa': 44800,
-        'Capital': 127160, 'Godoy Cruz': 194044, 'Luján de Cuyo': 172845,
-        'Maipú': 214412, 'Guaymallén': 321371, 'San Rafael': 215020,
-        'Rosario': 1030069, 'Santa Fe Capital': 439040, 'Funes / Roldán': 68500, 'Rafaela': 112000, 'Venado Tuerto': 84500,
-        'San Carlos de Bariloche': 135755, 'San Martín de los Andes': 36200, 'Villa La Angostura': 14800,
-        'Neuquén Capital': 288896, 'Cipolletti': 105482, 'GENERAL ROCA': 108680,
-        'Ushuaia': 82615, 'El Calafate': 22800, 'Comodoro Rivadavia': 215453, 'Trelew': 106214,
-        'Tandil': 145575, 'Bahía Blanca': 336574, 'Pinamar / Cariló': 39424, 'Villa Gesell': 37463,
-        'Necochea': 102110, 'Miramar': 35371, 'Olavarría': 126328, 'Junín': 103787, 'Pergamino': 115340,
-        'San Nicolás': 167824, 'San Nicolás de los Arroyos': 167824, 'Zárate': 132221, 'Campana': 110566, 'Lujan': 111251,
-        'Salta Capital': 627704, 'San Salvador de Jujuy': 321789, 'Cafayate': 17800,
-        'San Miguel de Tucumán': 605767, 'Yerba Buena': 102707, 'Santiago del Estero Capital': 311487,
-        'San Fernando del V. de Catamarca': 186947, 'Posadas': 323739, 'Puerto Iguazú': 54800,
-        'Corrientes Capital': 427531, 'Paraná': 279051, 'Concordia': 198802, 'Concepción del Uruguay': 85400,
-        'Resistencia': 318235, 'Formosa Capital': 269707, 'San Juan Capital': 114920,
-        'San Luis Capital': 214081, 'Villa de Merlo': 24600, 'La Rioja Capital': 211625,
-        'Santa Rosa': 119310, 'General Pico': 67800
-      };
-
-      var POB_REGIONES = new Map(Object.entries(POB_REGIONES_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
-      var POB_ZONAS = new Map(Object.entries(POB_ZONAS_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
-      var POB_PAIS_TOTAL = Object.values(POB_REGIONES_RAW).reduce(function (a, b) { return a + b; }, 0);
-
-      var REGIONES_OBJETIVO = new Set([
-        'caba y gran buenos aires',
-        'mar del plata',
-        'la plata',
-        'cordoba',
-        'santa fe',
-        'mendoza',
-        'salta y jujuy',
-        'catamarca, tucuman y santiago del estero',
-        'corrientes, misiones, entre rios, formosa y chaco',
-        'neuquen y rio negro',
-        'san juan, san luis, la rioja y la pampa',
-        'chubut, santa cruz y tierra del fuego',
-        'interior de bs as'
-      ]);
-
-      var PLAZAS_TURISTICAS_INTERIOR = /(pinamar|carilo|gesell|tandil|miramar|necochea|bahia blanca|san nicolas|zarate|campana|lujan|junin|pergamino|olavarria)/;
-
-      function esPlazaRecomendable(c) {
-        var regNorm = norm(c.ciudad);
-        if (!REGIONES_OBJETIVO.has(regNorm)) return false;
-        if (regNorm === 'interior de bs as') {
-          return PLAZAS_TURISTICAS_INTERIOR.test(norm(c.zona + ' ' + c.ciudadReal + ' ' + c.ubicacion));
-        }
-        return true;
-      }
-
-      var rankMap = new Map();
-      (function () {
-        var nombres = new Map();
-        ['arg', 'sud', 'mun'].forEach(function (tipo) {
-          (rankingDatos[tipo] || []).forEach(function (it) {
-            var k = norm(it.nombre);
-            var cur = nombres.get(k);
-            if (!cur || it.rank < cur) nombres.set(k, it.rank);
+        var esc = function (s) {
+          return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
           });
-        });
-        baseDatos.forEach(function (c) {
-          var r = nombres.get(norm(c.nombre));
-          if (r) rankMap.set(c.id, r);
-        });
-      })();
+        };
 
-      var FAV_KEY = 'cofi-favs';
-      var favoritos = new Set();
-      try { favoritos = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch (e) {}
-      var RECIENTES_KEY = 'cofi-recientes';
-      var recientes = [];
-      try { recientes = JSON.parse(localStorage.getItem(RECIENTES_KEY) || '[]'); } catch (e) {}
-
-      var PAGINA = 24;
-      var ZOOM_ETIQUETAS = 15;
-      var ESTILO_BASE = { radius: 7, color: '#ffffff', fillColor: '#e86a33', fillOpacity: 1, weight: 2 };
-      var ESTILO_BUSQUEDA = { radius: 10, color: '#ffffff', fillColor: '#1a0f0a', fillOpacity: 1, weight: 3 };
-      var ESTILO_ACTIVO = { radius: 12, color: '#ffffff', fillColor: '#1a0f0a', fillOpacity: 1, weight: 3 };
-      var VISTA_ARGENTINA = [-38.41, -63.61];
-      var zoomInicial = function () { return window.innerWidth < 700 ? 3.5 : 4; };
-      var IMG_FALLBACK = 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=600';
-      var ESTILO_MAPA = 'https://tiles.openfreemap.org/styles/positron';
-      var ATRIBUCION = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
-
-      var mapaCofiteca = null, markerCluster = null;
-      var mapaRanking = null, markerClusterRanking = null;
-      var mapaMercado = null, capaPuntosMercado = null, capaOportunidadMercado = null;
-      var marcadoresOppPorIdx = [];
-      var tostadoresRenderizados = false, rankingIniciado = false, mercadoIniciado = false;
-
-      var markersPorId = new Map();
-      var idsEnMapa = new Set();
-      var marcadoresActuales = [];
-      var marcadoresConEtiqueta = [];
-
-      var origen = null, markerOrigen = null;
-      var markerActivoId = null, haloActivo = null;
-      var listaActual = [], idsEnLista = new Set(), mostrados = PAGINA, idDestacado = null;
-      var soloFavoritos = false;
-      var busquedaActiva = false;
-
-      var estiloBase = function (id) { return (busquedaActiva && idsEnLista.has(id)) ? ESTILO_BUSQUEDA : ESTILO_BASE; };
-
-      var swalPromise = null;
-      function ensureSwal() {
-        if (window.Swal) return Promise.resolve();
-        if (swalPromise) return swalPromise;
-        swalPromise = new Promise(function (res, rej) {
-          var s = document.createElement('script');
-          s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
-          s.onload = res; s.onerror = rej;
-          document.head.appendChild(s);
-        });
-        return swalPromise;
-      }
-
-      function calcularD(lat1, lon1, lat2, lon2) {
-        var dLat = (lat2 - lat1) * Math.PI / 180;
-        var dLon = (lon2 - lon1) * Math.PI / 180;
-        var a = Math.pow(Math.sin(dLat / 2), 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.pow(Math.sin(dLon / 2), 2);
-        return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      }
-      function textoDistancia(dist) {
-        var cuadras = Math.round(dist * 10);
-        if (cuadras === 0) return '¡A menos de 1 cuadra!';
-        if (cuadras <= 30) return 'A ' + cuadras + ' cuadra' + (cuadras !== 1 ? 's' : '');
-        return 'A ' + dist.toFixed(1).replace('.', ',') + ' km';
-      }
-      var urlComoLlegar = function (c) { return 'https://www.google.com/maps/search/?api=1&query=' + c.lat + ',' + c.lon; };
-
-      // ---------- Favoritos / recientes ----------
-      function persistirFavs() {
-        try { localStorage.setItem(FAV_KEY, JSON.stringify(Array.from(favoritos))); } catch (e) {}
-        $('fav-count').textContent = favoritos.size ? '(' + favoritos.size + ')' : '';
-      }
-      window.cofiToggleFav = function (id, btn) {
-        if (favoritos.has(id)) favoritos.delete(id); else favoritos.add(id);
-        persistirFavs();
-        btn.textContent = favoritos.has(id) ? '★' : '☆';
-        btn.classList.toggle('is-fav', favoritos.has(id));
-        if (soloFavoritos) window.cofiFiltrar(false);
-      };
-      window.cofiToggleSoloFavs = function () {
-        soloFavoritos = !soloFavoritos;
-        $('pill-favs').classList.toggle('active', soloFavoritos);
-        window.cofiFiltrar(true);
-      };
-      function registrarVisto(id) {
-        recientes = [id].concat(recientes.filter(function (x) { return x !== id; })).slice(0, 8);
-        try { localStorage.setItem(RECIENTES_KEY, JSON.stringify(recientes)); } catch (e) {}
-      }
-      function renderRecientes() {
-        var wrap = $('recientes-wrap');
-        if (!recientes.length) { wrap.classList.add('hidden'); return; }
-        wrap.classList.remove('hidden');
-        var cont = $('recientes-list');
-        var frag = document.createDocumentFragment();
-        recientes.slice(0, 6).forEach(function (id) {
-          var c = baseDatos[id]; if (!c) return;
-          var btn = document.createElement('button');
-          btn.className = 'reciente-chip';
-          btn.textContent = '☕ ' + c.nombre;
-          btn.onclick = function () { verEnMapa(id); };
-          frag.appendChild(btn);
-        });
-        cont.replaceChildren(frag);
-      }
-
-      // ---------- Métricas ----------
-      window.cofiActualizarMetricas = function () {
-        var esRanking = $('btn-tab-ranking').classList.contains('active');
-        var cafes = 0, tost = 0, prov = 0, ciu = 0;
-        if (esRanking) {
-          var tipo = $('select-ranking-tipo').value;
-          var data = rankingDatos[tipo] || [];
-          var cuenta = function (campo, vacio) { return new Set(data.map(function (d) { return d[campo]; }).filter(function (v) { return v && v !== vacio; })).size; };
-          cafes = data.length;
-          if (tipo === 'arg') { $('label-provincias').innerText = 'Provincias'; prov = cuenta('provincia', 'Desconocida'); }
-          else { $('label-provincias').innerText = 'Países'; prov = cuenta('pais', 'Desconocido'); }
-          ciu = cuenta('ciudad', 'Desconocida');
-        } else {
-          $('label-provincias').innerText = 'Provincias';
-          cafes = meta.cafes; tost = meta.tostadores; prov = meta.provincias; ciu = meta.ciudades;
-        }
-        $('stat-cafes').innerText = cafes;
-        $('stat-tostadores').innerText = tost;
-        $('stat-provincias').innerText = prov;
-        $('stat-ciudades').innerText = ciu;
-        $('caja-provincias').style.display = prov > 0 ? '' : 'none';
-        $('caja-ciudades').style.display = ciu > 0 ? '' : 'none';
-        $('caja-tostadores').style.display = (!esRanking && tost > 0) ? '' : 'none';
-      };
-
-      window.cofiSwitchTab = function (tab) {
-        ['mapa', 'ranking', 'tostadores', 'mercado'].forEach(function (t) {
-          $('vista-' + t).classList.toggle('hidden', t !== tab);
-          $('btn-tab-' + t).classList.toggle('active', t === tab);
-        });
-        window.cofiActualizarMetricas();
-
-        if (tab === 'mapa' && mapaCofiteca) {
-          setTimeout(function () { mapaCofiteca.invalidateSize(); aplicarFiltros(false); }, 100);
-        }
-        if (tab === 'tostadores' && !tostadoresRenderizados) { window.cofiRenderizarTostadores(); tostadoresRenderizados = true; }
-        if (tab === 'ranking') {
-          if (!rankingIniciado) {
-            initMapaRanking();
-            window.cofiActualizarRankingCiudades();
-            window.cofiFiltrarRanking();
-            rankingIniciado = true;
-          } else if (mapaRanking) {
-            setTimeout(function () { mapaRanking.invalidateSize(); }, 100);
-          }
-        }
-        if (tab === 'mercado') {
-          if (!mercadoIniciado) {
-            initMapaMercado();
-            mercadoIniciado = true;
-          } else if (mapaMercado) {
-            setTimeout(function () { mapaMercado.invalidateSize(); }, 100);
-          }
-          window.cofiRenderMercado(true);
-        }
-        sincronizarURL();
-      };
-
-      // ---------- Pestaña Mercado ----------
-      function obtenerZonasRecomendadasDinamicas(ciu, zon) {
-        var esNacional = ciu === 'Todas';
-
-        var pool = baseDatos.filter(function (c) {
-          if (esNacional) return esPlazaRecomendable(c);
-          if (c.ciudad !== ciu) return false;
-          if (zon !== 'Todas' && c.zona !== zon) return false;
-          return true;
-        });
-
-        if (!pool.length) pool = baseDatos.filter(function (c) { return esNacional ? true : c.ciudad === ciu; });
-
-        var candidatos = pool.filter(function (c) { return c.mkt.k <= 3; });
-        if (candidatos.length < 3) candidatos = pool;
-
-        var evaluados = candidatos.map(function (c) {
-          var nombreBarrio = (c.zona && c.zona !== '-' && c.zona !== 'Sin Zona')
-            ? c.zona
-            : (c.ciudadReal || c.ciudad);
-          var plazaNombre = c.ciudadReal && c.ciudadReal !== c.ciudad
-            ? c.ciudadReal + ' (' + c.ciudad.replace(' y Gran Buenos Aires', '') + ')'
-            : c.ciudad;
-
-          var pobZ = POB_ZONAS.get(norm(nombreBarrio)) || POB_REGIONES.get(norm(c.ciudad)) || 60000;
-          var esTuristica = /(pinamar|carilo|gesell|bariloche|angostura|san martin de los andes|ushuaia|calafate|iguazu|cafayate|carlos paz|calamuchita|merlo|chapadmalal|playa grande|guemes|mendoza|salta|jujuy)/.test(
-            norm(c.ciudad + ' ' + c.ciudadReal + ' ' + nombreBarrio)
-          );
-
-          var publico = esTuristica
-            ? 'Turismo receptivo/interno, escapadas y consumo de especialidad'
-            : pobZ >= 120000
-              ? 'Público residencial habitual, home-office y vecinos de cercanía'
-              : 'Flujo comercial barrial, oficinas, estudiantes y visitantes';
-
-          var factorComp = 1 + (c.mkt.k * 0.45);
-          var rawScore = ((10.5 + (c.mkt.a * 0.12)) * c.mkt.t) / factorComp;
-          var score = Number(Math.min(19.2, Math.max(6.8, Math.max(c.mkt.o, rawScore))).toFixed(1));
-
-          return {
-            latitud: c.lat,
-            longitud: c.lon,
-            plaza: plazaNombre,
-            corredor: nombreBarrio,
-            direccionRef: c.ubicacion,
-            score_potencial: score,
-            competidores_cercanos: c.mkt.k,
-            atractores_cercanos: c.mkt.a || 18,
-            nivel_gasto: c.mkt.g,
-            indice_ticket: c.mkt.t,
-            circulacion: c.mkt.c || (c.mkt.a >= 30 ? 'Muy Alta' : c.mkt.a >= 15 ? 'Alta' : 'Media'),
-            publico_objetivo: publico,
-            claveUnica: esNacional ? norm(c.ciudad) : norm(nombreBarrio)
-          };
-        }).sort(function (a, b) { return b.score_potencial - a.score_potencial; });
-
-        var top = [];
-        var clavesUsadas = new Set();
-        var maxItems = esNacional ? 6 : 4;
-        var distMinima = esNacional ? 0.25 : 0.006;
-
-        for (var i = 0; i < evaluados.length; i++) {
-          var cand = evaluados[i];
-          var muyCerca = top.some(function (s) { return Math.hypot(cand.latitud - s.latitud, cand.longitud - s.longitud) < distMinima; });
-          if (muyCerca) continue;
-          if (zon === 'Todas' && clavesUsadas.has(cand.claveUnica) && evaluados.length > maxItems * 2) continue;
-
-          top.push(cand);
-          clavesUsadas.add(cand.claveUnica);
-          if (top.length >= maxItems) break;
-        }
-
-        if (top.length < Math.min(3, evaluados.length)) {
-          for (var j = 0; j < evaluados.length; j++) {
-            if (top.indexOf(evaluados[j]) === -1) top.push(evaluados[j]);
-            if (top.length >= Math.min(4, evaluados.length)) break;
-          }
-        }
-
-        return top;
-      }
-
-      function initMapaMercado() {
-        mapaMercado = L.map('mercado-map', { minZoom: 3, maxZoom: 18, zoomSnap: 0.5 }).setView(VISTA_ARGENTINA, zoomInicial());
-        L.maplibreGL({ style: ESTILO_MAPA, attribution: ATRIBUCION }).addTo(mapaMercado);
-        capaPuntosMercado = L.layerGroup().addTo(mapaMercado);
-        capaOportunidadMercado = L.layerGroup().addTo(mapaMercado);
-        setTimeout(function () { mapaMercado.invalidateSize(); }, 200);
-      }
-
-      window.cofiActualizarMercadoZonas = function () {
-        var ciu = $('select-mercado-ciudad').value;
-        var base = ciu === 'Todas' ? baseDatos : baseDatos.filter(function (c) { return c.ciudad === ciu; });
-        var zonas = Array.from(new Set(base.map(function (c) { return c.zona; }))).filter(function (z) { return z && z !== '-' && z !== 'Sin Zona'; }).sort(function (a, b) { return a.localeCompare(b, 'es'); });
-        $('select-mercado-zona').innerHTML = '<option value="Todas">Todos los Barrios / Zonas</option>' + zonas.map(function (z) { return '<option value="' + esc(z) + '">' + esc(z) + '</option>'; }).join('');
-      };
-
-      window.cofiSeleccionarCiudadMercado = function (ciu) {
-        $('select-mercado-ciudad').value = ciu;
-        window.cofiActualizarMercadoZonas();
-        window.cofiRenderMercado(true);
-      };
-
-      window.cofiSeleccionarZonaMercado = function (zon) {
-        var sel = $('select-mercado-zona');
-        sel.value = (sel.value === zon) ? 'Todas' : zon;
-        window.cofiRenderMercado(true);
-      };
-
-      window.cofiResetMercado = function () {
-        $('select-mercado-ciudad').value = 'Todas';
-        window.cofiActualizarMercadoZonas();
-        window.cofiRenderMercado(true);
-      };
-
-      window.cofiEnfocarOportunidad = function (idx) {
-        var item = marcadoresOppPorIdx[idx];
-        if (!item || !mapaMercado) return;
-        document.querySelector('#vista-mercado .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        mapaMercado.setView([item.lat, item.lon], 15);
-        item.marker.openPopup();
-      };
-
-      function calcularPerCapita(nLocales, poblacion) {
-        if (!poblacion || poblacion <= 0 || nLocales <= 0) return null;
-        var habPorCafe = Math.round(poblacion / nLocales);
-        var cada100k = Number(((nLocales / poblacion) * 100000).toFixed(1));
-        return { poblacion: poblacion, habPorCafe: habPorCafe, cada100k: cada100k };
-      }
-
-      function resumirGrupoMercado(items, poblacion) {
-        var n = items.length || 1;
-        var promTicket = Number((items.reduce(function (s, x) { return s + x.mkt.t; }, 0) / n).toFixed(2));
-        var promOp = Number((items.reduce(function (s, x) { return s + x.mkt.o; }, 0) / n).toFixed(1));
-        var promComp = Number((items.reduce(function (s, x) { return s + x.mkt.k; }, 0) / n).toFixed(1));
-
-        var nivelGasto = 'Medio-Alto';
-        if (promTicket >= 1.32) nivelGasto = 'Muy Alto';
-        else if (promTicket >= 1.18) nivelGasto = 'Alto';
-        else if (promTicket < 1.04) nivelGasto = 'Medio';
-
-        var perCap = calcularPerCapita(items.length, poblacion);
-        return { n: items.length, promTicket: promTicket, nivelGasto: nivelGasto, promOp: promOp, promComp: promComp, perCap: perCap };
-      }
-
-      function obtenerColorTendencia(capa, stats) {
-        if (capa === 'ticket') {
-          if (stats.promTicket >= 1.32) return { hex: '#1b7f5c', label: 'Ticket Muy Alto (≥ ×1.32)' };
-          if (stats.promTicket >= 1.18) return { hex: '#e86a33', label: 'Ticket Alto (×1.18 – ×1.31)' };
-          if (stats.promTicket >= 1.06) return { hex: '#d49b35', label: 'Ticket Medio-Alto (×1.06 – ×1.17)' };
-          return { hex: '#5c3d2e', label: 'Ticket Medio (< ×1.06)' };
-        }
-        if (capa === 'densidad') {
-          if (!stats.perCap) return { hex: '#8c7a6b', label: 'Sin dato censal de barrio' };
-          if (stats.perCap.habPorCafe >= 10000) return { hex: '#1b7f5c', label: 'Baja saturación (1 c/ +10k hab.)' };
-          if (stats.perCap.habPorCafe >= 4500) return { hex: '#e86a33', label: 'Presencia media (1 c/ 4.5k–10k hab.)' };
-          if (stats.perCap.habPorCafe >= 2000) return { hex: '#d49b35', label: 'Alta presencia (1 c/ 2k–4.5k hab.)' };
-          return { hex: '#5c3d2e', label: 'Polo muy denso (1 c/ <2k hab.)' };
-        }
-        if (stats.promOp >= 12.0) return { hex: '#1b7f5c', label: 'Alta oportunidad (≥ 12.0 pts)' };
-        if (stats.promOp >= 8.5) return { hex: '#e86a33', label: 'Buen potencial (8.5 – 11.9 pts)' };
-        if (stats.promOp >= 5.5) return { hex: '#d49b35', label: 'Equilibrado (5.5 – 8.4 pts)' };
-        return { hex: '#5c3d2e', label: 'Alta competencia (< 5.5 pts)' };
-      }
-
-      function renderLeyendaMercado(capa, tituloPlaza) {
-        if (capa === 'potencial') {
-          $('mkt-legend').innerHTML =
-            '<div class="mkt-legend-title">Zonas Sugeridas · ' + esc(tituloPlaza) + '</div>' +
-            '<div class="mkt-legend-items">' +
-              '<div class="mkt-legend-row"><span class="mkt-dot" style="background:#1b7f5c"></span><span>Pin #1–#6: Microzona recomendada</span></div>' +
-              '<div class="mkt-legend-row"><span class="mkt-dot" style="background:#c4a77d;opacity:.6"></span><span>Locales existentes (referencia)</span></div>' +
-            '</div>';
+        var datos;
+        try {
+          datos = JSON.parse(dataEl.textContent);
+        } catch (err) {
+          console.error('Error parseando cofi-data:', err);
           return;
         }
-        var titulos = {
-          ticket: 'Nivel de Gasto por Local',
-          densidad: 'Saturación · Cafés / Habitante'
+
+        var mercadoLista = datos.mercado || [];
+        var baseDatos = (datos.cafes || []).map(function (c, idx) {
+          return {
+            id: c.id,
+            nombre: c.n,
+            ubicacion: c.u,
+            instagram: c.s,
+            lat: c.a,
+            lon: c.o,
+            ciudad: datos.regiones[c.r],
+            zona: c.z >= 0 ? datos.zonas[c.z] : '',
+            ciudadReal: c.c >= 0 ? datos.ciudadesReales[c.c] : '',
+            slug: c.slug,
+            mkt: mercadoLista[idx] || { t: 1.08, g: 'Medio-Alto', o: 10.5, k: 2, c: 'Media', a: 18 }
+          };
+        });
+        baseDatos.forEach(function (c) {
+          c._q = norm([c.nombre, c.ubicacion, c.zona, c.ciudadReal, c.ciudad].join(' '));
+        });
+
+        var tostadoresDatos = datos.tostadores || [];
+        var rankingDatos = datos.ranking || { arg: [], sud: [], mun: [] };
+        var meta = datos.meta || { cafes: baseDatos.length, tostadores: 0, provincias: 24, ciudades: 140 };
+
+        var POB_REGIONES_RAW = {
+          'CABA y Gran Buenos Aires': 13986889,
+          'Córdoba': 3840905,
+          'Santa Fe': 3544908,
+          'Mendoza': 2043540,
+          'Mar del Plata': 667082,
+          'La Plata': 768470,
+          'Interior de BS AS': 5250000,
+          'Catamarca, Tucuman y Santiago del Estero': 3222288,
+          'Corrientes, Misiones, Entre Rios, Formosa y Chaco': 5654172,
+          'Salta y Jujuy': 2252962,
+          'Neuquén y Río Negro': 1461582,
+          'San Juan, San Luis, La Rioja y La Pampa': 2110646,
+          'Chubut, Santa Cruz y Tierra del Fuego': 1115579
         };
-        var escalas = {
-          ticket: [
-            ['#1b7f5c', 'Muy Alto (≥ ×1.32)'],
-            ['#e86a33', 'Alto (×1.18 – ×1.31)'],
-            ['#d49b35', 'Medio-Alto (×1.06 – ×1.17)'],
-            ['#5c3d2e', 'Medio (< ×1.06)']
-          ],
-          densidad: [
-            ['#1b7f5c', 'Baja saturación (+10k hab./café)'],
-            ['#e86a33', 'Media (4.5k – 10k hab./café)'],
-            ['#d49b35', 'Alta (2k – 4.5k hab./café)'],
-            ['#5c3d2e', 'Muy denso (< 2k hab./café)']
-          ]
+
+        var POB_ZONAS_RAW = {
+          'Palermo': 249016, 'Belgrano': 138942, 'Recoleta': 165494, 'Caballito': 183396,
+          'Almagro': 138942, 'Balvanera': 152198, 'Villa Urquiza': 104351, 'Villa Crespo': 95847,
+          'Núñez': 58134, 'Colegiales': 57101, 'Chacarita': 30223, 'Villa Devoto': 72189,
+          'Villa del Parque': 58912, 'Flores': 164310, 'San Telmo': 24812, 'Monserrat': 39914,
+          'San Nicolás': 33305, 'Retiro': 45002, 'Puerto Madero': 15932, 'Barracas': 98412,
+          'La Boca': 46819, 'Parque Patricios': 42190, 'Boedo': 48520, 'San Cristóbal': 50123,
+          'Constitución': 44107, 'Saavedra': 54312, 'Coghlan': 20415, 'Villa Ortúzar': 23910,
+          'Parque Chas': 19820, 'Agronomía': 15420, 'La Paternal': 21150, 'Villa Pueyrredón': 41210,
+          'Vicente López': 282281, 'San Isidro': 297282, 'San Fernando': 171616, 'Tigre': 446949,
+          'San Martín': 450335, 'Tres de Febrero': 364176, 'Morón': 331183, 'Ituzaingó': 180232,
+          'Hurlingham': 185641, 'La Matanza': 1841247, 'Avellaneda': 367554, 'Lanús': 461267,
+          'Lomas de Zamora': 690323, 'Quilmes': 633391, 'Pilar': 394754, 'Escobar': 256268,
+          'AREA CENTRO': 48500, 'GUEMES': 26400, 'LA PERLA': 31200, 'CHAUVIN': 24800,
+          'LOS TRONCOS': 16500, 'PLAYA GRANDE': 14200, 'CONSTITUCION': 38900,
+          'CBA: Centro / Nva Cba / Güemes': 145000, 'CBA: Norte y Noroeste': 310000,
+          'CBA: Sur y Suroeste': 285000, 'Villa Carlos Paz': 71274,
+          'Casco Urbano - Centro': 88000, 'City Bell': 38200, 'Gonnet': 26400,
+          'Capital': 127160, 'Godoy Cruz': 194044, 'Luján de Cuyo': 172845,
+          'Rosario': 1030069, 'Santa Fe Capital': 439040,
+          'San Carlos de Bariloche': 135755, 'Neuquén Capital': 288896,
+          'Tandil': 145575, 'Bahía Blanca': 336574, 'Pinamar / Cariló': 39424,
+          'Salta Capital': 627704, 'San Miguel de Tucumán': 605767, 'Yerba Buena': 102707
         };
-        $('mkt-legend').innerHTML =
-          '<div class="mkt-legend-title">' + titulos[capa] + '</div>' +
-          '<div class="mkt-legend-items">' +
-            escalas[capa].map(function (par) {
-              return '<div class="mkt-legend-row"><span class="mkt-dot" style="background:' + par[0] + '"></span><span>' + par[1] + '</span></div>';
-            }).join('') +
-          '</div>';
-      }
 
-      window.cofiRenderMercado = function (recentrar) {
-        var ciu = $('select-mercado-ciudad').value;
-        var zon = $('select-mercado-zona').value;
-        var capa = $('select-mercado-capa').value;
-        var esNacional = ciu === 'Todas';
+        var POB_REGIONES = new Map(Object.entries(POB_REGIONES_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
+        var POB_ZONAS = new Map(Object.entries(POB_ZONAS_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
+        var POB_PAIS_TOTAL = Object.values(POB_REGIONES_RAW).reduce(function (a, b) { return a + b; }, 0);
 
-        var scopeItems = esNacional
-          ? baseDatos
-          : baseDatos.filter(function (c) { return c.ciudad === ciu && (zon === 'Todas' || c.zona === zon); });
+        var REGIONES_OBJETIVO = new Set([
+          'caba y gran buenos aires', 'mar del plata', 'la plata', 'cordoba', 'santa fe',
+          'mendoza', 'salta y jujuy', 'catamarca, tucuman y santiago del estero',
+          'corrientes, misiones, entre rios, formosa y chaco', 'neuquen y rio negro',
+          'san juan, san luis, la rioja y la pampa', 'chubut, santa cruz y tierra del fuego',
+          'interior de bs as'
+        ]);
+        var PLAZAS_TURISTICAS_INTERIOR = /(pinamar|carilo|gesell|tandil|miramar|necochea|bahia blanca|san nicolas|zarate|campana|lujan|junin|pergamino|olavarria)/;
 
-        var pobScope = null;
-        var notaPob = '';
-        if (esNacional) {
-          pobScope = POB_PAIS_TOTAL;
-          notaPob = 'Base total país Censo 2022 (~46,0M hab.).';
-        } else if (zon !== 'Todas') {
-          var pobBarrio = POB_ZONAS.get(norm(zon));
-          if (pobBarrio) {
-            pobScope = pobBarrio;
-            notaPob = 'Población censal de ' + zon + ': ' + pobBarrio.toLocaleString('es-AR') + ' hab.';
-          } else {
-            var itemsCiu = baseDatos.filter(function (c) { return c.ciudad === ciu; });
-            var pobCiu = POB_REGIONES.get(norm(ciu));
-            var perCapCiu = calcularPerCapita(itemsCiu.length, pobCiu);
-            notaPob = perCapCiu
-              ? 'Sin censo de barrio · Total ' + ciu + ': 1 café c/ ' + perCapCiu.habPorCafe.toLocaleString('es-AR') + ' hab.'
-              : 'Sin desagregación censal individual para este barrio.';
+        function esPlazaRecomendable(c) {
+          var regNorm = norm(c.ciudad);
+          if (!REGIONES_OBJETIVO.has(regNorm)) return false;
+          if (regNorm === 'interior de bs as') {
+            return PLAZAS_TURISTICAS_INTERIOR.test(norm(c.zona + ' ' + c.ciudadReal + ' ' + c.ubicacion));
           }
-        } else {
-          pobScope = POB_REGIONES.get(norm(ciu)) || null;
-          notaPob = pobScope ? 'Población Censo 2022: ' + pobScope.toLocaleString('es-AR') + ' hab.' : '';
+          return true;
         }
 
-        var agg = resumirGrupoMercado(scopeItems.length ? scopeItems : baseDatos, pobScope);
-        var colorKpiTicket = obtenerColorTendencia('ticket', agg);
-        var colorKpiPot = obtenerColorTendencia('potencial', agg);
-        var colorKpiDen = obtenerColorTendencia('densidad', agg);
-
-        var pctTicket = Math.min(100, Math.round(((agg.promTicket - 0.8) / 0.7) * 100));
-        var pctPot = Math.min(100, Math.round((agg.promOp / 20) * 100));
-        var pctDen = agg.perCap ? Math.min(100, Math.round((agg.perCap.cada100k / 45) * 100)) : 20;
-
-        var htmlPerCapVal = agg.perCap
-          ? '1 café c/ ' + agg.perCap.habPorCafe.toLocaleString('es-AR') + ' <small>hab. (' + agg.perCap.cada100k + ' / 100k)</small>'
-          : 'Sin dato de barrio';
-
-        $('mkt-kpis').innerHTML =
-          '<div class="mkt-kpi-card">' +
-            '<span class="mkt-kpi-lbl">Ticket y Poder de Gasto</span>' +
-            '<span class="mkt-kpi-val">' + esc(agg.nivelGasto) + ' <small>· ×' + agg.promTicket.toFixed(2) + '</small></span>' +
-            '<div class="mkt-bar-bg"><div class="mkt-bar-fill" style="width:' + pctTicket + '%;background:' + colorKpiTicket.hex + '"></div></div>' +
-            '<span class="mkt-kpi-sub">Capacidad de consumo promedio frente a la media nacional (×1.00).</span>' +
-          '</div>' +
-          '<div class="mkt-kpi-card">' +
-            '<span class="mkt-kpi-lbl">Potencial de Expansión</span>' +
-            '<span class="mkt-kpi-val">' + agg.promOp + ' pts <small>· ' + agg.n + ' locales</small></span>' +
-            '<div class="mkt-bar-bg"><div class="mkt-bar-fill" style="width:' + pctPot + '%;background:' + colorKpiPot.hex + '"></div></div>' +
-            '<span class="mkt-kpi-sub">' + (agg.promOp >= 11 ? 'Buen margen de demanda frente a competencia directa.' : 'Plaza madura con competencia activa; requiere diferencial.') + '</span>' +
-          '</div>' +
-          '<div class="mkt-kpi-card">' +
-            '<span class="mkt-kpi-lbl">Cafeterías por Habitante</span>' +
-            '<span class="mkt-kpi-val">' + htmlPerCapVal + '</span>' +
-            '<div class="mkt-bar-bg"><div class="mkt-bar-fill" style="width:' + pctDen + '%;background:' + colorKpiDen.hex + '"></div></div>' +
-            '<span class="mkt-kpi-sub">' + esc(notaPob) + '</span>' +
-          '</div>';
-
-        var etiquetaPlazaActual = esNacional
-          ? 'Capitales y Plazas Turísticas'
-          : (zon !== 'Todas' ? zon + ' · ' + ciu : ciu);
-
-        renderLeyendaMercado(capa, etiquetaPlazaActual);
-
-        var gruposMap = new Map();
-        if (esNacional) {
+        var rankMap = new Map();
+        (function () {
+          var nombres = new Map();
+          ['arg', 'sud', 'mun'].forEach(function (tipo) {
+            (rankingDatos[tipo] || []).forEach(function (it) {
+              var k = norm(it.nombre);
+              var cur = nombres.get(k);
+              if (!cur || it.rank < cur) nombres.set(k, it.rank);
+            });
+          });
           baseDatos.forEach(function (c) {
-            if (!gruposMap.has(c.ciudad)) gruposMap.set(c.ciudad, []);
-            gruposMap.get(c.ciudad).push(c);
+            var r = nombres.get(norm(c.nombre));
+            if (r) rankMap.set(c.id, r);
           });
-        } else {
-          baseDatos.filter(function (c) { return c.ciudad === ciu; }).forEach(function (c) {
-            var z = (c.zona && c.zona !== '-' && c.zona !== 'Sin Zona') ? c.zona : 'Otras zonas';
-            if (!gruposMap.has(z)) gruposMap.set(z, []);
-            gruposMap.get(z).push(c);
-          });
+        })();
+
+        var FAV_KEY = 'cofi-favs';
+        var favoritos = new Set();
+        try { favoritos = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch (e) {}
+        var RECIENTES_KEY = 'cofi-recientes';
+        var recientes = [];
+        try { recientes = JSON.parse(localStorage.getItem(RECIENTES_KEY) || '[]'); } catch (e) {}
+
+        var PAGINA = 24;
+        var ZOOM_ETIQUETAS = 15;
+        var ESTILO_BASE = { radius: 7, color: '#ffffff', fillColor: '#e86a33', fillOpacity: 1, weight: 2 };
+        var ESTILO_BUSQUEDA = { radius: 10, color: '#ffffff', fillColor: '#1a0f0a', fillOpacity: 1, weight: 3 };
+        var ESTILO_ACTIVO = { radius: 12, color: '#ffffff', fillColor: '#1a0f0a', fillOpacity: 1, weight: 3 };
+        var VISTA_ARGENTINA = [-38.41, -63.61];
+        var zoomInicial = function () { return window.innerWidth < 700 ? 3.5 : 4; };
+        var IMG_FALLBACK = 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=600';
+        var ESTILO_MAPA = 'https://tiles.openfreemap.org/styles/positron';
+        var ATRIBUCION = '© OpenStreetMap · OpenFreeMap';
+
+        var mapaCofiteca = null, markerCluster = null;
+        var mapaRanking = null, markerClusterRanking = null;
+        var mapaMercado = null, capaPuntosMercado = null, capaOportunidadMercado = null;
+        var marcadoresOppPorIdx = [];
+        var tostadoresRenderizados = false, rankingIniciado = false, mercadoIniciado = false;
+
+        var markersPorId = new Map();
+        var idsEnMapa = new Set();
+        var marcadoresActuales = [];
+        var marcadoresConEtiqueta = [];
+
+        var origen = null, markerOrigen = null;
+        var markerActivoId = null, haloActivo = null;
+        var listaActual = [], idsEnLista = new Set(), mostrados = PAGINA, idDestacado = null;
+        var soloFavoritos = false;
+        var busquedaActiva = false;
+
+        var estiloBase = function (id) { return (busquedaActiva && idsEnLista.has(id)) ? ESTILO_BUSQUEDA : ESTILO_BASE; };
+
+        function agregarCapaBase(map) {
+          if (typeof L.maplibreGL === 'function' && typeof maplibregl !== 'undefined') {
+            try {
+              L.maplibreGL({ style: ESTILO_MAPA, attribution: ATRIBUCION }).addTo(map);
+              return;
+            } catch (e) {}
+          }
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: ATRIBUCION,
+            maxZoom: 19
+          }).addTo(map);
         }
 
-        var listaGrupos = Array.from(gruposMap.entries())
-          .map(function (entry) {
+        function crearGrupoMarcadores(map, opts) {
+          if (typeof L.markerClusterGroup === 'function') {
+            return L.markerClusterGroup(opts).addTo(map);
+          }
+          return L.layerGroup().addTo(map);
+        }
+
+        var swalPromise = null;
+        function ensureSwal() {
+          if (window.Swal) return Promise.resolve();
+          if (swalPromise) return swalPromise;
+          swalPromise = new Promise(function (res, rej) {
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+          });
+          return swalPromise;
+        }
+
+        function calcularD(lat1, lon1, lat2, lon2) {
+          var dLat = (lat2 - lat1) * Math.PI / 180;
+          var dLon = (lon2 - lon1) * Math.PI / 180;
+          var a = Math.pow(Math.sin(dLat / 2), 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.pow(Math.sin(dLon / 2), 2);
+          return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+        function textoDistancia(dist) {
+          var cuadras = Math.round(dist * 10);
+          if (cuadras === 0) return '¡A menos de 1 cuadra!';
+          if (cuadras <= 30) return 'A ' + cuadras + ' cuadra' + (cuadras !== 1 ? 's' : '');
+          return 'A ' + dist.toFixed(1).replace('.', ',') + ' km';
+        }
+        var urlComoLlegar = function (c) { return 'https://www.google.com/maps/search/?api=1&query=' + c.lat + ',' + c.lon; };
+
+        function persistirFavs() {
+          try { localStorage.setItem(FAV_KEY, JSON.stringify(Array.from(favoritos))); } catch (e) {}
+          $('fav-count').textContent = favoritos.size ? '(' + favoritos.size + ')' : '';
+        }
+        window.cofiToggleFav = function (id, btn) {
+          if (favoritos.has(id)) favoritos.delete(id); else favoritos.add(id);
+          persistirFavs();
+          btn.textContent = favoritos.has(id) ? '★' : '☆';
+          btn.classList.toggle('is-fav', favoritos.has(id));
+          if (soloFavoritos) window.cofiFiltrar(false);
+        };
+        window.cofiToggleSoloFavs = function () {
+          soloFavoritos = !soloFavoritos;
+          $('pill-favs').classList.toggle('active', soloFavoritos);
+          window.cofiFiltrar(true);
+        };
+        function registrarVisto(id) {
+          recientes = [id].concat(recientes.filter(function (x) { return x !== id; })).slice(0, 8);
+          try { localStorage.setItem(RECIENTES_KEY, JSON.stringify(recientes)); } catch (e) {}
+        }
+        function renderRecientes() {
+          var wrap = $('recientes-wrap');
+          if (!recientes.length) { wrap.classList.add('hidden'); return; }
+          wrap.classList.remove('hidden');
+          var cont = $('recientes-list');
+          var frag = document.createDocumentFragment();
+          recientes.slice(0, 6).forEach(function (id) {
+            var c = baseDatos[id]; if (!c) return;
+            var btn = document.createElement('button');
+            btn.className = 'reciente-chip';
+            btn.textContent = '☕ ' + c.nombre;
+            btn.onclick = function () { verEnMapa(id); };
+            frag.appendChild(btn);
+          });
+          cont.replaceChildren(frag);
+        }
+
+        window.cofiActualizarMetricas = function () {
+          var esRanking = $('btn-tab-ranking').classList.contains('active');
+          var cafes = 0, tost = 0, prov = 0, ciu = 0;
+          if (esRanking) {
+            var tipo = $('select-ranking-tipo').value;
+            var data = rankingDatos[tipo] || [];
+            var cuenta = function (campo, vacio) {
+              return new Set(data.map(function (d) { return d[campo]; }).filter(function (v) { return v && v !== vacio; })).size;
+            };
+            cafes = data.length;
+            if (tipo === 'arg') { $('label-provincias').innerText = 'Provincias'; prov = cuenta('provincia', 'Desconocida'); }
+            else { $('label-provincias').innerText = 'Países'; prov = cuenta('pais', 'Desconocido'); }
+            ciu = cuenta('ciudad', 'Desconocida');
+          } else {
+            $('label-provincias').innerText = 'Provincias';
+            cafes = meta.cafes; tost = meta.tostadores; prov = meta.provincias; ciu = meta.ciudades;
+          }
+          $('stat-cafes').innerText = cafes;
+          $('stat-tostadores').innerText = tost;
+          $('stat-provincias').innerText = prov;
+          $('stat-ciudades').innerText = ciu;
+          $('caja-provincias').style.display = prov > 0 ? '' : 'none';
+          $('caja-ciudades').style.display = ciu > 0 ? '' : 'none';
+          $('caja-tostadores').style.display = (!esRanking && tost > 0) ? '' : 'none';
+        };
+
+        window.cofiSwitchTab = function (tab) {
+          ['mapa', 'ranking', 'tostadores', 'mercado'].forEach(function (t) {
+            $('vista-' + t).classList.toggle('hidden', t !== tab);
+            $('btn-tab-' + t).classList.toggle('active', t === tab);
+          });
+          window.cofiActualizarMetricas();
+
+          if (tab === 'mapa' && mapaCofiteca) {
+            setTimeout(function () { mapaCofiteca.invalidateSize(); aplicarFiltros(false); }, 100);
+          }
+          if (tab === 'tostadores' && !tostadoresRenderizados) {
+            window.cofiRenderizarTostadores();
+            tostadoresRenderizados = true;
+          }
+          if (tab === 'ranking') {
+            if (!rankingIniciado && typeof L !== 'undefined') {
+              initMapaRanking();
+              rankingIniciado = true;
+            } else if (mapaRanking) {
+              setTimeout(function () { mapaRanking.invalidateSize(); }, 100);
+            }
+            window.cofiActualizarRankingCiudades();
+            window.cofiFiltrarRanking();
+          }
+          if (tab === 'mercado') {
+            if (!mercadoIniciado && typeof L !== 'undefined') {
+              initMapaMercado();
+              mercadoIniciado = true;
+            } else if (mapaMercado) {
+              setTimeout(function () { mapaMercado.invalidateSize(); }, 100);
+            }
+            window.cofiRenderMercado(true);
+          }
+          sincronizarURL();
+        };
+
+        // ---------- Mercado ----------
+        function obtenerZonasRecomendadasDinamicas(ciu, zon) {
+          var esNacional = ciu === 'Todas';
+          var pool = baseDatos.filter(function (c) {
+            if (esNacional) return esPlazaRecomendable(c);
+            if (c.ciudad !== ciu) return false;
+            if (zon !== 'Todas' && c.zona !== zon) return false;
+            return true;
+          });
+          if (!pool.length) pool = baseDatos.filter(function (c) { return esNacional ? true : c.ciudad === ciu; });
+
+          var candidatos = pool.filter(function (c) { return c.mkt.k <= 3; });
+          if (candidatos.length < 3) candidatos = pool;
+
+          var evaluados = candidatos.map(function (c) {
+            var nombreBarrio = (c.zona && c.zona !== '-' && c.zona !== 'Sin Zona') ? c.zona : (c.ciudadReal || c.ciudad);
+            var plazaNombre = c.ciudadReal && c.ciudadReal !== c.ciudad
+              ? c.ciudadReal + ' (' + c.ciudad.replace(' y Gran Buenos Aires', '') + ')'
+              : c.ciudad;
+            var pobZ = POB_ZONAS.get(norm(nombreBarrio)) || POB_REGIONES.get(norm(c.ciudad)) || 60000;
+            var esTuristica = /(pinamar|carilo|gesell|bariloche|angostura|san martin de los andes|ushuaia|calafate|iguazu|cafayate|carlos paz|calamuchita|merlo|chapadmalal|playa grande|guemes|mendoza|salta|jujuy)/.test(
+              norm(c.ciudad + ' ' + c.ciudadReal + ' ' + nombreBarrio)
+            );
+            var publico = esTuristica
+              ? 'Turismo receptivo/interno, escapadas y consumo de especialidad'
+              : pobZ >= 120000
+                ? 'Público residencial habitual, home-office y vecinos de cercanía'
+                : 'Flujo comercial barrial, oficinas, estudiantes y visitantes';
+
+            var factorComp = 1 + (c.mkt.k * 0.45);
+            var rawScore = ((10.5 + (c.mkt.a * 0.12)) * c.mkt.t) / factorComp;
+            var score = Number(Math.min(19.2, Math.max(6.8, Math.max(c.mkt.o, rawScore))).toFixed(1));
+
+            return {
+              latitud: c.lat,
+              longitud: c.lon,
+              plaza: plazaNombre,
+              corredor: nombreBarrio,
+              direccionRef: c.ubicacion,
+              score_potencial: score,
+              competidores_cercanos: c.mkt.k,
+              atractores_cercanos: c.mkt.a || 18,
+              nivel_gasto: c.mkt.g,
+              indice_ticket: c.mkt.t,
+              circulacion: c.mkt.c || (c.mkt.a >= 30 ? 'Muy Alta' : c.mkt.a >= 15 ? 'Alta' : 'Media'),
+              publico_objetivo: publico,
+              claveUnica: esNacional ? norm(c.ciudad) : norm(nombreBarrio)
+            };
+          }).sort(function (a, b) { return b.score_potencial - a.score_potencial; });
+
+          var top = [];
+          var clavesUsadas = new Set();
+          var maxItems = esNacional ? 6 : 4;
+          var distMinima = esNacional ? 0.25 : 0.006;
+
+          for (var i = 0; i < evaluados.length; i++) {
+            var cand = evaluados[i];
+            var muyCerca = top.some(function (s) { return Math.hypot(cand.latitud - s.latitud, cand.longitud - s.longitud) < distMinima; });
+            if (muyCerca) continue;
+            if (zon === 'Todas' && clavesUsadas.has(cand.claveUnica) && evaluados.length > maxItems * 2) continue;
+            top.push(cand);
+            clavesUsadas.add(cand.claveUnica);
+            if (top.length >= maxItems) break;
+          }
+          if (top.length < Math.min(3, evaluados.length)) {
+            for (var j = 0; j < evaluados.length; j++) {
+              if (top.indexOf(evaluados[j]) === -1) top.push(evaluados[j]);
+              if (top.length >= Math.min(4, evaluados.length)) break;
+            }
+          }
+          return top;
+        }
+
+        function initMapaMercado() {
+          if (typeof L === 'undefined') return;
+          mapaMercado = L.map('mercado-map', { minZoom: 3, maxZoom: 18, zoomSnap: 0.5 }).setView(VISTA_ARGENTINA, zoomInicial());
+          agregarCapaBase(mapaMercado);
+          capaPuntosMercado = L.layerGroup().addTo(mapaMercado);
+          capaOportunidadMercado = L.layerGroup().addTo(mapaMercado);
+          setTimeout(function () { mapaMercado.invalidateSize(); }, 200);
+        }
+
+        window.cofiActualizarMercadoZonas = function () {
+          var ciu = $('select-mercado-ciudad').value;
+          var base = ciu === 'Todas' ? baseDatos : baseDatos.filter(function (c) { return c.ciudad === ciu; });
+          var zonas = Array.from(new Set(base.map(function (c) { return c.zona; })))
+            .filter(function (z) { return z && z !== '-' && z !== 'Sin Zona'; })
+            .sort(function (a, b) { return a.localeCompare(b, 'es'); });
+          $('select-mercado-zona').innerHTML = '<option value="Todas">Todos los Barrios / Zonas</option>' +
+            zonas.map(function (z) { return '<option value="' + esc(z) + '">' + esc(z) + '</option>'; }).join('');
+        };
+
+        window.cofiSeleccionarCiudadMercado = function (ciu) {
+          $('select-mercado-ciudad').value = ciu;
+          window.cofiActualizarMercadoZonas();
+          window.cofiRenderMercado(true);
+        };
+
+        window.cofiSeleccionarZonaMercado = function (zon) {
+          var sel = $('select-mercado-zona');
+          sel.value = (sel.value === zon) ? 'Todas' : zon;
+          window.cofiRenderMercado(true);
+        };
+
+        window.cofiResetMercado = function () {
+          $('select-mercado-ciudad').value = 'Todas';
+          window.cofiActualizarMercadoZonas();
+          window.cofiRenderMercado(true);
+        };
+
+        window.cofiEnfocarOportunidad = function (idx) {
+          var item = marcadoresOppPorIdx[idx];
+          if (!item || !mapaMercado) return;
+          document.querySelector('#vista-mercado .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          mapaMercado.setView([item.lat, item.lon], 15);
+          item.marker.openPopup();
+        };
+
+        function calcularPerCapita(nLocales, poblacion) {
+          if (!poblacion || poblacion <= 0 || nLocales <= 0) return null;
+          return {
+            poblacion: poblacion,
+            habPorCafe: Math.round(poblacion / nLocales),
+            cada100k: Number(((nLocales / poblacion) * 100000).toFixed(1))
+          };
+        }
+
+        function resumirGrupoMercado(items, poblacion) {
+          var n = items.length || 1;
+          var promTicket = Number((items.reduce(function (s, x) { return s + x.mkt.t; }, 0) / n).toFixed(2));
+          var promOp = Number((items.reduce(function (s, x) { return s + x.mkt.o; }, 0) / n).toFixed(1));
+          var promComp = Number((items.reduce(function (s, x) { return s + x.mkt.k; }, 0) / n).toFixed(1));
+          var nivelGasto = promTicket >= 1.32 ? 'Muy Alto' : promTicket >= 1.18 ? 'Alto' : promTicket < 1.04 ? 'Medio' : 'Medio-Alto';
+          return { n: items.length, promTicket: promTicket, nivelGasto: nivelGasto, promOp: promOp, promComp: promComp, perCap: calcularPerCapita(items.length, poblacion) };
+        }
+
+        function obtenerColorTendencia(capa, stats) {
+          if (capa === 'ticket') {
+            if (stats.promTicket >= 1.32) return { hex: '#1b7f5c', label: 'Ticket Muy Alto (≥ ×1.32)' };
+            if (stats.promTicket >= 1.18) return { hex: '#e86a33', label: 'Ticket Alto (×1.18 – ×1.31)' };
+            if (stats.promTicket >= 1.06) return { hex: '#d49b35', label: 'Ticket Medio-Alto (×1.06 – ×1.17)' };
+            return { hex: '#5c3d2e', label: 'Ticket Medio (< ×1.06)' };
+          }
+          if (capa === 'densidad') {
+            if (!stats.perCap) return { hex: '#8c7a6b', label: 'Sin dato censal de barrio' };
+            if (stats.perCap.habPorCafe >= 10000) return { hex: '#1b7f5c', label: 'Baja saturación (1 c/ +10k hab.)' };
+            if (stats.perCap.habPorCafe >= 4500) return { hex: '#e86a33', label: 'Presencia media (1 c/ 4.5k–10k hab.)' };
+            if (stats.perCap.habPorCafe >= 2000) return { hex: '#d49b35', label: 'Alta presencia (1 c/ 2k–4.5k hab.)' };
+            return { hex: '#5c3d2e', label: 'Polo muy denso (1 c/ <2k hab.)' };
+          }
+          if (stats.promOp >= 12.0) return { hex: '#1b7f5c', label: 'Alta oportunidad (≥ 12.0 pts)' };
+          if (stats.promOp >= 8.5) return { hex: '#e86a33', label: 'Buen potencial (8.5 – 11.9 pts)' };
+          if (stats.promOp >= 5.5) return { hex: '#d49b35', label: 'Equilibrado (5.5 – 8.4 pts)' };
+          return { hex: '#5c3d2e', label: 'Alta competencia (< 5.5 pts)' };
+        }
+
+        function renderLeyendaMercado(capa, tituloPlaza) {
+          if (capa === 'potencial') {
+            $('mkt-legend').innerHTML =
+              '<div class="mkt-legend-title">Zonas Sugeridas · ' + esc(tituloPlaza) + '</div>' +
+              '<div class="mkt-legend-items">' +
+                '<div class="mkt-legend-row"><span class="mkt-dot" style="background:#1b7f5c"></span><span>Pin #1–#6: Microzona recomendada</span></div>' +
+                '<div class="mkt-legend-row"><span class="mkt-dot" style="background:#c4a77d;opacity:.6"></span><span>Locales existentes (referencia)</span></div>' +
+              '</div>';
+            return;
+          }
+          var titulos = { ticket: 'Nivel de Gasto por Local', densidad: 'Saturación · Cafés / Habitante' };
+          var escalas = {
+            ticket: [['#1b7f5c', 'Muy Alto (≥ ×1.32)'], ['#e86a33', 'Alto (×1.18 – ×1.31)'], ['#d49b35', 'Medio-Alto (×1.06 – ×1.17)'], ['#5c3d2e', 'Medio (< ×1.06)']],
+            densidad: [['#1b7f5c', 'Baja saturación (+10k hab./café)'], ['#e86a33', 'Media (4.5k – 10k hab./café)'], ['#d49b35', 'Alta (2k – 4.5k hab./café)'], ['#5c3d2e', 'Muy denso (< 2k hab./café)']]
+          };
+          $('mkt-legend').innerHTML =
+            '<div class="mkt-legend-title">' + titulos[capa] + '</div>' +
+            '<div class="mkt-legend-items">' +
+              escalas[capa].map(function (par) {
+                return '<div class="mkt-legend-row"><span class="mkt-dot" style="background:' + par[0] + '"></span><span>' + par[1] + '</span></div>';
+              }).join('') +
+            '</div>';
+        }
+
+        window.cofiRenderMercado = function (recentrar) {
+          var ciu = $('select-mercado-ciudad').value;
+          var zon = $('select-mercado-zona').value;
+          var capa = $('select-mercado-capa').value;
+          var esNacional = ciu === 'Todas';
+
+          var scopeItems = esNacional
+            ? baseDatos
+            : baseDatos.filter(function (c) { return c.ciudad === ciu && (zon === 'Todas' || c.zona === zon); });
+
+          var pobScope = null;
+          var notaPob = '';
+          if (esNacional) {
+            pobScope = POB_PAIS_TOTAL;
+            notaPob = 'Base total país Censo 2022 (~46,0M hab.).';
+          } else if (zon !== 'Todas') {
+            var pobBarrio = POB_ZONAS.get(norm(zon));
+            if (pobBarrio) {
+              pobScope = pobBarrio;
+              notaPob = 'Población censal de ' + zon + ': ' + pobBarrio.toLocaleString('es-AR') + ' hab.';
+            } else {
+              var itemsCiu = baseDatos.filter(function (c) { return c.ciudad === ciu; });
+              var perCapCiu = calcularPerCapita(itemsCiu.length, POB_REGIONES.get(norm(ciu)));
+              notaPob = perCapCiu
+                ? 'Sin censo de barrio · Total ' + ciu + ': 1 café c/ ' + perCapCiu.habPorCafe.toLocaleString('es-AR') + ' hab.'
+                : 'Sin desagregación censal individual para este barrio.';
+            }
+          } else {
+            pobScope = POB_REGIONES.get(norm(ciu)) || null;
+            notaPob = pobScope ? 'Población Censo 2022: ' + pobScope.toLocaleString('es-AR') + ' hab.' : '';
+          }
+
+          var agg = resumirGrupoMercado(scopeItems.length ? scopeItems : baseDatos, pobScope);
+          var colorKpiTicket = obtenerColorTendencia('ticket', agg);
+          var colorKpiPot = obtenerColorTendencia('potencial', agg);
+          var colorKpiDen = obtenerColorTendencia('densidad', agg);
+
+          var pctTicket = Math.min(100, Math.round(((agg.promTicket - 0.8) / 0.7) * 100));
+          var pctPot = Math.min(100, Math.round((agg.promOp / 20) * 100));
+          var pctDen = agg.perCap ? Math.min(100, Math.round((agg.perCap.cada100k / 45) * 100)) : 20;
+
+          var htmlPerCapVal = agg.perCap
+            ? '1 café c/ ' + agg.perCap.habPorCafe.toLocaleString('es-AR') + ' <small>hab. (' + agg.perCap.cada100k + ' / 100k)</small>'
+            : 'Sin dato de barrio';
+
+          $('mkt-kpis').innerHTML =
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Ticket y Poder de Gasto</span><span class="mkt-kpi-val">' + esc(agg.nivelGasto) + ' <small>· ×' + agg.promTicket.toFixed(2) + '</small></span><div class="mkt-bar-bg"><div class="mkt-bar-fill" style="width:' + pctTicket + '%;background:' + colorKpiTicket.hex + '"></div></div><span class="mkt-kpi-sub">Capacidad de consumo promedio frente a la media nacional (×1.00).</span></div>' +
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Potencial de Expansión</span><span class="mkt-kpi-val">' + agg.promOp + ' pts <small>· ' + agg.n + ' locales</small></span><div class="mkt-bar-bg"><div class="mkt-bar-fill" style="width:' + pctPot + '%;background:' + colorKpiPot.hex + '"></div></div><span class="mkt-kpi-sub">' + (agg.promOp >= 11 ? 'Buen margen de demanda frente a competencia directa.' : 'Plaza madura con competencia activa; requiere diferencial.') + '</span></div>' +
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Cafeterías por Habitante</span><span class="mkt-kpi-val">' + htmlPerCapVal + '</span><div class="mkt-bar-bg"><div class="mkt-bar-fill" style="width:' + pctDen + '%;background:' + colorKpiDen.hex + '"></div></div><span class="mkt-kpi-sub">' + esc(notaPob) + '</span></div>';
+
+          var etiquetaPlazaActual = esNacional ? 'Capitales y Plazas Turísticas' : (zon !== 'Todas' ? zon + ' · ' + ciu : ciu);
+          renderLeyendaMercado(capa, etiquetaPlazaActual);
+
+          var gruposMap = new Map();
+          if (esNacional) {
+            baseDatos.forEach(function (c) {
+              if (!gruposMap.has(c.ciudad)) gruposMap.set(c.ciudad, []);
+              gruposMap.get(c.ciudad).push(c);
+            });
+          } else {
+            baseDatos.filter(function (c) { return c.ciudad === ciu; }).forEach(function (c) {
+              var z = (c.zona && c.zona !== '-' && c.zona !== 'Sin Zona') ? c.zona : 'Otras zonas';
+              if (!gruposMap.has(z)) gruposMap.set(z, []);
+              gruposMap.get(z).push(c);
+            });
+          }
+
+          var listaGrupos = Array.from(gruposMap.entries()).map(function (entry) {
             var nombre = entry[0], items = entry[1];
             var pobG = esNacional ? POB_REGIONES.get(norm(nombre)) : POB_ZONAS.get(norm(nombre));
             var st = resumirGrupoMercado(items, pobG);
             var col = obtenerColorTendencia(capa === 'potencial' ? 'ticket' : capa, st);
-            return Object.assign({ nombre: nombre, color: col.hex, colorLabel: col.label }, st);
-          })
-          .sort(function (a, b) { return b.n - a.n; });
+            return Object.assign({ nombre: nombre, color: col.hex }, st);
+          }).sort(function (a, b) { return b.n - a.n; });
 
-        var zonasRec = obtenerZonasRecomendadasDinamicas(ciu, zon);
+          var zonasRec = obtenerZonasRecomendadasDinamicas(ciu, zon);
 
-        if (mapaMercado && capaPuntosMercado && capaOportunidadMercado) {
-          capaPuntosMercado.clearLayers();
-          capaOportunidadMercado.clearLayers();
-          marcadoresOppPorIdx = [];
+          if (mapaMercado && capaPuntosMercado && capaOportunidadMercado) {
+            capaPuntosMercado.clearLayers();
+            capaOportunidadMercado.clearLayers();
+            marcadoresOppPorIdx = [];
+            var puntosMostrar = scopeItems.length ? scopeItems : baseDatos;
 
-          var puntosMostrar = scopeItems.length ? scopeItems : baseDatos;
-
-          if (capa === 'potencial') {
-            puntosMostrar.forEach(function (c) {
-              var dot = L.circleMarker([c.lat, c.lon], {
-                radius: esNacional ? 3.5 : 5,
-                color: '#ffffff',
-                weight: 1,
-                fillColor: '#b89f82',
-                fillOpacity: 0.55
+            if (capa === 'potencial') {
+              puntosMostrar.forEach(function (c) {
+                var dot = L.circleMarker([c.lat, c.lon], { radius: esNacional ? 3.5 : 5, color: '#ffffff', weight: 1, fillColor: '#b89f82', fillOpacity: 0.55 });
+                dot.bindPopup('<div class="popup-cafe"><b>' + esc(c.nombre) + '</b><small>' + esc(c.zona || c.ciudadReal || c.ciudad) + '</small><br>Competencia actual · Ticket ×' + c.mkt.t.toFixed(2) + '</div>');
+                capaPuntosMercado.addLayer(dot);
               });
-              dot.bindPopup(
-                '<div class="popup-cafe">' +
-                  '<b>' + esc(c.nombre) + '</b>' +
-                  '<small>' + esc(c.zona || c.ciudadReal || c.ciudad) + '</small><br>' +
-                  'Competencia actual · Ticket ×' + c.mkt.t.toFixed(2) +
-                '</div>'
-              );
-              capaPuntosMercado.addLayer(dot);
-            });
 
-            zonasRec.forEach(function (z, idx) {
-              if (!esNacional) {
-                var radioFino = L.circle([z.latitud, z.longitud], {
-                  radius: 320,
-                  color: '#1b7f5c',
-                  weight: 2,
-                  dashArray: '5, 5',
-                  fillColor: '#1b7f5c',
-                  fillOpacity: 0.14
+              zonasRec.forEach(function (z, idx) {
+                if (!esNacional) {
+                  capaOportunidadMercado.addLayer(L.circle([z.latitud, z.longitud], { radius: 320, color: '#1b7f5c', weight: 2, dashArray: '5, 5', fillColor: '#1b7f5c', fillOpacity: 0.14 }));
+                }
+                var pinIcon = L.divIcon({
+                  html: '<div style="background:#1b7f5c;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:2.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35);">#' + (idx + 1) + '</div>',
+                  className: 'custom-opp-pin', iconSize: [30, 30], iconAnchor: [15, 15]
                 });
-                capaOportunidadMercado.addLayer(radioFino);
-              }
-
-              var pinIcon = L.divIcon({
-                html: '<div style="background:#1b7f5c;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:2.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35);">#' + (idx + 1) + '</div>',
-                className: 'custom-opp-pin',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15]
+                var markerOpp = L.marker([z.latitud, z.longitud], { icon: pinIcon }).bindPopup(
+                  '<div class="popup-cafe" style="text-align:left;min-width:225px;">' +
+                    '<div style="font-size:.68rem;font-weight:800;color:#1b7f5c;text-transform:uppercase;">★ Oportunidad #' + (idx + 1) + ' · ' + z.score_potencial + ' pts</div>' +
+                    '<b style="text-align:left;margin-top:2px;">' + esc(z.corredor) + '</b>' +
+                    '<small style="display:block;color:#5c3d2e;margin-bottom:6px;">' + esc(z.plaza) + '</small>' +
+                    '• <b>Demanda:</b> ' + z.atractores_cercanos + ' comercios/polos (' + esc(z.circulacion) + ')<br>' +
+                    '• <b>Baja saturación:</b> solo ' + z.competidores_cercanos + ' café(s) en 650 m<br>' +
+                    '• <b>Gasto promedio:</b> ' + esc(z.nivel_gasto) + ' (×' + z.indice_ticket + ')<br>' +
+                    '• <b>Público:</b> ' + esc(z.publico_objetivo) +
+                  '</div>'
+                );
+                capaOportunidadMercado.addLayer(markerOpp);
+                marcadoresOppPorIdx.push({ lat: z.latitud, lon: z.longitud, marker: markerOpp });
               });
-
-              var markerOpp = L.marker([z.latitud, z.longitud], { icon: pinIcon }).bindPopup(
-                '<div class="popup-cafe" style="text-align:left;min-width:225px;">' +
-                  '<div style="font-size:.68rem;font-weight:800;color:#1b7f5c;text-transform:uppercase;letter-spacing:.04em;">' +
-                    '★ Oportunidad #' + (idx + 1) + ' · ' + z.score_potencial + ' pts' +
-                  '</div>' +
-                  '<b style="text-align:left;margin-top:2px;">' + esc(z.corredor) + '</b>' +
-                  '<small style="display:block;color:#5c3d2e;margin-bottom:6px;">' + esc(z.plaza) + '</small>' +
-                  '<b>¿Por qué abrir acá?</b><br>' +
-                  '• <b>Demanda:</b> ' + z.atractores_cercanos + ' comercios/polos activos (' + esc(z.circulacion) + ')<br>' +
-                  '• <b>Baja saturación:</b> solo ' + z.competidores_cercanos + ' café(s) en 650 m<br>' +
-                  '• <b>Gasto promedio:</b> ' + esc(z.nivel_gasto) + ' (×' + z.indice_ticket + ')<br>' +
-                  '• <b>Público:</b> ' + esc(z.publico_objetivo) +
-                '</div>'
-              );
-              capaOportunidadMercado.addLayer(markerOpp);
-              marcadoresOppPorIdx.push({ lat: z.latitud, lon: z.longitud, marker: markerOpp });
-            });
-          } else {
-            puntosMostrar.forEach(function (c) {
-              var pobZ = POB_ZONAS.get(norm(c.zona)) || POB_REGIONES.get(norm(c.ciudad));
-              var cantZ = (c.zona && gruposMap.has(c.zona)) ? gruposMap.get(c.zona).length : (gruposMap.get(c.ciudad) ? gruposMap.get(c.ciudad).length : 1);
-              var perCapPunto = calcularPerCapita(cantZ, pobZ);
-              var stPunto = { promTicket: c.mkt.t, promOp: c.mkt.o, perCap: perCapPunto };
-              var colPunto = obtenerColorTendencia(capa, stPunto);
-
-              var dot = L.circleMarker([c.lat, c.lon], {
-                radius: esNacional ? 5 : 7.5,
-                color: '#ffffff',
-                weight: 1.5,
-                fillColor: colPunto.hex,
-                fillOpacity: 0.95
+            } else {
+              puntosMostrar.forEach(function (c) {
+                var pobZ = POB_ZONAS.get(norm(c.zona)) || POB_REGIONES.get(norm(c.ciudad));
+                var cantZ = (c.zona && gruposMap.has(c.zona)) ? gruposMap.get(c.zona).length : (gruposMap.get(c.ciudad) ? gruposMap.get(c.ciudad).length : 1);
+                var perCapPunto = calcularPerCapita(cantZ, pobZ);
+                var colPunto = obtenerColorTendencia(capa, { promTicket: c.mkt.t, promOp: c.mkt.o, perCap: perCapPunto });
+                var dot = L.circleMarker([c.lat, c.lon], { radius: esNacional ? 5 : 7.5, color: '#ffffff', weight: 1.5, fillColor: colPunto.hex, fillOpacity: 0.95 });
+                var habHtml = perCapPunto ? '<br>👥 Zona: <b>1 c/ ' + perCapPunto.habPorCafe.toLocaleString('es-AR') + ' hab.</b>' : '';
+                dot.bindPopup('<div class="popup-cafe"><b>' + esc(c.nombre) + '</b><small>' + esc(c.zona || c.ciudadReal || c.ciudad) + '</small><br>💳 Ticket: <b>×' + c.mkt.t.toFixed(2) + '</b> (' + esc(c.mkt.g) + ')<br>🚶 Circulación: <b>' + esc(c.mkt.c || 'Media') + '</b> · Comp. 500m: <b>' + c.mkt.k + '</b>' + habHtml + '<div class="popup-acciones"><a href="/cafe/' + esc(c.slug) + '" class="popup-link">Ver ficha completa</a></div></div>');
+                capaPuntosMercado.addLayer(dot);
               });
-              var habHtml = perCapPunto ? '<br>👥 Zona: <b>1 c/ ' + perCapPunto.habPorCafe.toLocaleString('es-AR') + ' hab.</b>' : '';
-              dot.bindPopup(
-                '<div class="popup-cafe">' +
-                  '<b>' + esc(c.nombre) + '</b>' +
-                  '<small>' + esc(c.zona || c.ciudadReal || c.ciudad) + '</small><br>' +
-                  '💳 Ticket: <b>×' + c.mkt.t.toFixed(2) + '</b> (' + esc(c.mkt.g) + ')<br>' +
-                  '🚶 Circulación: <b>' + esc(c.mkt.c || 'Media') + '</b> · Comp. 500m: <b>' + c.mkt.k + '</b>' +
-                  habHtml +
-                  '<div class="popup-acciones"><a href="/cafe/' + esc(c.slug) + '" class="popup-link">Ver ficha completa</a></div>' +
-                '</div>'
-              );
-              capaPuntosMercado.addLayer(dot);
-            });
-          }
+            }
 
-          if (recentrar) {
-            if (esNacional) {
-              mapaMercado.setView(VISTA_ARGENTINA, zoomInicial());
-            } else if (puntosMostrar.length) {
-              mapaMercado.fitBounds(L.latLngBounds(puntosMostrar.map(function (c) { return [c.lat, c.lon]; })), { padding: [45, 45], maxZoom: 15 });
+            if (recentrar) {
+              if (esNacional) mapaMercado.setView(VISTA_ARGENTINA, zoomInicial());
+              else if (puntosMostrar.length) mapaMercado.fitBounds(L.latLngBounds(puntosMostrar.map(function (c) { return [c.lat, c.lon]; })), { padding: [45, 45], maxZoom: 15 });
             }
           }
-        }
 
-        var resetBtn = $('mkt-reset-btn');
-        var grid = $('mkt-zones-grid');
+          var resetBtn = $('mkt-reset-btn');
+          var grid = $('mkt-zones-grid');
 
-        if (capa === 'potencial') {
-          resetBtn.classList.toggle('hidden', esNacional);
-          $('mkt-zones-title').textContent = esNacional
-            ? 'Top oportunidades en capitales, grandes ciudades y plazas turísticas'
-            : 'Zonas recomendadas en ' + etiquetaPlazaActual;
-          grid.className = 'mkt-opp-grid';
-          grid.innerHTML = zonasRec.map(function (z, idx) {
-            return (
-              '<div class="mkt-opp-card">' +
-                '<div>' +
-                  '<div class="mkt-opp-badge">★ Sugerencia #' + (idx + 1) + ' · Puntaje ' + z.score_potencial + ' / 20</div>' +
-                  '<div class="mkt-opp-title">' + esc(z.corredor) + '</div>' +
-                  '<div class="mkt-opp-sub">' + esc(z.plaza) + (z.direccionRef ? ' · Ref: ' + esc(z.direccionRef) : '') + '</div>' +
-                  '<ul class="mkt-opp-criteria">' +
-                    '<li>🚶 <b>Tráfico comercial:</b> ' + esc(z.circulacion) + ' (' + z.atractores_cercanos + ' comercios/turismo en el radio)</li>' +
-                    '<li>☕ <b>Baja competencia:</b> solo ' + z.competidores_cercanos + ' cafetería(s) en 650 m a la redonda</li>' +
-                    '<li>💳 <b>Poder de gasto:</b> ' + esc(z.nivel_gasto) + ' (ticket promedio ×' + z.indice_ticket + ')</li>' +
-                    '<li>🎯 <b>Público objetivo:</b> ' + esc(z.publico_objetivo) + '</li>' +
-                  '</ul>' +
-                '</div>' +
-                '<button type="button" class="mkt-opp-btn" onclick="cofiEnfocarOportunidad(' + idx + ')">Ver ubicación exacta en el mapa</button>' +
-              '</div>'
-            );
-          }).join('');
-          return;
-        }
-
-        grid.className = 'mkt-zones-grid';
-        if (esNacional) {
-          resetBtn.classList.add('hidden');
-          $('mkt-zones-title').textContent = 'Comparativa por Ciudad / Región (clic para ver barrios)';
-          grid.innerHTML = listaGrupos.map(function (g) {
-            var perCapLine = g.perCap
-              ? '👥 1 café c/ ' + g.perCap.habPorCafe.toLocaleString('es-AR') + ' hab. <span>(' + g.perCap.cada100k + '/100k)</span>'
-              : '👥 ' + g.n + ' cafeterías en la región';
-            return (
-              '<button type="button" class="mkt-zone-card" style="border-left-color:' + g.color + '" onclick="cofiSeleccionarCiudadMercado(\'' + esc(g.nombre) + '\')">' +
-                '<div class="mkt-zone-top">' +
-                  '<span class="mkt-zone-name">' + esc(g.nombre.replace(' y Gran Buenos Aires', '')) + '</span>' +
-                  '<span class="mkt-zone-count">' + g.n + ' loc.</span>' +
-                '</div>' +
-                '<div class="mkt-zone-percap">' + perCapLine + '</div>' +
-                '<div class="mkt-zone-stats">' +
-                  '<span>💳 Ticket: <b>×' + g.promTicket.toFixed(2) + '</b></span>' +
-                  '<span>📈 Potencial: <b>' + g.promOp + ' pts</b></span>' +
-                '</div>' +
-              '</button>'
-            );
-          }).join('');
-        } else {
-          resetBtn.classList.remove('hidden');
-          $('mkt-zones-title').textContent = 'Barrios y Zonas en ' + ciu + ' (clic para enfocar)';
-          var barriosMostrar = listaGrupos.filter(function (g) { return g.nombre !== 'Otras zonas'; });
-
-          if (!barriosMostrar.length) {
-            grid.innerHTML = '<div style="font-size:.82rem;color:var(--coffee-500);">Esta región aún no tiene barrios subdivididos en la base.</div>';
+          if (capa === 'potencial') {
+            resetBtn.classList.toggle('hidden', esNacional);
+            $('mkt-zones-title').textContent = esNacional
+              ? 'Top oportunidades en capitales, grandes ciudades y plazas turísticas'
+              : 'Zonas recomendadas en ' + etiquetaPlazaActual;
+            grid.className = 'mkt-opp-grid';
+            grid.innerHTML = zonasRec.map(function (z, idx) {
+              return '<div class="mkt-opp-card"><div><div class="mkt-opp-badge">★ Sugerencia #' + (idx + 1) + ' · Puntaje ' + z.score_potencial + ' / 20</div><div class="mkt-opp-title">' + esc(z.corredor) + '</div><div class="mkt-opp-sub">' + esc(z.plaza) + (z.direccionRef ? ' · Ref: ' + esc(z.direccionRef) : '') + '</div><ul class="mkt-opp-criteria"><li>🚶 <b>Tráfico comercial:</b> ' + esc(z.circulacion) + ' (' + z.atractores_cercanos + ' comercios/turismo en el radio)</li><li>☕ <b>Baja competencia:</b> solo ' + z.competidores_cercanos + ' cafetería(s) en 650 m a la redonda</li><li>💳 <b>Poder de gasto:</b> ' + esc(z.nivel_gasto) + ' (ticket promedio ×' + z.indice_ticket + ')</li><li>🎯 <b>Público objetivo:</b> ' + esc(z.publico_objetivo) + '</li></ul></div><button type="button" class="mkt-opp-btn" onclick="cofiEnfocarOportunidad(' + idx + ')">Ver ubicación exacta en el mapa</button></div>';
+            }).join('');
             return;
           }
 
-          grid.innerHTML = barriosMostrar.map(function (g) {
-            var activo = zon === g.nombre ? ' active' : '';
-            var perCapLine = g.perCap
-              ? '👥 1 café c/ ' + g.perCap.habPorCafe.toLocaleString('es-AR') + ' hab. <span>(' + g.perCap.cada100k + '/100k)</span>'
-              : '<span>Sin dato censal de barrio</span>';
-            return (
-              '<button type="button" class="mkt-zone-card' + activo + '" style="border-left-color:' + g.color + '" onclick="cofiSeleccionarZonaMercado(\'' + esc(g.nombre) + '\')">' +
-                '<div class="mkt-zone-top">' +
-                  '<span class="mkt-zone-name">' + esc(g.nombre) + '</span>' +
-                  '<span class="mkt-zone-count">' + g.n + ' loc.</span>' +
-                '</div>' +
-                '<div class="mkt-zone-percap">' + perCapLine + '</div>' +
-                '<div class="mkt-zone-stats">' +
-                  '<span>💳 Ticket: <b>×' + g.promTicket.toFixed(2) + '</b></span>' +
-                  '<span>📈 Potencial: <b>' + g.promOp + ' pts</b></span>' +
-                '</div>' +
-              '</button>'
-            );
-          }).join('');
+          grid.className = 'mkt-zones-grid';
+          if (esNacional) {
+            resetBtn.classList.add('hidden');
+            $('mkt-zones-title').textContent = 'Comparativa por Ciudad / Región (clic para ver barrios)';
+            grid.innerHTML = listaGrupos.map(function (g) {
+              var perCapLine = g.perCap ? '👥 1 café c/ ' + g.perCap.habPorCafe.toLocaleString('es-AR') + ' hab. <span>(' + g.perCap.cada100k + '/100k)</span>' : '👥 ' + g.n + ' cafeterías en la región';
+              return '<button type="button" class="mkt-zone-card" style="border-left-color:' + g.color + '" onclick="cofiSeleccionarCiudadMercado(\'' + esc(g.nombre) + '\')"><div class="mkt-zone-top"><span class="mkt-zone-name">' + esc(g.nombre.replace(' y Gran Buenos Aires', '')) + '</span><span class="mkt-zone-count">' + g.n + ' loc.</span></div><div class="mkt-zone-percap">' + perCapLine + '</div><div class="mkt-zone-stats"><span>💳 Ticket: <b>×' + g.promTicket.toFixed(2) + '</b></span><span>📈 Potencial: <b>' + g.promOp + ' pts</b></span></div></button>';
+            }).join('');
+          } else {
+            resetBtn.classList.remove('hidden');
+            $('mkt-zones-title').textContent = 'Barrios y Zonas en ' + ciu + ' (clic para enfocar)';
+            var barriosMostrar = listaGrupos.filter(function (g) { return g.nombre !== 'Otras zonas'; });
+            if (!barriosMostrar.length) {
+              grid.innerHTML = '<div style="font-size:.82rem;color:var(--coffee-500);">Esta región aún no tiene barrios subdivididos en la base.</div>';
+              return;
+            }
+            grid.innerHTML = barriosMostrar.map(function (g) {
+              var activo = zon === g.nombre ? ' active' : '';
+              var perCapLine = g.perCap ? '👥 1 café c/ ' + g.perCap.habPorCafe.toLocaleString('es-AR') + ' hab. <span>(' + g.perCap.cada100k + '/100k)</span>' : '<span>Sin dato censal de barrio</span>';
+              return '<button type="button" class="mkt-zone-card' + activo + '" style="border-left-color:' + g.color + '" onclick="cofiSeleccionarZonaMercado(\'' + esc(g.nombre) + '\')"><div class="mkt-zone-top"><span class="mkt-zone-name">' + esc(g.nombre) + '</span><span class="mkt-zone-count">' + g.n + ' loc.</span></div><div class="mkt-zone-percap">' + perCapLine + '</div><div class="mkt-zone-stats"><span>💳 Ticket: <b>×' + g.promTicket.toFixed(2) + '</b></span><span>📈 Potencial: <b>' + g.promOp + ' pts</b></span></div></button>';
+            }).join('');
+          }
+        };
+
+        // ---------- Mapa Principal ----------
+        function initMapa() {
+          if (typeof L === 'undefined' || mapaCofiteca) return;
+          mapaCofiteca = L.map('cofiteca-map', { minZoom: 3, maxZoom: 19, zoomSnap: 0.5 }).setView(VISTA_ARGENTINA, zoomInicial());
+          agregarCapaBase(mapaCofiteca);
+          markerCluster = crearGrupoMarcadores(mapaCofiteca, { maxClusterRadius: 40, disableClusteringAtZoom: 14, spiderfyOnMaxZoom: true, showCoverageOnHover: false, chunkedLoading: true });
+          mapaCofiteca.on('zoomend moveend', actualizarEtiquetas);
+
+          baseDatos.forEach(function (c) {
+            var m = L.circleMarker([c.lat, c.lon], Object.assign({}, ESTILO_BASE));
+            m._nombre = c.nombre;
+            m.bindPopup(function () { return popupHTML(baseDatos[c.id]); }, { maxWidth: 260 });
+            m.on('click', function () { registrarVisto(c.id); resaltarCard(c.id); renderRecientes(); });
+            m.on('popupopen', function () { resaltarMarker(c.id); });
+            m.on('popupclose', quitarResaltadoMarker);
+            markersPorId.set(c.id, m);
+          });
+          setTimeout(function () { mapaCofiteca.invalidateSize(); }, 200);
+          var vieneConFiltro = $('input-busqueda').value.trim() !== '' || $('select-ciudad').value !== 'Todas';
+          dibujarMapa(listaActual, vieneConFiltro);
         }
-      };
 
-      // ---------- Mapa principal ----------
-      function initMapa() {
-        mapaCofiteca = L.map('cofiteca-map', { minZoom: 3, maxZoom: 19, zoomSnap: 0.5 }).setView(VISTA_ARGENTINA, zoomInicial());
-        L.maplibreGL({ style: ESTILO_MAPA, attribution: ATRIBUCION }).addTo(mapaCofiteca);
-        markerCluster = L.markerClusterGroup({ maxClusterRadius: 40, disableClusteringAtZoom: 14, spiderfyOnMaxZoom: true, showCoverageOnHover: false, chunkedLoading: true }).addTo(mapaCofiteca);
-        mapaCofiteca.on('zoomend moveend', actualizarEtiquetas);
+        function popupHTML(c) {
+          var ig = c.instagram ? '<a href="' + esc(c.instagram) + '" target="_blank" rel="noopener noreferrer" class="popup-btn">Instagram</a>' : '';
+          var enLista = idsEnLista.has(c.id) ? '<a href="#" class="popup-link" onclick="cofiVerEnLista(' + c.id + '); return false;">Ver en la lista ↓</a>' : '';
+          var detalle = '<a href="/cafe/' + esc(c.slug) + '" class="popup-link">Ver ficha completa</a>';
+          return '<div class="popup-cafe"><b>' + esc(c.nombre) + '</b><small>' + esc(c.ubicacion) + '</small><div class="popup-acciones">' + ig + detalle + enLista + '</div></div>';
+        }
 
-        baseDatos.forEach(function (c) {
-          var m = L.circleMarker([c.lat, c.lon], Object.assign({}, ESTILO_BASE));
-          m._nombre = c.nombre;
-          m.bindPopup(function () { return popupHTML(baseDatos[c.id]); }, { maxWidth: 260 });
-          m.on('click', function () { registrarVisto(c.id); resaltarCard(c.id); renderRecientes(); });
-          m.on('popupopen', function () { resaltarMarker(c.id); });
-          m.on('popupclose', quitarResaltadoMarker);
-          markersPorId.set(c.id, m);
+        function quitarResaltadoMarker() {
+          if (!mapaCofiteca) return;
+          if (markerActivoId !== null) {
+            var m = markersPorId.get(markerActivoId);
+            if (m) m.setStyle(Object.assign({}, estiloBase(markerActivoId)));
+            markerActivoId = null;
+          }
+          if (haloActivo) { mapaCofiteca.removeLayer(haloActivo); haloActivo = null; }
+        }
+        function resaltarMarker(id) {
+          if (!mapaCofiteca) return;
+          quitarResaltadoMarker();
+          var m = markersPorId.get(id);
+          if (!m) return;
+          markerActivoId = id;
+          m.setStyle(Object.assign({}, ESTILO_ACTIVO));
+          haloActivo = L.circleMarker(m.getLatLng(), { radius: 22, weight: 0, fillColor: '#e86a33', fillOpacity: .3, interactive: false, className: 'cofi-halo' }).addTo(mapaCofiteca);
+          if (m._map) m.bringToFront();
+        }
+
+        function actualizarEtiquetas() {
+          if (!mapaCofiteca) return;
+          if (mapaCofiteca.getZoom() < ZOOM_ETIQUETAS) {
+            marcadoresConEtiqueta.forEach(function (m) { m.unbindTooltip(); m._tt = false; });
+            marcadoresConEtiqueta = [];
+            return;
+          }
+          var area = mapaCofiteca.getBounds().pad(0.2);
+          marcadoresActuales.forEach(function (m) {
+            if (!m._tt && area.contains(m.getLatLng())) {
+              m.bindTooltip(esc(m._nombre), { permanent: true, direction: 'top', className: 'cafe-label', offset: [0, -10] });
+              m._tt = true;
+              marcadoresConEtiqueta.push(m);
+            }
+          });
+        }
+
+        function dibujarMapa(lista, recentrar) {
+          if (!mapaCofiteca || !markerCluster) return;
+          quitarResaltadoMarker();
+          marcadoresConEtiqueta.forEach(function (m) { m.unbindTooltip(); m._tt = false; });
+          marcadoresConEtiqueta = [];
+
+          var nuevoSet = new Set(lista.map(function (c) { return c.id; }));
+          var idsQuitar = [], aAgregar = [];
+          idsEnMapa.forEach(function (id) { if (!nuevoSet.has(id)) idsQuitar.push(id); });
+          nuevoSet.forEach(function (id) { if (!idsEnMapa.has(id)) aAgregar.push(markersPorId.get(id)); });
+          var aQuitar = idsQuitar.map(function (id) { return markersPorId.get(id); });
+
+          if (typeof markerCluster.removeLayers === 'function') {
+            if (aQuitar.length) markerCluster.removeLayers(aQuitar);
+            if (aAgregar.length) markerCluster.addLayers(aAgregar);
+          } else {
+            aQuitar.forEach(function (m) { markerCluster.removeLayer(m); });
+            aAgregar.forEach(function (m) { markerCluster.addLayer(m); });
+          }
+          idsEnMapa = nuevoSet;
+          marcadoresActuales = lista.map(function (c) { return markersPorId.get(c.id); });
+
+          idsQuitar.forEach(function (id) { markersPorId.get(id).setStyle(Object.assign({}, ESTILO_BASE)); });
+          lista.forEach(function (c) { markersPorId.get(c.id).setStyle(Object.assign({}, estiloBase(c.id))); });
+
+          if (recentrar) {
+            var ciu = $('select-ciudad').value, zon = $('select-zona').value;
+            if (ciu === 'Todas' && zon === 'Todas' && !busquedaActiva && !origen && !soloFavoritos) {
+              mapaCofiteca.setView(VISTA_ARGENTINA, zoomInicial());
+            } else if (lista.length) {
+              mapaCofiteca.fitBounds(L.latLngBounds(lista.map(function (c) { return [c.lat, c.lon]; })), { padding: [40, 40], maxZoom: 17 });
+            }
+          }
+          if (busquedaActiva && lista.length === 1) resaltarMarker(lista[0].id);
+          actualizarEtiquetas();
+        }
+
+        // ---------- Lista ----------
+        function setLista(lista) {
+          listaActual = lista;
+          idsEnLista = new Set(lista.map(function (c) { return c.id; }));
+          mostrados = PAGINA;
+          idDestacado = null;
+          renderizarLista();
+        }
+
+        function crearCard(c) {
+          var div = document.createElement('div');
+          div.className = 'cafe-card' + (c.id === idDestacado ? ' destacada' : '');
+          div.dataset.id = c.id;
+
+          var dist = c.dist !== undefined ? '<br><b>📍 ' + textoDistancia(c.dist) + '</b>' : '';
+          var ig = c.instagram ? '<a href="' + esc(c.instagram) + '" target="_blank" rel="noopener noreferrer">Instagram</a>' : '';
+          var rank = rankMap.get(c.id);
+          var badge = rank ? ' <span class="card-badge">#' + rank + ' top</span>' : '';
+          var favActivo = favoritos.has(c.id) ? 'is-fav' : '';
+          var favIcon = favoritos.has(c.id) ? '★' : '☆';
+
+          div.innerHTML =
+            '<button class="fav-btn ' + favActivo + '" data-fav="' + c.id + '" aria-label="Favorito">' + favIcon + '</button>' +
+            '<div><h3><a href="/cafe/' + esc(c.slug) + '">' + esc(c.nombre) + '</a>' + badge + '</h3>' +
+            '<p>' + esc(c.ubicacion) + ' • <b>' + esc(c.ciudadReal || c.ciudad) + '</b>' + dist + '</p></div>' +
+            '<div class="cafe-actions"><button type="button" data-ver-mapa>Ver en mapa</button>' + ig + '<a href="' + urlComoLlegar(c) + '" target="_blank" rel="noopener noreferrer">Cómo llegar</a></div>';
+
+          div.querySelector('.fav-btn').addEventListener('click', function (e) {
+            e.stopPropagation();
+            window.cofiToggleFav(c.id, e.currentTarget);
+          });
+          div.querySelector('[data-ver-mapa]').addEventListener('click', function () { verEnMapa(c.id); });
+          return div;
+        }
+
+        function renderizarLista() {
+          var cont = $('cofi-resultados');
+          var frag = document.createDocumentFragment();
+          if (!listaActual.length) {
+            var empty = document.createElement('div');
+            empty.className = 'msg-vacio';
+            empty.innerHTML = '<span class="emoji">☕</span><h3>Sin resultados</h3><p>Probá con menos filtros o buscá cerca tuyo.</p><button onclick="cofiUsarMiGPS()">Cerca de mi ubicación</button>';
+            frag.appendChild(empty);
+          } else {
+            listaActual.slice(0, mostrados).forEach(function (c) { frag.appendChild(crearCard(c)); });
+            if (listaActual.length > mostrados) {
+              var btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'btn-ver-mas';
+              btn.textContent = 'Ver más (' + (listaActual.length - mostrados) + ' restantes)';
+              btn.addEventListener('click', function () { mostrados += PAGINA; renderizarLista(); });
+              frag.appendChild(btn);
+            }
+          }
+          cont.replaceChildren(frag);
+          $('cofi-count').textContent = listaActual.length
+            ? 'Mostrando ' + Math.min(mostrados, listaActual.length) + ' de ' + listaActual.length + ' locales'
+            : '';
+        }
+
+        function verEnMapa(id) {
+          var c = baseDatos[id];
+          var m = markersPorId.get(id);
+          registrarVisto(id);
+          renderRecientes();
+          resaltarCard(id);
+          if (!mapaCofiteca || !m) return;
+          document.querySelector('#vista-mapa .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (typeof markerCluster.zoomToShowLayer === 'function' && markerCluster.hasLayer(m)) {
+            markerCluster.zoomToShowLayer(m, function () { m.openPopup(); });
+          } else {
+            mapaCofiteca.setView([c.lat, c.lon], 16);
+            m.openPopup();
+          }
+        }
+
+        function resaltarCard(id) {
+          idDestacado = id;
+          document.querySelectorAll('#cofi-resultados .cafe-card.destacada').forEach(function (el) { el.classList.remove('destacada'); });
+          var el = document.querySelector('#cofi-resultados .cafe-card[data-id="' + id + '"]');
+          if (el) el.classList.add('destacada');
+        }
+
+        window.cofiVerEnLista = function (id) {
+          var idx = listaActual.findIndex(function (c) { return c.id === id; });
+          if (idx === -1) return;
+          if (idx >= mostrados) { mostrados = idx + 1; renderizarLista(); }
+          resaltarCard(id);
+          var el = document.querySelector('#cofi-resultados .cafe-card[data-id="' + id + '"]');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+
+        window.cofiActualizarZonas = function () {
+          var ciu = $('select-ciudad').value;
+          var base = ciu === 'Todas' ? baseDatos : baseDatos.filter(function (c) { return c.ciudad === ciu; });
+          var zonas = Array.from(new Set(base.map(function (c) { return c.zona; }))).filter(function (z) { return z && z !== '-' && z !== 'Sin Zona'; }).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+          $('select-zona').innerHTML = '<option value="Todas">Zona / Barrio</option>' + zonas.map(function (z) { return '<option value="' + esc(z) + '">' + esc(z) + '</option>'; }).join('');
+        };
+
+        function filtrarDatos() {
+          var ciu = $('select-ciudad').value;
+          var zon = $('select-zona').value;
+          var tokens = norm($('input-busqueda').value).trim().split(/\s+/).filter(Boolean);
+          var filtrados = baseDatos.filter(function (c) {
+            return (ciu === 'Todas' || c.ciudad === ciu) &&
+              (zon === 'Todas' || c.zona === zon) &&
+              (!soloFavoritos || favoritos.has(c.id)) &&
+              tokens.every(function (t) { return c._q.indexOf(t) !== -1; });
+          });
+          if (origen) {
+            filtrados = filtrados.slice().sort(function (a, b) {
+              return calcularD(origen.lat, origen.lon, a.lat, a.lon) - calcularD(origen.lat, origen.lon, b.lat, b.lon);
+            });
+          }
+          return filtrados;
+        }
+
+        function limpiarOrigen() {
+          if (markerOrigen && mapaCofiteca) { mapaCofiteca.removeLayer(markerOrigen); markerOrigen = null; }
+          origen = null;
+          $('cofi-status').classList.add('hidden');
+        }
+
+        function aplicarFiltros(recentrar) {
+          busquedaActiva = $('input-busqueda').value.trim().length > 0;
+          var filtrados = filtrarDatos();
+          setLista(filtrados);
+          dibujarMapa(filtrados, recentrar);
+          sincronizarURL();
+        }
+
+        var debounceFiltro = null;
+        window.cofiFiltrar = function (modo) {
+          clearTimeout(debounceFiltro);
+          debounceFiltro = setTimeout(function () {
+            if (modo === true) limpiarOrigen();
+            aplicarFiltros(modo === true || modo === 'texto');
+          }, 200);
+        };
+        window.cofiQuitarOrigen = function () { limpiarOrigen(); aplicarFiltros(true); };
+
+        function sincronizarURL() {
+          var p = new URLSearchParams(location.search);
+          var c = $('select-ciudad').value;
+          var q = $('input-busqueda').value.trim();
+          var activeBtn = document.querySelector('.view-tab-btn.active');
+          var tab = activeBtn ? activeBtn.id.replace('btn-tab-', '') : 'mapa';
+          if (c !== 'Todas') p.set('c', c); else p.delete('c');
+          if (q) p.set('q', q); else p.delete('q');
+          if (tab !== 'mapa') p.set('v', tab); else p.delete('v');
+          history.replaceState(null, '', p.toString() ? '?' + p : location.pathname);
+        }
+
+        function hidratarDesdeURL() {
+          var p = new URLSearchParams(location.search);
+          var c = p.get('c'), q = p.get('q'), v = p.get('v');
+          if (c) {
+            var opt = Array.from($('select-ciudad').options).find(function (o) { return o.value === c; });
+            if (opt) { $('select-ciudad').value = c; window.cofiActualizarZonas(); }
+          }
+          if (q) $('input-busqueda').value = q;
+          if (v && ['ranking', 'tostadores', 'mercado'].indexOf(v) !== -1) {
+            window.cofiSwitchTab(v);
+          }
+        }
+
+        // ---------- Rankings ----------
+        function getRankingColor(rank) {
+          if (!rank || isNaN(rank)) return '#34495e';
+          if (rank <= 3) return '#D4AF37';
+          if (rank <= 10) return '#E86A33';
+          if (rank <= 20) return '#009FBD';
+          if (rank <= 30) return '#8e44ad';
+          if (rank <= 40) return '#27ae60';
+          if (rank <= 50) return '#f39c12';
+          if (rank <= 60) return '#d35400';
+          if (rank <= 70) return '#c0392b';
+          if (rank <= 80) return '#16a085';
+          if (rank <= 90) return '#7f8c8d';
+          return '#2c3e50';
+        }
+
+        function initMapaRanking() {
+          if (typeof L === 'undefined') return;
+          mapaRanking = L.map('ranking-map', { minZoom: 2, maxZoom: 19 }).setView(VISTA_ARGENTINA, 4);
+          agregarCapaBase(mapaRanking);
+          markerClusterRanking = crearGrupoMarcadores(mapaRanking, { maxClusterRadius: 35, disableClusteringAtZoom: 12, spiderfyOnMaxZoom: true });
+          setTimeout(function () { mapaRanking.invalidateSize(); }, 200);
+        }
+
+        window.cofiActualizarRankingCiudades = function () {
+          var tipo = $('select-ranking-tipo').value;
+          var data = rankingDatos[tipo] || [];
+          var lugares = Array.from(new Set(data.map(function (c) { return c.lugar; }))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+          var texto = tipo === 'arg' ? 'Todas las Ciudades' : 'Todos los Países';
+          $('select-ranking-ciudad').innerHTML = '<option value="Todas">' + texto + '</option>' + lugares.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
+        };
+
+        window.cofiFiltrarRanking = function () {
+          var tipo = $('select-ranking-tipo').value;
+          var lugar = $('select-ranking-ciudad').value;
+          var filtrados = (rankingDatos[tipo] || []).filter(function (c) { return lugar === 'Todas' || c.lugar === lugar; });
+
+          if (markerClusterRanking && mapaRanking) {
+            var markers = filtrados.map(function (c) {
+              var color = getRankingColor(c.rank);
+              var icon = L.divIcon({
+                html: '<div style="background-color:' + color + '; color:white; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-weight:800; border:2px solid white; box-shadow:0 3px 6px rgba(0,0,0,.3); font-size:13px; font-family:Inter,sans-serif;">' + esc(c.rank) + '</div>',
+                className: 'custom-ranking-icon', iconSize: [28, 28], iconAnchor: [14, 14]
+              });
+              var ig = c.ig ? '<div class="popup-acciones"><a href="' + esc(c.ig) + '" target="_blank" rel="noopener noreferrer" class="popup-btn">Instagram</a></div>' : '';
+              return L.marker([c.lat, c.lon], { icon: icon }).bindPopup(
+                '<div class="popup-cafe"><span class="rank-badge" style="background:' + color + ';">#' + esc(c.rank) + '</span><br><b>' + esc(c.nombre) + '</b><small>' + esc(c.ubicacion) + ' • ' + esc(c.lugar) + '</small>' + ig + '</div>',
+                { maxWidth: 260 }
+              );
+            });
+            markerClusterRanking.clearLayers();
+            if (typeof markerClusterRanking.addLayers === 'function') markerClusterRanking.addLayers(markers);
+            else markers.forEach(function (m) { markerClusterRanking.addLayer(m); });
+
+            if (filtrados.length) {
+              var zoom = lugar === 'Todas' ? (tipo === 'mun' ? 2 : 4) : (tipo !== 'arg' ? 5 : 12);
+              var lat = filtrados.reduce(function (s, c) { return s + c.lat; }, 0) / filtrados.length;
+              var lon = filtrados.reduce(function (s, c) { return s + c.lon; }, 0) / filtrados.length;
+              mapaRanking.setView([lat, lon], zoom);
+            }
+          }
+
+          var frag = document.createDocumentFragment();
+          filtrados.forEach(function (c) {
+            var color = getRankingColor(c.rank);
+            var div = document.createElement('div');
+            div.className = 'cafe-card';
+            var ig = c.ig ? '<a href="' + esc(c.ig) + '" target="_blank" rel="noopener noreferrer">Instagram</a>' : '';
+            div.innerHTML =
+              '<div><h3 style="padding-right:0"><span class="rank-badge" style="background:' + color + ';">#' + esc(c.rank) + '</span> ' + esc(c.nombre) + '</h3>' +
+              '<p>' + esc(c.ubicacion) + ' • <b>' + esc(c.lugar) + '</b></p></div>' +
+              '<div class="cafe-actions">' + ig + '<a href="' + urlComoLlegar(c) + '" target="_blank" rel="noopener noreferrer">Cómo llegar</a></div>';
+            frag.appendChild(div);
+          });
+          $('ranking-resultados').replaceChildren(frag);
+        };
+
+        // ---------- Tostadores ----------
+        window.cofiRenderizarTostadores = function () {
+          var ciudad = $('select-ciudad-tostadores').value;
+          var filtrados = tostadoresDatos.filter(function (t) { return ciudad === 'Todas' || t.ciudad === ciudad; });
+          var cont = $('lista-tostadores');
+          if (!filtrados.length) {
+            cont.innerHTML = '<p class="msg-vacio"><span class="emoji">🌱</span>Todavía no hay tostadores registrados en esta ciudad.</p>';
+            return;
+          }
+          var frag = document.createDocumentFragment();
+          filtrados.forEach(function (t) {
+            var div = document.createElement('div');
+            div.className = 'tostador-card';
+            var img = t.foto || IMG_FALLBACK;
+            var botones = '';
+            if (t.ig) botones += '<a href="' + esc(t.ig) + '" target="_blank" rel="noopener noreferrer" class="btn-outline-mad" style="margin-bottom:8px;display:flex;">Instagram</a>';
+            if (t.tienda) botones += '<a href="' + esc(t.tienda) + '" target="_blank" rel="noopener noreferrer" class="btn-primary-mad" style="display:flex;">Tienda Online</a>';
+            div.innerHTML =
+              '<img src="' + esc(img) + '" class="tostador-img" width="400" height="200" loading="lazy" decoding="async" alt="' + esc(t.nombre) + '" onerror="this.onerror=null;this.src=\'' + IMG_FALLBACK + '\'">' +
+              '<div class="tostador-content"><div><h3>' + esc(t.nombre) + '</h3><p>📍 ' + esc(t.ciudad) + '</p></div><div>' + botones + '</div></div>';
+            frag.appendChild(div);
+          });
+          cont.replaceChildren(frag);
+        };
+
+        // ---------- Ubicación y Modales ----------
+        function cofiProcesarOrigen(lat, lon, label) {
+          $('select-ciudad').value = 'Todas';
+          window.cofiActualizarZonas();
+          $('input-busqueda').value = '';
+          busquedaActiva = false;
+          limpiarOrigen();
+
+          origen = { lat: lat, lon: lon, label: label };
+          if (mapaCofiteca) {
+            markerOrigen = L.circleMarker([lat, lon], { radius: 9, color: '#1a0f0a', fillColor: '#fff', weight: 3, fillOpacity: 1 })
+              .addTo(mapaCofiteca).bindPopup(esc(label)).openPopup();
+          }
+
+          var conDist = baseDatos.map(function (c) { return Object.assign({}, c, { dist: calcularD(lat, lon, c.lat, c.lon) }); })
+            .sort(function (a, b) { return a.dist - b.dist; });
+          setLista(conDist);
+          dibujarMapa(baseDatos, false);
+          if (mapaCofiteca) mapaCofiteca.setView([lat, lon], 15);
+          document.querySelector('#vista-mapa .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          var st = $('cofi-status');
+          st.innerHTML = '📍 Más cercanos a <b>' + esc(label) + '</b> · <a onclick="cofiFiltrarRadio(1)">1 km</a> · <a onclick="cofiFiltrarRadio(5)">5 km</a> · <a onclick="cofiFiltrarRadio(15)">15 km</a> · <a onclick="cofiFiltrarRadio(50)">50 km</a> · <a onclick="cofiQuitarOrigen()">Quitar</a>';
+          st.classList.remove('hidden');
+          sincronizarURL();
+        }
+
+        window.cofiFiltrarRadio = function (km) {
+          if (!origen) return;
+          var dentro = baseDatos.map(function (c) { return Object.assign({}, c, { dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) }); })
+            .filter(function (c) { return c.dist <= km; }).sort(function (a, b) { return a.dist - b.dist; });
+          setLista(dentro);
+          dibujarMapa(dentro, false);
+          $('cofi-status').innerHTML = '📍 A menos de <b>' + km + ' km</b> de <b>' + esc(origen.label) + '</b> · <a onclick="cofiQuitarOrigen()">Quitar</a>';
+        };
+
+        window.cofiUsarMiGPS = function () {
+          if (!navigator.geolocation) { ensureSwal().then(function () { Swal.fire('Error', 'Tu navegador no soporta GPS.', 'error'); }); return; }
+          navigator.geolocation.getCurrentPosition(
+            function (p) { cofiProcesarOrigen(p.coords.latitude, p.coords.longitude, 'tu ubicación'); },
+            function () { ensureSwal().then(function () { Swal.fire('Aviso', 'No pudimos obtener tu ubicación. Revisá los permisos.', 'warning'); }); },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+          );
+        };
+
+        window.cofiMedirDesdeDireccion = function () {
+          ensureSwal().then(function () {
+            Swal.fire({
+              title: '¿Dónde estás?',
+              html: '<p style="font-size:.9rem;color:#5c3d2e;margin-bottom:15px;">Escribí tu calle y ciudad (Ej: Güemes, Mar del Plata)</p><input id="swal-autocomplete-input" class="swal-custom-input" placeholder="Escribir..." autocomplete="off"><div id="autocomplete-results" style="text-align:left;margin-top:10px;max-height:200px;overflow-y:auto;"></div>',
+              showConfirmButton: false, showCancelButton: true, cancelButtonText: 'Cerrar',
+              customClass: { popup: 'swal-custom-popup', cancelButton: 'swal-custom-btn-cancel' },
+              didOpen: function () {
+                var input = $('swal-autocomplete-input');
+                var resultsContainer = $('autocomplete-results');
+                var timeout = null, solicitudId = 0;
+                input.focus();
+                input.addEventListener('input', function () {
+                  clearTimeout(timeout);
+                  var val = input.value.trim();
+                  if (val.length < 4) { resultsContainer.innerHTML = ''; return; }
+                  resultsContainer.innerHTML = '<div style="padding:10px;color:#1a0f0a;font-weight:bold;text-align:center;">Buscando...</div>';
+                  timeout = setTimeout(function () {
+                    var miId = ++solicitudId;
+                    fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(val) + '&countrycodes=ar&addressdetails=1&limit=6')
+                      .then(function (res) { return res.json(); })
+                      .then(function (data) {
+                        if (miId !== solicitudId) return;
+                        resultsContainer.innerHTML = '';
+                        if (!data.length) { resultsContainer.innerHTML = '<div style="padding:10px;opacity:.7;text-align:center;">No encontramos la dirección.</div>'; return; }
+                        data.forEach(function (item) {
+                          var partes = [];
+                          if (item.address.road) partes.push(item.address.road + (item.address.house_number ? ' ' + item.address.house_number : ''));
+                          var localidad = item.address.city || item.address.town || item.address.village;
+                          if (localidad) partes.push(localidad);
+                          var nombreStr = partes.length ? partes.join(', ') : item.display_name.split(',').slice(0, 3).join(', ');
+                          var btn = document.createElement('button');
+                          btn.style.cssText = 'width:100%;text-align:left;background:rgba(255,255,255,.7);color:#1a0f0a;border:1px solid rgba(196,167,125,.5);padding:12px;border-radius:6px;cursor:pointer;margin-bottom:8px;font-family:Inter,sans-serif;font-size:.9rem;';
+                          btn.innerHTML = '📍 <b>' + esc(nombreStr) + '</b>';
+                          btn.onclick = function () { Swal.close(); cofiProcesarOrigen(parseFloat(item.lat), parseFloat(item.lon), nombreStr); };
+                          resultsContainer.appendChild(btn);
+                        });
+                      })
+                      .catch(function () { if (miId === solicitudId) resultsContainer.innerHTML = '<div style="padding:10px;color:red;text-align:center;">Error con el mapa.</div>'; });
+                  }, 800);
+                });
+              }
+            });
+          });
+        };
+
+        window.cofiAbrirReporte = function () {
+          ensureSwal().then(function () {
+            return Swal.fire({
+              title: 'Soporte',
+              customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
+              html: '<div style="text-align:left;"><select id="swal-tipo" class="swal-custom-input" style="margin-bottom:10px;"><option value="Dato Incorrecto">Corrección de datos</option><option value="Local Cerrado">Local cerrado</option></select><input id="swal-local" class="swal-custom-input" placeholder="Nombre del local o tu teléfono" style="margin-bottom:10px;"><textarea id="swal-detalle" class="swal-custom-input" placeholder="Detalle de la solicitud..." style="height:80px;resize:none;"></textarea></div>',
+              showCancelButton: true, confirmButtonText: 'Enviar', cancelButtonText: 'Cancelar',
+              preConfirm: function () {
+                var local = $('swal-local').value.trim();
+                if (!local) { Swal.showValidationMessage('Ingresá una referencia válida'); return false; }
+                return { tipo: $('swal-tipo').value, local: local, detalle: $('swal-detalle').value.trim() };
+              }
+            });
+          }).then(function (res) { if (res && res.value) window.cofiEnviarReporteEmail(res.value); });
+        };
+
+        window.cofiAbrirSumate = function () {
+          ensureSwal().then(function () {
+            return Swal.fire({
+              title: 'Añadir Local',
+              customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
+              html: '<div style="text-align:left;"><select id="sumate-tipo" class="swal-custom-input" style="margin-bottom:10px;"><option value="Cafetería / Tostaduría">Cafetería / Tostaduría</option></select><input id="sumate-nombre" class="swal-custom-input" placeholder="Nombre comercial" style="margin-bottom:10px;"><input id="sumate-link" class="swal-custom-input" placeholder="Link a Instagram o Web" style="margin-bottom:10px;"></div>',
+              showCancelButton: true, confirmButtonText: 'Enviar Solicitud', cancelButtonText: 'Cancelar',
+              preConfirm: function () {
+                var nombre = $('sumate-nombre').value.trim();
+                if (!nombre) { Swal.showValidationMessage('Ingresá el nombre comercial'); return false; }
+                return { tipo: 'ALTA NUEVA: ' + $('sumate-tipo').value, local: nombre, detalle: 'Link/IG: ' + $('sumate-link').value.trim() };
+              }
+            });
+          }).then(function (res) { if (res && res.value) window.cofiEnviarReporteEmail(res.value); });
+        };
+
+        window.cofiEnviarReporteEmail = function (datosForm) {
+          fetch('/api/reporte?t=' + Date.now(), {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(datosForm)
+          }).then(function () {
+            Swal.fire({ title: 'Enviado', text: 'Tu solicitud fue recibida.', icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
+          }).catch(function () {
+            Swal.fire({ title: 'Error', text: 'Problemas de conexión con el servidor.', icon: 'error', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
+          });
+        };
+
+        document.addEventListener('keydown', function (e) {
+          if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'SELECT') {
+            e.preventDefault();
+            $('input-busqueda').focus();
+          }
+          if (e.key === 'Escape' && document.activeElement.id === 'input-busqueda') {
+            $('input-busqueda').value = '';
+            window.cofiFiltrar('texto');
+          }
         });
-        setTimeout(function () { mapaCofiteca.invalidateSize(); }, 200);
+
+        // 1. ARRANQUE INMEDIATO DE LA UI
+        var ciudades = Array.from(new Set(baseDatos.map(function (c) { return c.ciudad; }))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+        var opcionesCiudades = ciudades.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
+        $('select-ciudad').innerHTML = '<option value="Todas">Región / Ciudad</option>' + opcionesCiudades;
+        $('select-mercado-ciudad').innerHTML = '<option value="Todas">Todo el país (Región / Ciudad)</option>' + opcionesCiudades;
+
+        var ciudadesTost = Array.from(new Set(tostadoresDatos.map(function (t) { return t.ciudad; }))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+        $('select-ciudad-tostadores').innerHTML = '<option value="Todas">Todas las Ciudades</option>' + ciudadesTost.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
+
+        var GRANDES = ['CABA y Gran Buenos Aires', 'Córdoba', 'Mar del Plata', 'Mendoza', 'La Plata'];
+        $('quick-chips').innerHTML = GRANDES
+          .filter(function (r) { return ciudades.indexOf(r) !== -1; })
+          .map(function (r) { return '<button class="quick-chip" onclick="cofiQuickRegion(\'' + esc(r) + '\')">' + esc(r.replace(' y Gran Buenos Aires', '')) + '</button>'; })
+          .join('');
+
+        window.cofiQuickRegion = function (r) {
+          $('select-ciudad').value = r;
+          window.cofiActualizarZonas();
+          window.cofiFiltrar(true);
+        };
+
+        persistirFavs();
+        renderRecientes();
+        window.cofiActualizarZonas();
+        window.cofiActualizarMercadoZonas();
+        window.cofiActualizarMetricas();
+        hidratarDesdeURL();
+        var vieneConFiltro = $('input-busqueda').value.trim() !== '' || $('select-ciudad').value !== 'Todas';
+        aplicarFiltros(vieneConFiltro);
+
+        // 2. CARGA ASÍNCRONA DE LIBRERÍAS DE MAPA
+        function cargarScript(src) {
+          return new Promise(function (resolve) {
+            var s = document.createElement('script');
+            s.src = src;
+            s.onload = function () { resolve(true); };
+            s.onerror = function () { resolve(false); };
+            document.head.appendChild(s);
+          });
+        }
+
+        cargarScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js').then(function (okLeaflet) {
+          if (!okLeaflet || typeof L === 'undefined') return;
+          return Promise.all([
+            cargarScript('https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js'),
+            cargarScript('https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js')
+          ]).then(function () {
+            return cargarScript('https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js');
+          }).then(function () {
+            initMapa();
+            var tabActiva = document.querySelector('.view-tab-btn.active');
+            if (tabActiva && tabActiva.id === 'btn-tab-mercado' && !mercadoIniciado) {
+              initMapaMercado();
+              mercadoIniciado = true;
+              window.cofiRenderMercado(true);
+            }
+            if (tabActiva && tabActiva.id === 'btn-tab-ranking' && !rankingIniciado) {
+              initMapaRanking();
+              rankingIniciado = true;
+              window.cofiFiltrarRanking();
+            }
+          });
+        });
+
         window.addEventListener('resize', function () {
           if (mapaCofiteca) mapaCofiteca.invalidateSize();
           if (mapaRanking) mapaRanking.invalidateSize();
@@ -1478,565 +1907,10 @@ const datosJSON = JSON.stringify({
         });
       }
 
-      function popupHTML(c) {
-        var ig = c.instagram ? '<a href="' + esc(c.instagram) + '" target="_blank" rel="noopener noreferrer" class="popup-btn">Instagram</a>' : '';
-        var enLista = idsEnLista.has(c.id) ? '<a href="#" class="popup-link" onclick="cofiVerEnLista(' + c.id + '); return false;">Ver en la lista ↓</a>' : '';
-        var detalle = '<a href="/cafe/' + esc(c.slug) + '" class="popup-link">Ver ficha completa</a>';
-        return '<div class="popup-cafe"><b>' + esc(c.nombre) + '</b><small>' + esc(c.ubicacion) + '</small><div class="popup-acciones">' + ig + detalle + enLista + '</div></div>';
-      }
-
-      function quitarResaltadoMarker() {
-        if (markerActivoId !== null) {
-          var m = markersPorId.get(markerActivoId);
-          if (m) m.setStyle(Object.assign({}, estiloBase(markerActivoId)));
-          markerActivoId = null;
-        }
-        if (haloActivo) { mapaCofiteca.removeLayer(haloActivo); haloActivo = null; }
-      }
-      function resaltarMarker(id) {
-        quitarResaltadoMarker();
-        var m = markersPorId.get(id);
-        if (!m) return;
-        markerActivoId = id;
-        m.setStyle(Object.assign({}, ESTILO_ACTIVO));
-        haloActivo = L.circleMarker(m.getLatLng(), { radius: 22, weight: 0, fillColor: '#e86a33', fillOpacity: .3, interactive: false, className: 'cofi-halo' }).addTo(mapaCofiteca);
-        if (m._map) m.bringToFront();
-      }
-
-      function actualizarEtiquetas() {
-        if (!mapaCofiteca) return;
-        if (mapaCofiteca.getZoom() < ZOOM_ETIQUETAS) {
-          marcadoresConEtiqueta.forEach(function (m) { m.unbindTooltip(); m._tt = false; });
-          marcadoresConEtiqueta = [];
-          return;
-        }
-        var area = mapaCofiteca.getBounds().pad(0.2);
-        marcadoresActuales.forEach(function (m) {
-          if (!m._tt && area.contains(m.getLatLng())) {
-            m.bindTooltip(esc(m._nombre), { permanent: true, direction: 'top', className: 'cafe-label', offset: [0, -10] });
-            m._tt = true;
-            marcadoresConEtiqueta.push(m);
-          }
-        });
-      }
-
-      function dibujarMapa(lista, recentrar) {
-        quitarResaltadoMarker();
-        marcadoresConEtiqueta.forEach(function (m) { m.unbindTooltip(); m._tt = false; });
-        marcadoresConEtiqueta = [];
-
-        var nuevoSet = new Set(lista.map(function (c) { return c.id; }));
-        var idsQuitar = [], aAgregar = [];
-        idsEnMapa.forEach(function (id) { if (!nuevoSet.has(id)) idsQuitar.push(id); });
-        nuevoSet.forEach(function (id) { if (!idsEnMapa.has(id)) aAgregar.push(markersPorId.get(id)); });
-        var aQuitar = idsQuitar.map(function (id) { return markersPorId.get(id); });
-        if (aQuitar.length) markerCluster.removeLayers(aQuitar);
-        if (aAgregar.length) markerCluster.addLayers(aAgregar);
-        idsEnMapa = nuevoSet;
-        marcadoresActuales = lista.map(function (c) { return markersPorId.get(c.id); });
-
-        idsQuitar.forEach(function (id) { markersPorId.get(id).setStyle(Object.assign({}, ESTILO_BASE)); });
-        lista.forEach(function (c) { markersPorId.get(c.id).setStyle(Object.assign({}, estiloBase(c.id))); });
-
-        if (recentrar) {
-          var ciu = $('select-ciudad').value, zon = $('select-zona').value;
-          if (ciu === 'Todas' && zon === 'Todas' && !busquedaActiva && !origen && !soloFavoritos) {
-            mapaCofiteca.setView(VISTA_ARGENTINA, zoomInicial());
-          } else if (lista.length) {
-            mapaCofiteca.fitBounds(L.latLngBounds(lista.map(function (c) { return [c.lat, c.lon]; })), { padding: [40, 40], maxZoom: 17 });
-          }
-        }
-
-        if (busquedaActiva && lista.length === 1) resaltarMarker(lista[0].id);
-
-        actualizarEtiquetas();
-      }
-
-      // ---------- Lista ----------
-      function setLista(lista) {
-        listaActual = lista;
-        idsEnLista = new Set(lista.map(function (c) { return c.id; }));
-        mostrados = PAGINA;
-        idDestacado = null;
-        renderizarLista();
-      }
-
-      function crearCard(c) {
-        var div = document.createElement('div');
-        div.className = 'cafe-card' + (c.id === idDestacado ? ' destacada' : '');
-        div.dataset.id = c.id;
-
-        var dist = c.dist !== undefined ? '<br><b>📍 ' + textoDistancia(c.dist) + '</b>' : '';
-        var ig = c.instagram ? '<a href="' + esc(c.instagram) + '" target="_blank" rel="noopener noreferrer">Instagram</a>' : '';
-        var rank = rankMap.get(c.id);
-        var badge = rank ? ' <span class="card-badge">#' + rank + ' top</span>' : '';
-        var favActivo = favoritos.has(c.id) ? 'is-fav' : '';
-        var favIcon = favoritos.has(c.id) ? '★' : '☆';
-
-        div.innerHTML =
-          '<button class="fav-btn ' + favActivo + '" data-fav="' + c.id + '" aria-label="Favorito">' + favIcon + '</button>' +
-          '<div>' +
-            '<h3><a href="/cafe/' + esc(c.slug) + '">' + esc(c.nombre) + '</a>' + badge + '</h3>' +
-            '<p>' + esc(c.ubicacion) + ' • <b>' + esc(c.ciudadReal || c.ciudad) + '</b>' + dist + '</p>' +
-          '</div>' +
-          '<div class="cafe-actions">' +
-            '<button type="button" data-ver-mapa>Ver en mapa</button>' +
-            ig +
-            '<a href="' + urlComoLlegar(c) + '" target="_blank" rel="noopener noreferrer">Cómo llegar</a>' +
-          '</div>';
-
-        div.querySelector('.fav-btn').addEventListener('click', function (e) {
-          e.stopPropagation();
-          window.cofiToggleFav(c.id, e.currentTarget);
-        });
-        div.querySelector('[data-ver-mapa]').addEventListener('click', function () { verEnMapa(c.id); });
-        return div;
-      }
-
-      function renderizarLista() {
-        var cont = $('cofi-resultados');
-        var frag = document.createDocumentFragment();
-
-        if (!listaActual.length) {
-          var empty = document.createElement('div');
-          empty.className = 'msg-vacio';
-          empty.innerHTML =
-            '<span class="emoji">☕</span>' +
-            '<h3>Sin resultados</h3>' +
-            '<p>Probá con menos filtros o buscá cerca tuyo.</p>' +
-            '<button onclick="cofiUsarMiGPS()">Cerca de mi ubicación</button>';
-          frag.appendChild(empty);
-        } else {
-          listaActual.slice(0, mostrados).forEach(function (c) { frag.appendChild(crearCard(c)); });
-          if (listaActual.length > mostrados) {
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'btn-ver-mas';
-            btn.textContent = 'Ver más (' + (listaActual.length - mostrados) + ' restantes)';
-            btn.addEventListener('click', function () { mostrados += PAGINA; renderizarLista(); });
-            frag.appendChild(btn);
-          }
-        }
-        cont.replaceChildren(frag);
-
-        var count = $('cofi-count');
-        count.textContent = listaActual.length
-          ? 'Mostrando ' + Math.min(mostrados, listaActual.length) + ' de ' + listaActual.length + ' locales'
-          : '';
-      }
-
-      function verEnMapa(id) {
-        var c = baseDatos[id];
-        var m = markersPorId.get(id);
-        registrarVisto(id);
-        renderRecientes();
-        resaltarCard(id);
-        document.querySelector('#vista-mapa .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        if (markerCluster.hasLayer(m)) markerCluster.zoomToShowLayer(m, function () { m.openPopup(); });
-        else {
-          mapaCofiteca.setView([c.lat, c.lon], 16);
-          m.openPopup();
-        }
-      }
-
-      function resaltarCard(id) {
-        idDestacado = id;
-        document.querySelectorAll('#cofi-resultados .cafe-card.destacada').forEach(function (el) { el.classList.remove('destacada'); });
-        var el = document.querySelector('#cofi-resultados .cafe-card[data-id="' + id + '"]');
-        if (el) el.classList.add('destacada');
-      }
-
-      window.cofiVerEnLista = function (id) {
-        var idx = listaActual.findIndex(function (c) { return c.id === id; });
-        if (idx === -1) return;
-        if (idx >= mostrados) { mostrados = idx + 1; renderizarLista(); }
-        resaltarCard(id);
-        var el = document.querySelector('#cofi-resultados .cafe-card[data-id="' + id + '"]');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      };
-
-      // ---------- Filtros ----------
-      window.cofiActualizarZonas = function () {
-        var ciu = $('select-ciudad').value;
-        var base = ciu === 'Todas' ? baseDatos : baseDatos.filter(function (c) { return c.ciudad === ciu; });
-        var zonas = Array.from(new Set(base.map(function (c) { return c.zona; }))).filter(function (z) { return z && z !== '-' && z !== 'Sin Zona'; }).sort(function (a, b) { return a.localeCompare(b, 'es'); });
-        $('select-zona').innerHTML = '<option value="Todas">Zona / Barrio</option>' + zonas.map(function (z) { return '<option value="' + esc(z) + '">' + esc(z) + '</option>'; }).join('');
-      };
-
-      function filtrarDatos() {
-        var ciu = $('select-ciudad').value;
-        var zon = $('select-zona').value;
-        var tokens = norm($('input-busqueda').value).trim().split(/\s+/).filter(Boolean);
-
-        var filtrados = baseDatos.filter(function (c) {
-          return (ciu === 'Todas' || c.ciudad === ciu) &&
-            (zon === 'Todas' || c.zona === zon) &&
-            (!soloFavoritos || favoritos.has(c.id)) &&
-            tokens.every(function (t) { return c._q.indexOf(t) !== -1; });
-        });
-
-        if (origen) {
-          filtrados = filtrados.slice().sort(function (a, b) {
-            return calcularD(origen.lat, origen.lon, a.lat, a.lon) - calcularD(origen.lat, origen.lon, b.lat, b.lon);
-          });
-        }
-        return filtrados;
-      }
-
-      function limpiarOrigen() {
-        if (markerOrigen) { mapaCofiteca.removeLayer(markerOrigen); markerOrigen = null; }
-        origen = null;
-        $('cofi-status').classList.add('hidden');
-      }
-
-      function aplicarFiltros(recentrar) {
-        busquedaActiva = $('input-busqueda').value.trim().length > 0;
-        var filtrados = filtrarDatos();
-        setLista(filtrados);
-        dibujarMapa(filtrados, recentrar);
-        sincronizarURL();
-      }
-
-      var debounceFiltro = null;
-      window.cofiFiltrar = function (modo) {
-        clearTimeout(debounceFiltro);
-        debounceFiltro = setTimeout(function () {
-          if (modo === true) limpiarOrigen();
-          aplicarFiltros(modo === true || modo === 'texto');
-        }, 200);
-      };
-      window.cofiQuitarOrigen = function () { limpiarOrigen(); aplicarFiltros(true); };
-
-      function sincronizarURL() {
-        var p = new URLSearchParams(location.search);
-        var c = $('select-ciudad').value;
-        var q = $('input-busqueda').value.trim();
-        var activeBtn = document.querySelector('.view-tab-btn.active');
-        var tab = activeBtn ? activeBtn.id.replace('btn-tab-', '') : 'mapa';
-        if (c !== 'Todas') p.set('c', c); else p.delete('c');
-        if (q) p.set('q', q); else p.delete('q');
-        if (tab !== 'mapa') p.set('v', tab); else p.delete('v');
-        history.replaceState(null, '', p.toString() ? '?' + p : location.pathname);
-      }
-
-      function hidratarDesdeURL() {
-        var p = new URLSearchParams(location.search);
-        var c = p.get('c'), q = p.get('q'), v = p.get('v');
-        if (c) {
-          var opt = Array.from($('select-ciudad').options).find(function (o) { return o.value === c; });
-          if (opt) { $('select-ciudad').value = c; window.cofiActualizarZonas(); }
-        }
-        if (q) $('input-busqueda').value = q;
-        if (v && ['ranking', 'tostadores', 'mercado'].indexOf(v) !== -1) {
-          window.cofiSwitchTab(v);
-        }
-      }
-
-      // ---------- Rankings ----------
-      function getRankingColor(rank) {
-        if (!rank || isNaN(rank)) return '#34495e';
-        if (rank <= 3) return '#D4AF37';
-        if (rank <= 10) return '#E86A33';
-        if (rank <= 20) return '#009FBD';
-        if (rank <= 30) return '#8e44ad';
-        if (rank <= 40) return '#27ae60';
-        if (rank <= 50) return '#f39c12';
-        if (rank <= 60) return '#d35400';
-        if (rank <= 70) return '#c0392b';
-        if (rank <= 80) return '#16a085';
-        if (rank <= 90) return '#7f8c8d';
-        return '#2c3e50';
-      }
-
-      function initMapaRanking() {
-        mapaRanking = L.map('ranking-map', { minZoom: 2, maxZoom: 19 }).setView(VISTA_ARGENTINA, 4);
-        L.maplibreGL({ style: ESTILO_MAPA, attribution: ATRIBUCION }).addTo(mapaRanking);
-        markerClusterRanking = L.markerClusterGroup({ maxClusterRadius: 35, disableClusteringAtZoom: 12, spiderfyOnMaxZoom: true }).addTo(mapaRanking);
-        setTimeout(function () { mapaRanking.invalidateSize(); }, 200);
-      }
-
-      window.cofiActualizarRankingCiudades = function () {
-        var tipo = $('select-ranking-tipo').value;
-        var data = rankingDatos[tipo] || [];
-        var lugares = Array.from(new Set(data.map(function (c) { return c.lugar; }))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
-        var texto = tipo === 'arg' ? 'Todas las Ciudades' : 'Todos los Países';
-        $('select-ranking-ciudad').innerHTML = '<option value="Todas">' + texto + '</option>' + lugares.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
-      };
-
-      window.cofiFiltrarRanking = function () {
-        if (!markerClusterRanking) return;
-        var tipo = $('select-ranking-tipo').value;
-        var lugar = $('select-ranking-ciudad').value;
-        var filtrados = (rankingDatos[tipo] || []).filter(function (c) { return lugar === 'Todas' || c.lugar === lugar; });
-
-        var markers = filtrados.map(function (c) {
-          var color = getRankingColor(c.rank);
-          var icon = L.divIcon({
-            html: '<div style="background-color:' + color + '; color:white; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-weight:800; border:2px solid white; box-shadow:0 3px 6px rgba(0,0,0,.3); font-size:13px; font-family:Inter,sans-serif;">' + esc(c.rank) + '</div>',
-            className: 'custom-ranking-icon', iconSize: [28, 28], iconAnchor: [14, 14]
-          });
-          var ig = c.ig ? '<div class="popup-acciones"><a href="' + esc(c.ig) + '" target="_blank" rel="noopener noreferrer" class="popup-btn">Instagram</a></div>' : '';
-          return L.marker([c.lat, c.lon], { icon: icon }).bindPopup(
-            '<div class="popup-cafe"><span class="rank-badge" style="background:' + color + ';">#' + esc(c.rank) + '</span><br><b>' + esc(c.nombre) + '</b><small>' + esc(c.ubicacion) + ' • ' + esc(c.lugar) + '</small>' + ig + '</div>',
-            { maxWidth: 260 }
-          );
-        });
-
-        markerClusterRanking.clearLayers();
-        markerClusterRanking.addLayers(markers);
-
-        if (filtrados.length) {
-          var zoom = 12;
-          if (lugar === 'Todas') zoom = tipo === 'mun' ? 2 : 4;
-          else if (tipo !== 'arg') zoom = 5;
-          var lat = filtrados.reduce(function (s, c) { return s + c.lat; }, 0) / filtrados.length;
-          var lon = filtrados.reduce(function (s, c) { return s + c.lon; }, 0) / filtrados.length;
-          mapaRanking.setView([lat, lon], zoom);
-        }
-
-        var frag = document.createDocumentFragment();
-        filtrados.forEach(function (c) {
-          var color = getRankingColor(c.rank);
-          var div = document.createElement('div');
-          div.className = 'cafe-card';
-          var ig = c.ig ? '<a href="' + esc(c.ig) + '" target="_blank" rel="noopener noreferrer">Instagram</a>' : '';
-          div.innerHTML =
-            '<div><h3 style="padding-right:0"><span class="rank-badge" style="background:' + color + ';">#' + esc(c.rank) + '</span> ' + esc(c.nombre) + '</h3>' +
-            '<p>' + esc(c.ubicacion) + ' • <b>' + esc(c.lugar) + '</b></p></div>' +
-            '<div class="cafe-actions">' + ig + '<a href="' + urlComoLlegar(c) + '" target="_blank" rel="noopener noreferrer">Cómo llegar</a></div>';
-          frag.appendChild(div);
-        });
-        $('ranking-resultados').replaceChildren(frag);
-      };
-
-      // ---------- Tostadores ----------
-      window.cofiRenderizarTostadores = function () {
-        var ciudad = $('select-ciudad-tostadores').value;
-        var filtrados = tostadoresDatos.filter(function (t) { return ciudad === 'Todas' || t.ciudad === ciudad; });
-        var cont = $('lista-tostadores');
-
-        if (!filtrados.length) {
-          cont.innerHTML = '<p class="msg-vacio"><span class="emoji">🌱</span>Todavía no hay tostadores registrados en esta ciudad.</p>';
-          return;
-        }
-        var frag = document.createDocumentFragment();
-        filtrados.forEach(function (t) {
-          var div = document.createElement('div');
-          div.className = 'tostador-card';
-          var img = t.foto || IMG_FALLBACK;
-          var botones = '';
-          if (t.ig) botones += '<a href="' + esc(t.ig) + '" target="_blank" rel="noopener noreferrer" class="btn-outline-mad" style="margin-bottom:8px;display:flex;">Instagram</a>';
-          if (t.tienda) botones += '<a href="' + esc(t.tienda) + '" target="_blank" rel="noopener noreferrer" class="btn-primary-mad" style="display:flex;">Tienda Online</a>';
-          div.innerHTML =
-            '<img src="' + esc(img) + '" class="tostador-img" width="400" height="200" loading="lazy" decoding="async" alt="' + esc(t.nombre) + '" onerror="this.onerror=null;this.src=\'' + IMG_FALLBACK + '\'">' +
-            '<div class="tostador-content"><div>' +
-              '<h3>' + esc(t.nombre) + '</h3>' +
-              '<p>📍 ' + esc(t.ciudad) + '</p>' +
-            '</div><div>' + botones + '</div></div>';
-          frag.appendChild(div);
-        });
-        cont.replaceChildren(frag);
-      };
-
-      // ---------- Ubicación ----------
-      function cofiProcesarOrigen(lat, lon, label) {
-        $('select-ciudad').value = 'Todas';
-        window.cofiActualizarZonas();
-        $('input-busqueda').value = '';
-        busquedaActiva = false;
-        limpiarOrigen();
-
-        origen = { lat: lat, lon: lon, label: label };
-        markerOrigen = L.circleMarker([lat, lon], { radius: 9, color: '#1a0f0a', fillColor: '#fff', weight: 3, fillOpacity: 1 })
-          .addTo(mapaCofiteca).bindPopup(esc(label)).openPopup();
-
-        var conDist = baseDatos.map(function (c) { return Object.assign({}, c, { dist: calcularD(lat, lon, c.lat, c.lon) }); })
-          .sort(function (a, b) { return a.dist - b.dist; });
-        setLista(conDist);
-
-        dibujarMapa(baseDatos, false);
-        mapaCofiteca.setView([lat, lon], 15);
-        document.querySelector('#vista-mapa .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        var st = $('cofi-status');
-        st.innerHTML = '📍 Más cercanos a <b>' + esc(label) + '</b>' +
-          ' · <a onclick="cofiFiltrarRadio(1)">1 km</a>' +
-          ' · <a onclick="cofiFiltrarRadio(5)">5 km</a>' +
-          ' · <a onclick="cofiFiltrarRadio(15)">15 km</a>' +
-          ' · <a onclick="cofiFiltrarRadio(50)">50 km</a>' +
-          ' · <a onclick="cofiQuitarOrigen()">Quitar</a>';
-        st.classList.remove('hidden');
-        sincronizarURL();
-      }
-
-      window.cofiFiltrarRadio = function (km) {
-        if (!origen) return;
-        var dentro = baseDatos.map(function (c) { return Object.assign({}, c, { dist: calcularD(origen.lat, origen.lon, c.lat, c.lon) }); })
-          .filter(function (c) { return c.dist <= km; }).sort(function (a, b) { return a.dist - b.dist; });
-        setLista(dentro);
-        dibujarMapa(dentro, false);
-        $('cofi-status').innerHTML = '📍 A menos de <b>' + km + ' km</b> de <b>' + esc(origen.label) + '</b>' +
-          ' · <a onclick="cofiQuitarOrigen()">Quitar</a>';
-      };
-
-      window.cofiUsarMiGPS = function () {
-        if (!navigator.geolocation) { ensureSwal().then(function () { Swal.fire('Error', 'Tu navegador no soporta GPS.', 'error'); }); return; }
-        navigator.geolocation.getCurrentPosition(
-          function (p) { cofiProcesarOrigen(p.coords.latitude, p.coords.longitude, 'tu ubicación'); },
-          function () { ensureSwal().then(function () { Swal.fire('Aviso', 'No pudimos obtener tu ubicación. Revisá los permisos.', 'warning'); }); },
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-        );
-      };
-
-      window.cofiMedirDesdeDireccion = function () {
-        ensureSwal().then(function () {
-          Swal.fire({
-            title: '¿Dónde estás?',
-            html: '<p style="font-size:.9rem;color:#5c3d2e;margin-bottom:15px;">Escribí tu calle y ciudad (Ej: Güemes, Mar del Plata)</p>' +
-                  '<input id="swal-autocomplete-input" class="swal-custom-input" placeholder="Escribir..." autocomplete="off">' +
-                  '<div id="autocomplete-results" style="text-align:left;margin-top:10px;max-height:200px;overflow-y:auto;"></div>',
-            showConfirmButton: false, showCancelButton: true, cancelButtonText: 'Cerrar',
-            customClass: { popup: 'swal-custom-popup', cancelButton: 'swal-custom-btn-cancel' },
-            didOpen: function () {
-              var input = $('swal-autocomplete-input');
-              var resultsContainer = $('autocomplete-results');
-              var timeout = null, solicitudId = 0;
-              input.focus();
-              input.addEventListener('input', function () {
-                clearTimeout(timeout);
-                var val = input.value.trim();
-                if (val.length < 4) { resultsContainer.innerHTML = ''; return; }
-                resultsContainer.innerHTML = '<div style="padding:10px;color:#1a0f0a;font-weight:bold;text-align:center;">Buscando...</div>';
-                timeout = setTimeout(function () {
-                  var miId = ++solicitudId;
-                  fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(val) + '&countrycodes=ar&addressdetails=1&limit=6')
-                    .then(function (res) { return res.json(); })
-                    .then(function (data) {
-                      if (miId !== solicitudId) return;
-                      resultsContainer.innerHTML = '';
-                      if (!data.length) { resultsContainer.innerHTML = '<div style="padding:10px;opacity:.7;text-align:center;">No encontramos la dirección.</div>'; return; }
-                      data.forEach(function (item) {
-                        var partes = [];
-                        if (item.address.road) partes.push(item.address.road + (item.address.house_number ? ' ' + item.address.house_number : ''));
-                        var localidad = item.address.city || item.address.town || item.address.village;
-                        if (localidad) partes.push(localidad);
-                        var nombreStr = partes.length ? partes.join(', ') : item.display_name.split(',').slice(0, 3).join(', ');
-                        var btn = document.createElement('button');
-                        btn.style.cssText = 'width:100%;text-align:left;background:rgba(255,255,255,.7);color:#1a0f0a;border:1px solid rgba(196,167,125,.5);padding:12px;border-radius:6px;cursor:pointer;margin-bottom:8px;font-family:Inter,sans-serif;font-size:.9rem;';
-                        btn.innerHTML = '📍 <b>' + esc(nombreStr) + '</b>';
-                        btn.onclick = function () { Swal.close(); cofiProcesarOrigen(parseFloat(item.lat), parseFloat(item.lon), nombreStr); };
-                        resultsContainer.appendChild(btn);
-                      });
-                    })
-                    .catch(function () { if (miId === solicitudId) resultsContainer.innerHTML = '<div style="padding:10px;color:red;text-align:center;">Error con el mapa.</div>'; });
-                }, 800);
-              });
-            }
-          });
-        });
-      };
-
-      // ---------- Formularios ----------
-      window.cofiAbrirReporte = function () {
-        ensureSwal().then(function () {
-          return Swal.fire({
-            title: 'Soporte',
-            customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
-            html: '<div style="text-align:left;">' +
-                  '<select id="swal-tipo" class="swal-custom-input" style="margin-bottom:10px;"><option value="Dato Incorrecto">Corrección de datos</option><option value="Local Cerrado">Local cerrado</option></select>' +
-                  '<input id="swal-local" class="swal-custom-input" placeholder="Nombre del local o tu teléfono" style="margin-bottom:10px;">' +
-                  '<textarea id="swal-detalle" class="swal-custom-input" placeholder="Detalle de la solicitud..." style="height:80px;resize:none;"></textarea></div>',
-            showCancelButton: true, confirmButtonText: 'Enviar', cancelButtonText: 'Cancelar',
-            preConfirm: function () {
-              var local = $('swal-local').value.trim();
-              if (!local) { Swal.showValidationMessage('Ingresá una referencia válida'); return false; }
-              return { tipo: $('swal-tipo').value, local: local, detalle: $('swal-detalle').value.trim() };
-            }
-          });
-        }).then(function (res) {
-          if (res && res.value) window.cofiEnviarReporteEmail(res.value);
-        });
-      };
-
-      window.cofiAbrirSumate = function () {
-        ensureSwal().then(function () {
-          return Swal.fire({
-            title: 'Añadir Local',
-            customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm', cancelButton: 'swal-custom-btn-cancel' },
-            html: '<div style="text-align:left;">' +
-                  '<select id="sumate-tipo" class="swal-custom-input" style="margin-bottom:10px;"><option value="Cafetería / Tostaduría">Cafetería / Tostaduría</option></select>' +
-                  '<input id="sumate-nombre" class="swal-custom-input" placeholder="Nombre comercial" style="margin-bottom:10px;">' +
-                  '<input id="sumate-link" class="swal-custom-input" placeholder="Link a Instagram o Web" style="margin-bottom:10px;"></div>',
-            showCancelButton: true, confirmButtonText: 'Enviar Solicitud', cancelButtonText: 'Cancelar',
-            preConfirm: function () {
-              var nombre = $('sumate-nombre').value.trim();
-              if (!nombre) { Swal.showValidationMessage('Ingresá el nombre comercial'); return false; }
-              return { tipo: 'ALTA NUEVA: ' + $('sumate-tipo').value, local: nombre, detalle: 'Link/IG: ' + $('sumate-link').value.trim() };
-            }
-          });
-        }).then(function (res) {
-          if (res && res.value) window.cofiEnviarReporteEmail(res.value);
-        });
-      };
-
-      window.cofiEnviarReporteEmail = function (datosForm) {
-        fetch('/api/reporte?t=' + Date.now(), {
-          method: 'POST', mode: 'no-cors',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams(datosForm)
-        }).then(function () {
-          Swal.fire({ title: 'Enviado', text: 'Tu solicitud fue recibida.', icon: 'success', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
-        }).catch(function () {
-          Swal.fire({ title: 'Error', text: 'Problemas de conexión con el servidor.', icon: 'error', customClass: { popup: 'swal-custom-popup', confirmButton: 'swal-custom-btn-confirm' } });
-        });
-      };
-
-      document.addEventListener('keydown', function (e) {
-        if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'SELECT') {
-          e.preventDefault();
-          $('input-busqueda').focus();
-        }
-        if (e.key === 'Escape' && document.activeElement.id === 'input-busqueda') {
-          $('input-busqueda').value = '';
-          window.cofiFiltrar('texto');
-        }
-      });
-
-      // ---------- Arranque ----------
-      var ciudades = Array.from(new Set(baseDatos.map(function (c) { return c.ciudad; }))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
-      var opcionesCiudades = ciudades.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
-      $('select-ciudad').innerHTML = '<option value="Todas">Región / Ciudad</option>' + opcionesCiudades;
-      $('select-mercado-ciudad').innerHTML = '<option value="Todas">Todo el país (Región / Ciudad)</option>' + opcionesCiudades;
-
-      var ciudadesTost = Array.from(new Set(tostadoresDatos.map(function (t) { return t.ciudad; }))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
-      $('select-ciudad-tostadores').innerHTML = '<option value="Todas">Todas las Ciudades</option>' + ciudadesTost.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
-
-      var GRANDES = ['CABA y Gran Buenos Aires', 'Córdoba', 'Mar del Plata', 'Mendoza', 'La Plata'];
-      $('quick-chips').innerHTML = GRANDES
-        .filter(function (r) { return ciudades.indexOf(r) !== -1; })
-        .map(function (r) { return '<button class="quick-chip" onclick="cofiQuickRegion(\'' + esc(r) + '\')">' + esc(r.replace(' y Gran Buenos Aires', '')) + '</button>'; })
-        .join('');
-
-      window.cofiQuickRegion = function (r) {
-        $('select-ciudad').value = r;
-        window.cofiActualizarZonas();
-        window.cofiFiltrar(true);
-      };
-
-      persistirFavs();
-      renderRecientes();
-      window.cofiActualizarZonas();
-      window.cofiActualizarMercadoZonas();
-      window.cofiActualizarMetricas();
-      initMapa();
-      hidratarDesdeURL();
-      var vieneConFiltro = $('input-busqueda').value.trim() !== '' || $('select-ciudad').value !== 'Todas';
-      aplicarFiltros(vieneConFiltro);
-    }
-
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { iniciarBuscadorSeguro(); });
-    else iniciarBuscadorSeguro();
-    document.addEventListener('astro:page-load', function () { iniciarBuscadorSeguro(); });
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+      else boot();
+      document.addEventListener('astro:page-load', boot);
+    })();
   </script>
 </body>
 </html>
