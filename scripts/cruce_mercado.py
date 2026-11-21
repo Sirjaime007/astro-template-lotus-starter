@@ -398,9 +398,9 @@ def parsear_coords(val):
     return None, None
 
 
-def leer_hoja_publicada(gid):
+def leer_hoja_publicada(gid, header="infer"):
     url = f"https://docs.google.com/spreadsheets/d/e/{PUB_ID}/pub?gid={gid}&single=true&output=csv"
-    return pd.read_csv(url)
+    return pd.read_csv(url, header=header)
 
 
 def cargar_locales():
@@ -411,6 +411,29 @@ def cargar_locales():
     if df.empty:
         raise RuntimeError("La hoja Base_Maestra descargada está vacía.")
 
+    # Detectar si la primera fila ya contiene datos en lugar de encabezados
+    primera_fila_es_dato = False
+    for c in df.columns[:4]:
+        cs = str(c).strip()
+        if parsear_coords(cs)[0] is not None:
+            primera_fila_es_dato = True
+            break
+        try:
+            v = float(cs.replace(",", "."))
+            if -56.0 <= v <= -21.0 or -74.0 <= v <= -53.0:
+                primera_fila_es_dato = True
+                break
+        except ValueError:
+            pass
+
+    if primera_fila_es_dato:
+        df = leer_hoja_publicada(GID_DATOS_MERCADO, header=None)
+        nombres_std = ["nombre", "latitud", "longitud", "ubicacion", "instagram", "zona", "ciudad", "ciudad_real"]
+        df.columns = [
+            nombres_std[i] if i < len(nombres_std) else f"col_{i}"
+            for i in range(df.shape[1])
+        ]
+
     col_nombre = encontrar_col(df.columns, ["nombre", "cafeteria", "local", "cafe", "slug"])
     col_coords = encontrar_col(df.columns, ["coordenada", "ubicacion_mapa", "gps", "latlong"])
     col_lat = encontrar_col(df.columns, ["latitud", "lat"])
@@ -419,10 +442,7 @@ def cargar_locales():
     col_zona = encontrar_col(df.columns, ["zona", "barrio", "partido", "localidad"])
 
     if not col_nombre and not (col_coords or (col_lat and col_lon)):
-        df = pd.read_csv(
-            f"https://docs.google.com/spreadsheets/d/e/{PUB_ID}/pub?gid={GID_DATOS_MERCADO}&single=true&output=csv",
-            header=None,
-        )
+        df = leer_hoja_publicada(GID_DATOS_MERCADO, header=None)
         col_nombre = 0
         for c in df.columns[1:]:
             muestra = df[c].dropna().astype(str).head(15)
@@ -431,7 +451,9 @@ def cargar_locales():
                 break
         if col_coords is None and df.shape[1] >= 3:
             col_lat, col_lon = 1, 2
-        if df.shape[1] >= 4:
+        if df.shape[1] >= 6:
+            col_zona = 5
+        elif df.shape[1] >= 4:
             col_zona = 3
 
     registros = []
@@ -1195,3 +1217,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
