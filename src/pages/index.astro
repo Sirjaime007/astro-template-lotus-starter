@@ -30,9 +30,8 @@ const mercadoCompact = cafesExpanded.map(c => {
   const slugNorm = c.slug.trim().toLowerCase();
   let m: DatosMercado | undefined = mercadoMap[c.slug] ?? mercadoMap[slugNorm];
 
-  // Si el slug no coincide exacto, buscar por proximidad geográfica (< ~120 metros)
   if (!m && mercadoEntries.length) {
-    let mejorDist = 0.0012; // ~120 m
+    let mejorDist = 0.0012;
     for (const item of mercadoEntries) {
       if (item.latitud == null || item.longitud == null) continue;
       const d = Math.hypot(item.latitud - c.lat, item.longitud - c.lon);
@@ -57,8 +56,6 @@ const mercadoCompact = cafesExpanded.map(c => {
   const comp = m?.competidores_500m ?? 2;
   const circ = m?.nivel_circulacion ?? 'Media';
   const atr = m?.atractores_500m ?? 18;
-
-  // Si viene de mercado.json usamos su score real; si no, calculamos uno coherente según competencia y ticket
   const op = m?.indice_oportunidad ?? Number(Math.min(18.5, Math.max(3.2, (11.5 * ticket) / (1 + comp * 0.45))).toFixed(1));
 
   return {
@@ -204,17 +201,17 @@ const datosJSON = JSON.stringify({
 
     .results-count { font-size: .8rem; color: var(--coffee-500); margin: 0 0 .8rem; font-weight: 500; }
 
-    /* ===== Mapa (grande) ===== */
+    /* ===== Mapa ===== */
     .map-wrapper { width: 100%; height: 78vh; height: 78dvh; min-height: 560px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid rgba(196,167,125,.4); margin-bottom: 1.5rem; position: relative; z-index: 1; }
-    .map-wrapper.mercado-map-box { height: 62vh; height: 62dvh; min-height: 440px; margin-bottom: 1.25rem; }
+    .map-wrapper.mercado-map-box { height: 60vh; height: 60dvh; min-height: 430px; margin-bottom: 1.25rem; }
     @media (max-width: 800px) {
       .map-wrapper { height: 62vh; height: 62dvh; min-height: 400px; margin-bottom: 1.1rem; }
-      .map-wrapper.mercado-map-box { height: 52vh; height: 52dvh; min-height: 360px; }
+      .map-wrapper.mercado-map-box { height: 50vh; height: 50dvh; min-height: 350px; }
     }
     #cofiteca-map, #ranking-map, #mercado-map { width: 100%; height: 100%; background: #e6e2db; }
 
     .cafe-label { background: transparent; border: none; box-shadow: none; color: var(--coffee-900); font-weight: 800; font-size: .72rem; text-shadow: 2px 2px 0 white, -2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white; pointer-events: none; text-transform: uppercase; letter-spacing: .05em; }
-    .custom-ranking-icon { background: none; border: none; }
+    .custom-ranking-icon, .custom-opp-pin { background: none; border: none; }
     .cofi-halo { animation: cofiPulso 1.4s ease-in-out infinite; }
     @keyframes cofiPulso { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
 
@@ -223,13 +220,13 @@ const datosJSON = JSON.stringify({
 
     .leaflet-container { font-family: var(--font-body); }
     .leaflet-popup-content { margin: 12px 14px; }
-    .popup-cafe { text-align: center; font-family: var(--font-body); font-size: .85rem; line-height: 1.4; }
+    .popup-cafe { text-align: center; font-family: var(--font-body); font-size: .85rem; line-height: 1.45; }
     .popup-cafe b { display: block; margin-bottom: .2rem; font-size: .95rem; }
     .popup-acciones { display: flex; flex-direction: column; gap: 6px; align-items: center; margin-top: 8px; }
     .popup-btn { display: inline-block; background: var(--coffee-900); color: white !important; padding: 7px 14px; border-radius: 5px; font-size: .8rem; text-decoration: none; }
     .popup-link { font-size: .8rem; color: var(--coffee-500); font-weight: 600; text-decoration: underline; padding: 3px 0; }
 
-    /* ===== Vista Mercado (KPIs, Mapa de Color y Barrios) ===== */
+    /* ===== Vista Mercado ===== */
     .mkt-kpis {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -291,7 +288,7 @@ const datosJSON = JSON.stringify({
       bottom: 14px;
       left: 14px;
       z-index: 600;
-      background: rgba(250, 247, 242, 0.95);
+      background: rgba(250, 247, 242, 0.96);
       backdrop-filter: blur(8px);
       border: 1px solid rgba(196,167,125,.55);
       border-radius: var(--radius-sm);
@@ -328,11 +325,6 @@ const datosJSON = JSON.stringify({
       border: 1.5px solid white;
       box-shadow: 0 0 0 1px rgba(26,15,10,.2);
     }
-    .mkt-dot.opp-ring {
-      background: rgba(16, 185, 129, 0.25);
-      border: 2px dashed #059669;
-      box-shadow: none;
-    }
 
     .mkt-section-head {
       display: flex;
@@ -361,6 +353,76 @@ const datosJSON = JSON.stringify({
     }
     .mkt-reset-btn:hover { background: var(--coffee-900); color: white; }
 
+    /* Tarjetas de Zonas Recomendadas (Criterio claro) */
+    .mkt-opp-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr));
+      gap: .85rem;
+    }
+    .mkt-opp-card {
+      background: var(--cream-50);
+      border: 1px solid rgba(27, 127, 92, 0.35);
+      border-left: 5px solid #1b7f5c;
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: .65rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .mkt-opp-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #1b7f5c;
+    }
+    .mkt-opp-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--coffee-900);
+      margin: .15rem 0;
+    }
+    .mkt-opp-sub {
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--coffee-500);
+      margin-bottom: .35rem;
+    }
+    .mkt-opp-criteria {
+      list-style: none;
+      margin: 0;
+      padding: .5rem 0 0;
+      border-top: 1px dashed rgba(196,167,125,.45);
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+      font-size: .78rem;
+      color: var(--coffee-700);
+    }
+    .mkt-opp-criteria li b { color: var(--coffee-900); }
+    .mkt-opp-btn {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid #1b7f5c;
+      background: #1b7f5c;
+      color: white;
+      font-size: .76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .mkt-opp-btn:hover { background: #146347; }
+
+    /* Tarjetas por Ciudad / Barrio */
     .mkt-zones-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(min(245px, 100%), 1fr));
@@ -570,10 +632,10 @@ const datosJSON = JSON.stringify({
           <select id="select-mercado-zona" class="input-moderno" onchange="cofiRenderMercado(true)">
             <option value="Todas">Todos los Barrios / Zonas</option>
           </select>
-          <select id="select-mercado-capa" class="input-moderno" onchange="cofiRenderMercado(false)">
-            <option value="potencial">🎨 Mapa de color: Potencial</option>
-            <option value="ticket">💳 Mapa de color: Ticket / Gasto</option>
-            <option value="densidad">👥 Mapa de color: Cafés / hab.</option>
+          <select id="select-mercado-capa" class="input-moderno" onchange="cofiRenderMercado(true)">
+            <option value="potencial">🎯 Zonas recomendadas p/ abrir</option>
+            <option value="ticket">💳 Nivel de gasto por local</option>
+            <option value="densidad">👥 Saturación (Cafés / hab.)</option>
           </select>
         </div>
 
@@ -585,10 +647,10 @@ const datosJSON = JSON.stringify({
         </div>
 
         <div class="mkt-section-head">
-          <h2 class="mkt-section-title" id="mkt-zones-title">Tendencia por Ciudad / Región</h2>
+          <h2 class="mkt-section-title" id="mkt-zones-title">Zonas recomendadas para abrir un café</h2>
           <button type="button" class="mkt-reset-btn hidden" id="mkt-reset-btn" onclick="cofiResetMercado()">← Ver todo el país</button>
         </div>
-        <div class="mkt-zones-grid" id="mkt-zones-grid"></div>
+        <div id="mkt-zones-grid"></div>
       </div>
     </div>
   </div>
@@ -733,7 +795,8 @@ const datosJSON = JSON.stringify({
 
       let mapaCofiteca = null, markerCluster = null;
       let mapaRanking = null, markerClusterRanking = null;
-      let mapaMercado = null, capaZonasMercado = null, capaPuntosMercado = null, capaOportunidadMercado = null;
+      let mapaMercado = null, capaPuntosMercado = null, capaOportunidadMercado = null;
+      let marcadoresOppPorIdx = [];
       let tostadoresRenderizados = false, rankingIniciado = false, mercadoIniciado = false;
       let zonasRecomendadasCache = null;
 
@@ -873,7 +936,7 @@ const datosJSON = JSON.stringify({
         sincronizarURL();
       };
 
-      // ---------- Pestaña Mercado (Ticket, Potencial, Cafés/hab. y Zonas Recomendadas) ----------
+      // ---------- Pestaña Mercado (Sin círculos superpuestos + Criterio explícito) ----------
       async function cargarZonasRecomendadas() {
         if (zonasRecomendadasCache) return zonasRecomendadasCache;
         try {
@@ -887,7 +950,6 @@ const datosJSON = JSON.stringify({
           }
         } catch {}
 
-        // Respaldo dinámico: detecta las 4 mejores microzonas en grandes ciudades o centros turísticos
         const elegibles = new Set([
           'CABA y Gran Buenos Aires', 'Córdoba', 'Mar del Plata', 'Mendoza',
           'La Plata', 'Santa Fe', 'Neuquén y Río Negro'
@@ -904,7 +966,7 @@ const datosJSON = JSON.stringify({
             return {
               latitud: c.lat,
               longitud: c.lon,
-              radio_metros: 650,
+              radio_metros: 400,
               plaza: c.ciudad,
               corredor: c.zona,
               score_potencial: Number(Math.min(18.5, Math.max(12.2, c.mkt.o)).toFixed(1)),
@@ -931,7 +993,6 @@ const datosJSON = JSON.stringify({
       function initMapaMercado() {
         mapaMercado = L.map('mercado-map', { minZoom: 3, maxZoom: 18, zoomSnap: 0.5 }).setView(VISTA_ARGENTINA, zoomInicial());
         L.maplibreGL({ style: ESTILO_MAPA, attribution: ATRIBUCION }).addTo(mapaMercado);
-        capaZonasMercado = L.layerGroup().addTo(mapaMercado);
         capaPuntosMercado = L.layerGroup().addTo(mapaMercado);
         capaOportunidadMercado = L.layerGroup().addTo(mapaMercado);
         setTimeout(() => mapaMercado.invalidateSize(), 200);
@@ -962,6 +1023,14 @@ const datosJSON = JSON.stringify({
         window.cofiRenderMercado(true);
       };
 
+      window.cofiEnfocarOportunidad = function (idx) {
+        const item = marcadoresOppPorIdx[idx];
+        if (!item || !mapaMercado) return;
+        document.querySelector('#vista-mercado .map-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        mapaMercado.setView([item.lat, item.lon], 15);
+        item.marker.openPopup();
+      };
+
       function calcularPerCapita(nLocales, poblacion) {
         if (!poblacion || poblacion <= 0 || nLocales <= 0) return null;
         const habPorCafe = Math.round(poblacion / nLocales);
@@ -974,8 +1043,6 @@ const datosJSON = JSON.stringify({
         const promTicket = Number((items.reduce((s, x) => s + x.mkt.t, 0) / n).toFixed(2));
         const promOp = Number((items.reduce((s, x) => s + x.mkt.o, 0) / n).toFixed(1));
         const promComp = Number((items.reduce((s, x) => s + x.mkt.k, 0) / n).toFixed(1));
-        const lat = items.reduce((s, x) => s + x.lat, 0) / n;
-        const lon = items.reduce((s, x) => s + x.lon, 0) / n;
 
         let nivelGasto = 'Medio-Alto';
         if (promTicket >= 1.32) nivelGasto = 'Muy Alto';
@@ -983,7 +1050,7 @@ const datosJSON = JSON.stringify({
         else if (promTicket < 1.04) nivelGasto = 'Medio';
 
         const perCap = calcularPerCapita(items.length, poblacion);
-        return { n: items.length, promTicket, nivelGasto, promOp, promComp, perCap, lat, lon };
+        return { n: items.length, promTicket, nivelGasto, promOp, promComp, perCap };
       }
 
       function obtenerColorTendencia(capa, stats) {
@@ -1000,7 +1067,6 @@ const datosJSON = JSON.stringify({
           if (stats.perCap.habPorCafe >= 2000) return { hex: '#d49b35', label: 'Alta presencia (1 c/ 2k–4.5k hab.)' };
           return { hex: '#5c3d2e', label: 'Polo muy denso (1 c/ <2k hab.)' };
         }
-        // Potencial recalibrado (Verde = alta oportunidad, Naranja = bueno, Amarillo = equilibrado, Marrón = saturado)
         if (stats.promOp >= 12.0) return { hex: '#1b7f5c', label: 'Alta oportunidad (≥ 12.0 pts)' };
         if (stats.promOp >= 8.5) return { hex: '#e86a33', label: 'Buen potencial (8.5 – 11.9 pts)' };
         if (stats.promOp >= 5.5) return { hex: '#d49b35', label: 'Equilibrado (5.5 – 8.4 pts)' };
@@ -1008,18 +1074,20 @@ const datosJSON = JSON.stringify({
       }
 
       function renderLeyendaMercado(capa) {
+        if (capa === 'potencial') {
+          $('mkt-legend').innerHTML =
+            '<div class="mkt-legend-title">Zonas Sugeridas para Abrir</div>' +
+            '<div class="mkt-legend-items">' +
+              '<div class="mkt-legend-row"><span class="mkt-dot" style="background:#1b7f5c"></span><span>Pin #1–#4: Microzona recomendada</span></div>' +
+              '<div class="mkt-legend-row"><span class="mkt-dot" style="background:#c4a77d;opacity:.6"></span><span>Locales existentes (referencia)</span></div>' +
+            '</div>';
+          return;
+        }
         const titulos = {
-          potencial: 'Tendencia · Potencial',
-          ticket: 'Tendencia · Ticket de Zona',
-          densidad: 'Tendencia · Cafés / Habitante'
+          ticket: 'Nivel de Gasto por Local',
+          densidad: 'Saturación · Cafés / Habitante'
         };
         const escalas = {
-          potencial: [
-            ['#1b7f5c', 'Alta oportunidad (≥ 12.0 pts)'],
-            ['#e86a33', 'Buen potencial (8.5 – 11.9)'],
-            ['#d49b35', 'Equilibrado (5.5 – 8.4)'],
-            ['#5c3d2e', 'Alta competencia (< 5.5)']
-          ],
           ticket: [
             ['#1b7f5c', 'Muy Alto (≥ ×1.32)'],
             ['#e86a33', 'Alto (×1.18 – ×1.31)'],
@@ -1039,7 +1107,6 @@ const datosJSON = JSON.stringify({
             escalas[capa].map(([hex, txt]) =>
               '<div class="mkt-legend-row"><span class="mkt-dot" style="background:' + hex + '"></span><span>' + txt + '</span></div>'
             ).join('') +
-            '<div class="mkt-legend-row" style="margin-top:3px;padding-top:3px;border-top:1px dashed rgba(196,167,125,.5);"><span class="mkt-dot opp-ring"></span><span>Zona recomendada p/ abrir</span></div>' +
           '</div>';
       }
 
@@ -1129,104 +1196,106 @@ const datosJSON = JSON.stringify({
           .map(([nombre, items]) => {
             const pobG = esNacional ? POB_REGIONES.get(norm(nombre)) : POB_ZONAS.get(norm(nombre));
             const st = resumirGrupoMercado(items, pobG);
-            const col = obtenerColorTendencia(capa, st);
+            const col = obtenerColorTendencia(capa === 'potencial' ? 'ticket' : capa, st);
             return { nombre, ...st, color: col.hex, colorLabel: col.label };
           })
           .sort((a, b) => b.n - a.n);
 
-        if (mapaMercado && capaZonasMercado && capaPuntosMercado && capaOportunidadMercado) {
-          capaZonasMercado.clearLayers();
+        const zonasRec = await cargarZonasRecomendadas();
+
+        if (mapaMercado && capaPuntosMercado && capaOportunidadMercado) {
           capaPuntosMercado.clearLayers();
           capaOportunidadMercado.clearLayers();
+          marcadoresOppPorIdx = [];
 
-          // 1. Círculos de tendencia por zona/ciudad
-          const gruposMapa = esNacional ? listaGrupos : listaGrupos.filter(g => g.nombre !== 'Otras zonas');
-          const radioZona = esNacional ? 65000 : 850;
-
-          gruposMapa.forEach(g => {
-            const circulo = L.circle([g.lat, g.lon], {
-              radius: radioZona,
-              color: g.color,
-              weight: 2,
-              fillColor: g.color,
-              fillOpacity: 0.22
-            });
-            const infoHab = g.perCap
-              ? `<br>👥 <b>1 café c/ ${g.perCap.habPorCafe.toLocaleString('es-AR')} hab.</b> (${g.perCap.cada100k}/100k)`
-              : '';
-            circulo.bindPopup(
-              `<div class="popup-cafe">` +
-                `<b>${esc(g.nombre)}</b>` +
-                `<small>${g.n} cafeterías registradas</small><br>` +
-                `💳 Ticket: <b>${esc(g.nivelGasto)} (×${g.promTicket.toFixed(2)})</b><br>` +
-                `📈 Potencial: <b>${g.promOp} pts</b>` +
-                infoHab +
-              `</div>`
-            );
-            circulo.on('click', () => {
-              if (esNacional) window.cofiSeleccionarCiudadMercado(g.nombre);
-              else window.cofiSeleccionarZonaMercado(g.nombre);
-            });
-            capaZonasMercado.addLayer(circulo);
-          });
-
-          // 2. Puntos individuales coloreados según la tendencia real
           const puntosMostrar = scopeItems.length ? scopeItems : baseDatos;
-          puntosMostrar.forEach(c => {
-            const pobZ = POB_ZONAS.get(norm(c.zona)) || POB_REGIONES.get(norm(c.ciudad));
-            const cantZ = (c.zona && gruposMap.has(c.zona)) ? gruposMap.get(c.zona).length : (gruposMap.get(c.ciudad)?.length || 1);
-            const perCapPunto = calcularPerCapita(cantZ, pobZ);
-            const stPunto = { promTicket: c.mkt.t, promOp: c.mkt.o, perCap: perCapPunto };
-            const colPunto = obtenerColorTendencia(capa, stPunto);
 
-            const dot = L.circleMarker([c.lat, c.lon], {
-              radius: esNacional ? 5 : 7,
-              color: '#ffffff',
-              weight: 1.5,
-              fillColor: colPunto.hex,
-              fillOpacity: 0.95
+          if (capa === 'potencial') {
+            // 1. En modo Potencial, los locales existentes se dibujan discretos en tono neutro para no ensuciar
+            puntosMostrar.forEach(c => {
+              const dot = L.circleMarker([c.lat, c.lon], {
+                radius: esNacional ? 3.5 : 5,
+                color: '#ffffff',
+                weight: 1,
+                fillColor: '#b89f82',
+                fillOpacity: 0.55
+              });
+              dot.bindPopup(
+                `<div class="popup-cafe">` +
+                  `<b>${esc(c.nombre)}</b>` +
+                  `<small>${esc(c.zona || c.ciudadReal || c.ciudad)}</small><br>` +
+                  `Competencia actual · Ticket ×${c.mkt.t.toFixed(2)}` +
+                `</div>`
+              );
+              capaPuntosMercado.addLayer(dot);
             });
-            const habHtml = perCapPunto ? `<br>👥 Zona: <b>1 c/ ${perCapPunto.habPorCafe.toLocaleString('es-AR')} hab.</b>` : '';
-            dot.bindPopup(
-              `<div class="popup-cafe">` +
-                `<b>${esc(c.nombre)}</b>` +
-                `<small>${esc(c.zona || c.ciudadReal || c.ciudad)}</small><br>` +
-                `💳 Ticket: <b>×${c.mkt.t.toFixed(2)}</b> · 📈 Potencial: <b>${c.mkt.o} pts</b><br>` +
-                `🚶 Circulación: <b>${esc(c.mkt.c || 'Media')}</b> · Comp. 500m: <b>${c.mkt.k}</b>` +
-                habHtml +
-                `<div class="popup-acciones"><a href="/cafe/${esc(c.slug)}" class="popup-link">Ver ficha completa</a></div>` +
-              `</div>`
-            );
-            capaPuntosMercado.addLayer(dot);
-          });
 
-          // 3. Círculos destacados de Zonas Recomendadas para abrir un café (grandes ciudades / centros turísticos)
-          const zonasRec = await cargarZonasRecomendadas();
-          zonasRec.forEach((z, idx) => {
-            const radioVis = esNacional ? 28000 : (z.radio_metros || 650);
-            const circuloOpp = L.circle([z.latitud, z.longitud], {
-              radius: radioVis,
-              color: '#059669',
-              weight: 2.5,
-              dashArray: '6, 6',
-              fillColor: '#10b981',
-              fillOpacity: 0.22
+            // 2. Solo se destacan con pines numerados (#1, #2, #3, #4) y un radio fino (350m) las microzonas sugeridas
+            zonasRec.forEach((z, idx) => {
+              const radioFino = L.circle([z.latitud, z.longitud], {
+                radius: 350,
+                color: '#1b7f5c',
+                weight: 2,
+                dashArray: '5, 5',
+                fillColor: '#1b7f5c',
+                fillOpacity: 0.14
+              });
+              capaOportunidadMercado.addLayer(radioFino);
+
+              const pinIcon = L.divIcon({
+                html: `<div style="background:#1b7f5c;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:2.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35);">#${idx + 1}</div>`,
+                className: 'custom-opp-pin',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+              });
+
+              const markerOpp = L.marker([z.latitud, z.longitud], { icon: pinIcon }).bindPopup(
+                `<div class="popup-cafe" style="text-align:left;min-width:225px;">` +
+                  `<div style="font-size:.68rem;font-weight:800;color:#1b7f5c;text-transform:uppercase;letter-spacing:.04em;">` +
+                    `★ Oportunidad #${idx + 1} · ${z.score_potencial} pts` +
+                  `</div>` +
+                  `<b style="text-align:left;margin-top:2px;">${esc(z.plaza)}</b>` +
+                  `<small style="display:block;color:#5c3d2e;margin-bottom:6px;">${esc(z.corredor)}</small>` +
+                  `<b>¿Por qué abrir acá?</b><br>` +
+                  `• <b>Demanda:</b> ${z.atractores_cercanos} comercios/polos activos (${esc(z.circulacion)})<br>` +
+                  `• <b>Baja saturación:</b> solo ${z.competidores_cercanos} café(s) en 650 m<br>` +
+                  `• <b>Gasto promedio:</b> ${esc(z.nivel_gasto)} (×${z.indice_ticket})<br>` +
+                  `• <b>Público:</b> ${esc(z.publico_objetivo)}` +
+                `</div>`
+              );
+              capaOportunidadMercado.addLayer(markerOpp);
+              marcadoresOppPorIdx.push({ lat: z.latitud, lon: z.longitud, marker: markerOpp });
             });
-            circuloOpp.bindPopup(
-              `<div class="popup-cafe" style="text-align:left;min-width:210px;">` +
-                `<div style="font-size:.68rem;font-weight:800;color:#059669;text-transform:uppercase;letter-spacing:.04em;">` +
-                  `★ Zona Recomendada #${idx + 1} · ${z.score_potencial} pts` +
-                `</div>` +
-                `<b style="text-align:left;margin-top:2px;">${esc(z.plaza)}</b>` +
-                `<small style="display:block;color:#5c3d2e;margin-bottom:6px;">${esc(z.corredor)}</small>` +
-                `🚶 <b>Circulación:</b> ${esc(z.circulacion)} (${z.atractores_cercanos} polos)<br>` +
-                `💳 <b>Gasto medio:</b> ${esc(z.nivel_gasto)} (×${z.indice_ticket})<br>` +
-                `☕ <b>Competencia (650m):</b> ${z.competidores_cercanos} locales<br>` +
-                `🎯 <b>Público ideal:</b> ${esc(z.publico_objetivo)}` +
-              `</div>`
-            );
-            capaOportunidadMercado.addLayer(circuloOpp);
-          });
+          } else {
+            // En Ticket / Gasto y Cafés por habitante: solo puntos individuales sin círculos superpuestos
+            puntosMostrar.forEach(c => {
+              const pobZ = POB_ZONAS.get(norm(c.zona)) || POB_REGIONES.get(norm(c.ciudad));
+              const cantZ = (c.zona && gruposMap.has(c.zona)) ? gruposMap.get(c.zona).length : (gruposMap.get(c.ciudad)?.length || 1);
+              const perCapPunto = calcularPerCapita(cantZ, pobZ);
+              const stPunto = { promTicket: c.mkt.t, promOp: c.mkt.o, perCap: perCapPunto };
+              const colPunto = obtenerColorTendencia(capa, stPunto);
+
+              const dot = L.circleMarker([c.lat, c.lon], {
+                radius: esNacional ? 5 : 7.5,
+                color: '#ffffff',
+                weight: 1.5,
+                fillColor: colPunto.hex,
+                fillOpacity: 0.95
+              });
+              const habHtml = perCapPunto ? `<br>👥 Zona: <b>1 c/ ${perCapPunto.habPorCafe.toLocaleString('es-AR')} hab.</b>` : '';
+              dot.bindPopup(
+                `<div class="popup-cafe">` +
+                  `<b>${esc(c.nombre)}</b>` +
+                  `<small>${esc(c.zona || c.ciudadReal || c.ciudad)}</small><br>` +
+                  `💳 Ticket: <b>×${c.mkt.t.toFixed(2)}</b> (${esc(c.mkt.g)})<br>` +
+                  `🚶 Circulación: <b>${esc(c.mkt.c || 'Media')}</b> · Comp. 500m: <b>${c.mkt.k}</b>` +
+                  habHtml +
+                  `<div class="popup-acciones"><a href="/cafe/${esc(c.slug)}" class="popup-link">Ver ficha completa</a></div>` +
+                `</div>`
+              );
+              capaPuntosMercado.addLayer(dot);
+            });
+          }
 
           if (recentrar) {
             if (esNacional) {
@@ -1240,9 +1309,33 @@ const datosJSON = JSON.stringify({
         const resetBtn = $('mkt-reset-btn');
         const grid = $('mkt-zones-grid');
 
+        if (capa === 'potencial') {
+          resetBtn.classList.toggle('hidden', esNacional);
+          $('mkt-zones-title').textContent = 'Criterio de expansión: por qué recomendamos abrir en estas zonas';
+          grid.className = 'mkt-opp-grid';
+          grid.innerHTML = zonasRec.map((z, idx) => (
+            '<div class="mkt-opp-card">' +
+              '<div>' +
+                '<div class="mkt-opp-badge">★ Sugerencia #' + (idx + 1) + ' · Puntaje ' + z.score_potencial + ' / 20</div>' +
+                '<div class="mkt-opp-title">' + esc(z.plaza) + '</div>' +
+                '<div class="mkt-opp-sub">' + esc(z.corredor) + '</div>' +
+                '<ul class="mkt-opp-criteria">' +
+                  '<li>🚶 <b>Tráfico comercial:</b> ' + esc(z.circulacion) + ' (' + z.atractores_cercanos + ' comercios/turismo en el radio)</li>' +
+                  '<li>☕ <b>Baja competencia:</b> solo ' + z.competidores_cercanos + ' cafetería(s) en 650 m a la redonda</li>' +
+                  '<li>💳 <b>Poder de gasto:</b> ' + esc(z.nivel_gasto) + ' (ticket promedio ×' + z.indice_ticket + ')</li>' +
+                  '<li>🎯 <b>Público objetivo:</b> ' + esc(z.publico_objetivo) + '</li>' +
+                '</ul>' +
+              '</div>' +
+              '<button type="button" class="mkt-opp-btn" onclick="cofiEnfocarOportunidad(' + idx + ')">Ver ubicación exacta en el mapa</button>' +
+            '</div>'
+          )).join('');
+          return;
+        }
+
+        grid.className = 'mkt-zones-grid';
         if (esNacional) {
           resetBtn.classList.add('hidden');
-          $('mkt-zones-title').textContent = 'Tendencia por Ciudad / Región (clic para ver barrios)';
+          $('mkt-zones-title').textContent = 'Comparativa por Ciudad / Región (clic para ver barrios)';
           grid.innerHTML = listaGrupos.map(g => {
             const perCapLine = g.perCap
               ? `👥 1 café c/ ${g.perCap.habPorCafe.toLocaleString('es-AR')} hab. <span>(${g.perCap.cada100k}/100k)</span>`
