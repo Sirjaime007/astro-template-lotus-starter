@@ -20,28 +20,28 @@ URL_DRIVE_DEPTOS = "https://drive.google.com/file/d/1_BthlwEU2QMKtUlzwDv1AEsF4mB
 URL_GEOFABRIK_AR = "https://download.geofabrik.de/south-america/argentina-latest-free.shp.zip"
 URL_SINTA_EOH_CSV = "https://datos.yvera.gob.ar/dataset/0314b342-9c2d-4c5c-88c1-443054192a3b/resource/7e867c46-214d-4551-8e62-751d9f944b57/download/eoh-localidades.csv"
 
-HOJAS_REGIONES = [
-    ("Mar del Plata", "1241219956"),
-    ("Córdoba", "233389903"),
-    ("La Plata", "1349312598"),
-    ("CABA y Gran Buenos Aires", "1786522164"),
-    ("Mendoza", "1874393135"),
-    ("Santa Fe", "105395890"),
-    ("Interior de BS AS", "976652490"),
-    ("Neuquén y Río Negro", "1815065645"),
-    ("Salta y Jujuy", "1957429891"),
-    ("Catamarca, Tucuman y Santiago del Estero", "71722959"),
-    ("Corrientes, Misiones, Entre Rios, Formosa y Chaco", "939337218"),
-    ("San Juan, San Luis, La Rioja y La Pampa", "478641816"),
-    ("Chubut, Santa Cruz y Tierra del Fuego", "1550596244"),
-]
-
 GID_DATOS_MERCADO = "1552155233"
 
 RUTA_RADIOS = "datos_censales/radios_2022.gpkg"
 RUTA_DEPTOS = "datos_censales/deptos_2022.gpkg"
 RUTA_CACHE_OSM = "datos_censales/pois_osm_v2.json"
 RUTA_CACHE_RUTAS = "datos_censales/rutas_osm_v1.json"
+
+PLAZAS_ELEGIBLES_EXPANSION = {
+    "Ciudad Autónoma de Buenos Aires",
+    "GBA / La Plata",
+    "Mar del Plata (Urbana)",
+    "Chapadmalal / Sur Mar del Plata",
+    "Pinamar / Cariló",
+    "Córdoba Capital / Rosario / Santa Fe",
+    "Valles Serranos Córdoba (Carlos Paz / Calamuchita)",
+    "Gran Mendoza / Enoturismo",
+    "Cordillera Patagónica (Bariloche / SMA / VLA)",
+    "Patagonia Austral (Ushuaia / El Calafate)",
+    "Norte Argentino (Salta / Quebrada / Cafayate)",
+    "Puerto Iguazú",
+    "Tandil / Escapadas Cercanas",
+}
 
 HISTORICO_TURISMO = {
     "chapadmalal": {
@@ -404,95 +404,90 @@ def leer_hoja_publicada(gid):
 
 
 def cargar_locales():
-    log("1/5 Descargando locales desde Google Sheets...")
-    registros = []
+    log("1/5 Descargando locales desde Google Sheets (Base_Maestra)...")
     slugs_vistos = {}
 
-    for region_nombre, gid in HOJAS_REGIONES:
-        try:
-            df_h = leer_hoja_publicada(gid)
-            if df_h.empty:
-                continue
+    df = leer_hoja_publicada(GID_DATOS_MERCADO)
+    if df.empty:
+        raise RuntimeError("La hoja Base_Maestra descargada está vacía.")
 
-            col_nombre = encontrar_col(df_h.columns, ["nombre", "cafeteria", "local", "cafe"])
-            col_coords = encontrar_col(df_h.columns, ["coordenada", "ubicacion_mapa", "gps", "latlong"])
-            col_lat = encontrar_col(df_h.columns, ["latitud", "lat"])
-            col_lon = encontrar_col(df_h.columns, ["longitud", "lon", "lng"])
-            col_zona = encontrar_col(df_h.columns, ["zona", "barrio", "partido", "localidad"])
+    col_nombre = encontrar_col(df.columns, ["nombre", "cafeteria", "local", "cafe", "slug"])
+    col_coords = encontrar_col(df.columns, ["coordenada", "ubicacion_mapa", "gps", "latlong"])
+    col_lat = encontrar_col(df.columns, ["latitud", "lat"])
+    col_lon = encontrar_col(df.columns, ["longitud", "lon", "lng"])
+    col_ciudad = encontrar_col(df.columns, ["ciudad", "provincia", "region"])
+    col_zona = encontrar_col(df.columns, ["zona", "barrio", "partido", "localidad"])
 
-            if not col_nombre:
-                continue
+    if not col_nombre and not (col_coords or (col_lat and col_lon)):
+        df = pd.read_csv(
+            f"https://docs.google.com/spreadsheets/d/e/{PUB_ID}/pub?gid={GID_DATOS_MERCADO}&single=true&output=csv",
+            header=None,
+        )
+        col_nombre = 0
+        for c in df.columns[1:]:
+            muestra = df[c].dropna().astype(str).head(15)
+            if any(parsear_coords(v)[0] is not None for v in muestra):
+                col_coords = c
+                break
+        if col_coords is None and df.shape[1] >= 3:
+            col_lat, col_lon = 1, 2
+        if df.shape[1] >= 4:
+            col_zona = 3
 
-            for _, fila in df_h.iterrows():
-                nombre = str(fila.get(col_nombre, "") or "").strip()
-                if not nombre or nombre.lower() in ("nan", "none"):
-                    continue
+    registros = []
+    for _, fila in df.iterrows():
+        nombre = str(fila.get(col_nombre, "") or "").strip() if col_nombre is not None else ""
+        if not nombre or nombre.lower() in ("nan", "none", "nombre", "slug_local"):
+            continue
 
-                lat, lon = None, None
-                if col_coords:
-                    lat, lon = parsear_coords(fila.get(col_coords))
-                if (lat is None or lon is None) and col_lat and col_lon:
-                    try:
-                        la = float(str(fila.get(col_lat, "")).replace(",", ".").strip())
-                        lo = float(str(fila.get(col_lon, "")).replace(",", ".").strip())
-                        if -56.0 <= la <= -21.0 and -74.0 <= lo <= -53.0:
-                            lat, lon = la, lo
-                    except ValueError:
-                        pass
+        lat, lon = None, None
+        if col_coords is not None:
+            lat, lon = parsear_coords(fila.get(col_coords))
+        if (lat is None or lon is None) and col_lat is not None and col_lon is not None:
+            try:
+                la = float(str(fila.get(col_lat, "")).replace(",", ".").strip())
+                lo = float(str(fila.get(col_lon, "")).replace(",", ".").strip())
+                if -56.0 <= la <= -21.0 and -74.0 <= lo <= -53.0:
+                    lat, lon = la, lo
+            except ValueError:
+                pass
 
-                if lat is None or lon is None:
-                    continue
+        if lat is None or lon is None:
+            continue
 
-                base_slug = f"{slugify_texto(nombre)}-{slugify_texto(region_nombre)}"
-                if not base_slug or base_slug == "-":
-                    base_slug = f"local-{len(registros) + 1}"
+        ciudad = str(fila.get(col_ciudad, "") or "").strip() if col_ciudad is not None else ""
+        if ciudad.lower() in ("nan", "none"):
+            ciudad = ""
 
-                count = slugs_vistos.get(base_slug, 0) + 1
-                slugs_vistos[base_slug] = count
-                slug_final = base_slug if count == 1 else f"{base_slug}-{count}"
+        barrio = str(fila.get(col_zona, "") or "").strip() if col_zona is not None else ""
+        if barrio.lower() in ("nan", "none"):
+            barrio = ""
 
-                barrio = str(fila.get(col_zona, "") or "").strip() if col_zona else ""
-                if barrio.lower() in ("nan", "none"):
-                    barrio = ""
+        base_slug = slugify_texto(f"{nombre}-{ciudad}" if ciudad else nombre)
+        if not base_slug:
+            base_slug = f"local-{len(registros) + 1}"
 
-                registros.append({
-                    "slug_local": slug_final,
-                    "nombre": nombre,
-                    "latitud": lat,
-                    "longitud": lon,
-                    "ciudad": region_nombre,
-                    "barrio": barrio,
-                })
-        except Exception as e:
-            log(f"    -> Aviso leyendo '{region_nombre}': {e}")
+        count = slugs_vistos.get(base_slug, 0) + 1
+        slugs_vistos[base_slug] = count
+        slug_final = base_slug if count == 1 else f"{base_slug}-{count}"
+
+        registros.append({
+            "slug_local": slug_final,
+            "nombre": nombre,
+            "latitud": lat,
+            "longitud": lon,
+            "ciudad": ciudad,
+            "barrio": barrio,
+        })
 
     if not registros:
-        log("    -> Usando hoja Datos_Mercado como respaldo...")
-        df = leer_hoja_publicada(GID_DATOS_MERCADO)
-        if not {"slug_local", "latitud", "longitud"}.issubset(df.columns):
-            df = pd.read_csv(
-                f"https://docs.google.com/spreadsheets/d/e/{PUB_ID}/pub?gid={GID_DATOS_MERCADO}&single=true&output=csv",
-                header=None,
-            )
-            df = df.iloc[:, :5].copy()
-            df.columns = ["slug_local", "latitud", "longitud", "ciudad", "barrio"][: df.shape[1]]
-
-        df = df.dropna(subset=["slug_local", "latitud", "longitud"]).copy()
-        df["slug_local"] = df["slug_local"].astype(str).str.strip().str.lower()
-        df = df[df["slug_local"] != "slug_local"].copy()
-        df["latitud"] = pd.to_numeric(df["latitud"].astype(str).str.replace(",", "."), errors="coerce")
-        df["longitud"] = pd.to_numeric(df["longitud"].astype(str).str.replace(",", "."), errors="coerce")
-        df = df.dropna(subset=["latitud", "longitud"]).reset_index(drop=True)
-        for idx, r in df.iterrows():
-            s = r["slug_local"]
-            c = slugs_vistos.get(s, 0) + 1
-            slugs_vistos[s] = c
-            df.at[idx, "slug_local"] = s if c == 1 else f"{s}-{c}"
-        log(f"    -> {len(df)} locales válidos cargados desde Datos_Mercado.")
-        return df
+        raise RuntimeError(
+            f"Se descargaron {len(df)} filas de Base_Maestra (columnas: {list(df.columns)}), "
+            "pero ninguna tenía nombre y coordenadas válidas."
+        )
 
     df_total = pd.DataFrame(registros)
-    log(f"    -> {len(df_total)} locales válidos cargados de las 13 regiones.")
+    log(f"    -> {len(df_total)} locales válidos cargados desde Base_Maestra.")
     return df_total
 
 
@@ -856,6 +851,19 @@ def detectar_corredor_ruta(row, info_osm_ruta):
     return False, "", 0
 
 
+def inferir_publico_objetivo(econ, hist, com, tur, tra, pob):
+    corredor = econ["corredor"].lower()
+    if "corporativo" in corredor or "puerto madero" in corredor:
+        return "Ejecutivos, oficinas y turismo receptivo de alto ticket"
+    if tur >= 8 or "enoturismo" in corredor or "patagonia" in corredor or "pinamar" in corredor:
+        return "Turismo nacional/internacional y escapadas de fin de semana"
+    if tra >= 6 or "universitario" in corredor:
+        return "Estudiantes universitarios, tránsito diario y consumo al paso"
+    if pob >= 6500:
+        return "Público residencial habitual, home-office y vecinos de cercanía"
+    return "Mixto: flujo comercial barrial y visitantes de cercanía"
+
+
 def evaluar_modelo_integral(row, rutas_por_slug):
     slug = row["slug_local"]
     pob = row["poblacion_500m"]
@@ -871,35 +879,46 @@ def evaluar_modelo_integral(row, rutas_por_slug):
 
     ratio_est = round(hist["ocupacion_alta_pct"] / max(1, hist["ocupacion_baja_pct"]), 1)
 
-    aporte_ruta_score = round(flujo_ruta_diario / 220.0) if es_ruta else round(flujo_ruta_diario / 500.0)
-    flujo_score = com + (tur * 4) + (tra * 2) + aporte_ruta_score
+    aporte_ruta_score = round(flujo_ruta_diario / 250.0) if es_ruta else round(flujo_ruta_diario / 550.0)
+    flujo_score = com + (tur * 3.5) + (tra * 2.0) + aporte_ruta_score
 
-    if flujo_score >= 120:
+    if flujo_score >= 130:
         circulacion = "Muy Alta"
-    elif flujo_score >= 45:
+    elif flujo_score >= 50:
         circulacion = "Alta"
-    elif flujo_score >= 15:
+    elif flujo_score >= 18:
         circulacion = "Media"
     else:
         circulacion = "Baja"
 
-    aporte_ruta_personas = int(round(flujo_ruta_diario * (0.45 if es_ruta else 0.15)))
+    aporte_ruta_personas = int(round(flujo_ruta_diario * (0.40 if es_ruta else 0.12)))
     publico_diurno = int(round(
-        pob + (com * 45) + (tra * 150) + (tur * 90) + econ["bonus_diurno"] + aporte_ruta_personas
+        pob + (com * 40) + (tra * 130) + (tur * 85) + econ["bonus_diurno"] + aporte_ruta_personas
     ))
 
     pea_est = round(min(76.0, max(55.0, 56.0 + (tra * 0.4) + (com * 0.08))), 1)
     ticket_mult = econ["indice_ticket"]
 
-    factor_baja = hist["ocupacion_baja_pct"] / 60.0
-    demanda_baja = ((publico_diurno / 140.0) + ((com + tra * 2) * 0.55) + (tur * 2.5 * factor_baja)) * ticket_mult
-    oportunidad_baja = round(demanda_baja / (comp + 1), 1)
+    # Escala recalibrada (0 a 20 pts) para diferenciar plazas saturadas, equilibradas y con oportunidad real
+    factor_saturacion = 1.0 + (comp * 0.65) + (max(0, comp - 4) * 0.45)
 
-    factor_alta = (hist["ocupacion_alta_pct"] / 50.0) * (1.0 + min(1.5, hist["turistas_anuales"] / 5000000.0))
-    demanda_alta = ((publico_diurno / 140.0) + (flujo_score * 0.70 * factor_alta)) * ticket_mult
-    oportunidad_alta = round(demanda_alta / (comp + 1), 1)
+    base_baja = (
+        min(8.5, pob / 1400.0)
+        + min(6.5, (com * 0.14) + (tra * 0.45))
+        + min(4.0, tur * 0.25 * (hist["ocupacion_baja_pct"] / 55.0))
+        + (2.2 if es_ruta else 0.0)
+    ) * ticket_mult
+    oportunidad_baja = round(min(20.0, max(1.2, (base_baja * 2.1) / factor_saturacion)), 1)
 
-    indice_compuesto = round((oportunidad_baja * 0.6) + (oportunidad_alta * 0.4), 1)
+    factor_pico = (hist["ocupacion_alta_pct"] / 65.0) * (1.0 + min(0.65, hist["turistas_anuales"] / 9000000.0))
+    base_alta = (
+        min(7.5, pob / 1600.0)
+        + min(8.5, (flujo_score * 0.085) * factor_pico)
+        + (2.8 if es_ruta else 0.0)
+    ) * ticket_mult
+    oportunidad_alta = round(min(20.0, max(1.5, (base_alta * 2.2) / factor_saturacion)), 1)
+
+    indice_compuesto = round((oportunidad_baja * 0.62) + (oportunidad_alta * 0.38), 1)
 
     return pd.Series([
         circulacion,
@@ -927,6 +946,119 @@ def evaluar_modelo_integral(row, rutas_por_slug):
         ruta_nombre,
         int(flujo_ruta_diario),
     ])
+
+
+def detectar_zonas_recomendadas(res_df, gdf_locales_3857, gdf_pois_3857, top_n=4):
+    if gdf_pois_3857.empty or res_df.empty:
+        return []
+
+    elegibles = res_df[res_df["plaza_turistica"].isin(PLAZAS_ELEGIBLES_EXPANSION)].copy()
+    if elegibles.empty:
+        elegibles = res_df.copy()
+
+    gdf_eleg_3857 = gpd.GeoDataFrame(
+        elegibles,
+        geometry=gpd.points_from_xy(elegibles["longitud"], elegibles["latitud"]),
+        crs="EPSG:4326",
+    ).to_crs(epsg=3857)
+
+    area_urbana = gdf_eleg_3857.geometry.buffer(4000).union_all()
+    pois_candidatos = gdf_pois_3857[gdf_pois_3857.geometry.within(area_urbana)].copy()
+    if pois_candidatos.empty:
+        return []
+
+    pois_candidatos["gx"] = (pois_candidatos.geometry.x // 700).astype(int)
+    pois_candidatos["gy"] = (pois_candidatos.geometry.y // 700).astype(int)
+
+    celdas = (
+        pois_candidatos.groupby(["gx", "gy"])
+        .agg(
+            total_pois=("cat", "count"),
+            com=("cat", lambda s: (s == "comercio").sum()),
+            tur=("cat", lambda s: (s == "turismo").sum()),
+            tra=("cat", lambda s: (s == "transporte").sum()),
+            x_mean=("geometry", lambda g: g.x.mean()),
+            y_mean=("geometry", lambda g: g.y.mean()),
+        )
+        .reset_index()
+    )
+
+    celdas = celdas[celdas["total_pois"] >= 10].sort_values("total_pois", ascending=False).head(120)
+    if celdas.empty:
+        return []
+
+    gdf_celdas = gpd.GeoDataFrame(
+        celdas,
+        geometry=gpd.points_from_xy(celdas["x_mean"], celdas["y_mean"]),
+        crs="EPSG:3857",
+    )
+
+    buf_celdas = gdf_celdas[["geometry"]].copy()
+    buf_celdas["geometry"] = buf_celdas.geometry.buffer(650)
+    cruce_comp = gpd.sjoin(buf_celdas, gdf_locales_3857[["geometry"]], how="left", predicate="intersects")
+    comp_por_celda = cruce_comp.groupby(cruce_comp.index)["index_right"].count()
+    gdf_celdas["comp_650m"] = gdf_celdas.index.map(comp_por_celda).fillna(0).astype(int)
+
+    gdf_celdas = gdf_celdas[gdf_celdas["comp_650m"] <= 2].copy()
+    if gdf_celdas.empty:
+        return []
+
+    gdf_celdas_4326 = gdf_celdas.to_crs(epsg=4326)
+    candidatos_rank = []
+
+    for _, row in gdf_celdas_4326.iterrows():
+        lat, lon = round(row.geometry.y, 5), round(row.geometry.x, 5)
+        dist = np.hypot(elegibles["latitud"] - lat, elegibles["longitud"] - lon)
+        ref = elegibles.loc[dist.idxmin()]
+
+        if ref["plaza_turistica"] not in PLAZAS_ELEGIBLES_EXPANSION:
+            continue
+
+        hist = detectar_plaza_historica({"latitud": lat, "longitud": lon, "slug_local": "", "ciudad": ref.get("ciudad", ""), "barrio": ref.get("barrio", "")})
+        econ = detectar_perfil_economico({"latitud": lat, "longitud": lon, "slug_local": "", "ciudad": ref.get("ciudad", ""), "barrio": ref.get("barrio", "")})
+
+        flujo = row["com"] + (row["tur"] * 3.5) + (row["tra"] * 2.0)
+        score = round(
+            min(19.5, ((flujo * 0.14) * econ["indice_ticket"]) / (1.0 + row["comp_650m"] * 0.7)),
+            1,
+        )
+        publico = inferir_publico_objetivo(econ, hist, row["com"], row["tur"], row["tra"], ref.get("poblacion_500m", 4000))
+
+        candidatos_rank.append({
+            "latitud": lat,
+            "longitud": lon,
+            "radio_metros": 650,
+            "plaza": hist["plaza"],
+            "corredor": econ["corredor"],
+            "ciudad": str(ref.get("ciudad", "") or hist["plaza"]),
+            "barrio_referencia": str(ref.get("barrio", "") or econ["corredor"]),
+            "score_potencial": score,
+            "competidores_cercanos": int(row["comp_650m"]),
+            "atractores_cercanos": int(row["total_pois"]),
+            "nivel_gasto": econ["nivel_gasto"],
+            "indice_ticket": econ["indice_ticket"],
+            "circulacion": "Muy Alta" if flujo >= 110 else "Alta",
+            "publico_objetivo": publico,
+            "motivo": (
+                f"{int(row['total_pois'])} polos comerciales/turísticos y gasto {econ['nivel_gasto'].lower()} "
+                f"con solo {int(row['comp_650m'])} cafetería(s) en 650 m."
+            ),
+        })
+
+    candidatos_rank.sort(key=lambda x: x["score_potencial"], reverse=True)
+    seleccionadas = []
+    for cand in candidatos_rank:
+        muy_cerca = any(
+            np.hypot(cand["latitud"] - s["latitud"], cand["longitud"] - s["longitud"]) < 0.03
+            for s in seleccionadas
+        )
+        if not muy_cerca:
+            cand["id"] = f"zona-oportunidad-{len(seleccionadas) + 1}"
+            seleccionadas.append(cand)
+        if len(seleccionadas) >= top_n:
+            break
+
+    return seleccionadas
 
 
 def main():
@@ -968,7 +1100,7 @@ def main():
         gdf_faltantes = gdf_buffers[gdf_buffers["slug_local"].isin(slugs_sin_pob)]
         pob_deptos = calcular_censo_500m(gdf_faltantes, RUTA_DEPTOS)
 
-        log("5/5 Exportando modelo integral...")
+    log("5/5 Exportando modelo integral...")
     res = df_locales.copy()
     if "ciudad" not in res.columns:
         res["ciudad"] = ""
@@ -1015,6 +1147,13 @@ def main():
     os.makedirs("src/data", exist_ok=True)
     os.makedirs("public/data", exist_ok=True)
     res.set_index("slug_local").to_json("src/data/mercado.json", orient="index", force_ascii=False, indent=2)
+
+    zonas_oportunidad = detectar_zonas_recomendadas(res, gdf_locales, gdf_pois, top_n=4)
+    with open("src/data/zonas_oportunidad.json", "w", encoding="utf-8") as f:
+        json.dump(zonas_oportunidad, f, ensure_ascii=False, indent=2)
+    with open("public/data/zonas_oportunidad.json", "w", encoding="utf-8") as f:
+        json.dump(zonas_oportunidad, f, ensure_ascii=False, indent=2)
+    log(f"    -> {len(zonas_oportunidad)} zonas recomendadas para expansión exportadas.")
 
     cols_sheets = [
         "slug_local",
