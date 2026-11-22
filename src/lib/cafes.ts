@@ -3,7 +3,7 @@ import fs from 'node:fs';
 
 const SHEET_ID = '10vUOhRr7IAXlRrkBphxEP4ApXYBgrnuxJq6G83GnfHI';
 const urlSheet = (gid: string) =>
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}&_t=${Date.now()}`;
 
 const GIDS: Record<string, string> = {
   'Mar del Plata': '0', 'CABA y Gran Buenos Aires': '1296176686', 'La Plata': '208452991', 'Córdoba': '1250014567',
@@ -49,7 +49,12 @@ function parseCSV(text: string): string[][] {
 async function leerHoja(gid: string, intentos = 3): Promise<Fila[]> {
   for (let i = 0; i < intentos; i++) {
     try {
-      const res = await fetch(urlSheet(gid));
+      const res = await fetch(urlSheet(gid), {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const rows = parseCSV(await res.text());
       if (rows.length < 2) return [];
@@ -100,8 +105,14 @@ for (const { ciudad, filas } of hojasCafes) {
     if (!f.CAFE) continue;
     const lat = numero(f.LAT || f.LATITUD);
     const lon = numero(f.LONG || f.LNG || f.LONGITUD);
-    if (lat === null || lon === null) continue;
-    if (lat < -56 || lat > -21 || lon < -74 || lon > -53) { descartados.push(`${f.CAFE} (${lat}, ${lon})`); continue; }
+    if (lat === null || lon === null) {
+      console.warn(`[cafes] Descartado por coordenadas vacías o inválidas (${ciudad}): ${f.CAFE}`);
+      continue;
+    }
+    if (lat < -56 || lat > -21 || lon < -74 || lon > -53) {
+      descartados.push(`${f.CAFE} (${lat}, ${lon})`);
+      continue;
+    }
     cafesRaw.push({
       nombre: f.CAFE.trim(),
       ciudad,
