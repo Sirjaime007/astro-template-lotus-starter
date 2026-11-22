@@ -744,7 +744,7 @@ const datosJSON = JSON.stringify({
           'Catamarca, Tucuman y Santiago del Estero': 3222288,
           'Corrientes, Misiones, Entre Rios, Formosa y Chaco': 5654172,
           'Salta y Jujuy': 2252962,
-          'Neuquén y Río Negro': 1461582,
+          'Neuquen y Río Negro': 1461582,
           'San Juan, San Luis, La Rioja y La Pampa': 2110646,
           'Chubut, Santa Cruz y Tierra del Fuego': 1115579
         };
@@ -996,6 +996,19 @@ const datosJSON = JSON.stringify({
         };
 
         // ---------- Mercado: Motor Universal de Polos Gastronómicos y Zonas en Desarrollo ----------
+        function calcularMedianaZona(ciudad, zona) {
+          var delBarrio = baseDatos.filter(function (x) {
+            return x.ciudad === ciudad && x.zona === zona;
+          });
+          if (delBarrio.length < 2) return null;
+          var lats = delBarrio.map(function (x) { return x.lat; }).sort(function (a, b) { return a - b; });
+          var lons = delBarrio.map(function (x) { return x.lon; }).sort(function (a, b) { return a - b; });
+          var mid = Math.floor(lats.length / 2);
+          var medLat = lats.length % 2 !== 0 ? lats[mid] : (lats[mid - 1] + lats[mid]) / 2;
+          var medLon = lons.length % 2 !== 0 ? lons[mid] : (lons[mid - 1] + lons[mid]) / 2;
+          return { lat: medLat, lon: medLon, total: delBarrio.length };
+        }
+
         function obtenerZonasRecomendadasDinamicas(ciu, zon) {
           var esNacional = ciu === 'Todas';
 
@@ -1008,6 +1021,14 @@ const datosJSON = JSON.stringify({
             if (esNacional) return esPlazaRecomendable(c);
             if (c.ciudad !== ciu) return false;
             if (zon !== 'Todas' && c.zona !== zon) return false;
+
+            // Descarta locales mal etiquetados a más de 1.8 km del núcleo real de su propio barrio
+            if (c.zona && c.zona !== '-' && c.zona !== 'Sin Zona') {
+              var med = calcularMedianaZona(c.ciudad, c.zona);
+              if (med && med.total >= 3 && calcularD(c.lat, c.lon, med.lat, med.lon) > 1.8) {
+                return false;
+              }
+            }
             return true;
           });
 
@@ -1069,6 +1090,27 @@ const datosJSON = JSON.stringify({
             var esEnDesarrollo = item.vecinos1500m >= 2 && item.vecinos1500m <= 7 && item.vecinos350m <= 1;
             var tipoCorredor = esEnDesarrollo ? 'Zona en desarrollo' : 'Polo gastronómico';
 
+            // Si es un polo consolidado con barrio definido, anclamos el pin al centroide mediano del barrio
+            var pinLat = c.lat;
+            var pinLon = c.lon;
+            var v350Final = item.vecinos350m;
+            var v1500Final = item.vecinos1500m;
+
+            if (!esEnDesarrollo && c.zona && c.zona !== '-' && c.zona !== 'Sin Zona') {
+              var medBarrio = calcularMedianaZona(c.ciudad, c.zona);
+              if (medBarrio && medBarrio.total >= 3) {
+                pinLat = Number(medBarrio.lat.toFixed(5));
+                pinLon = Number(medBarrio.lon.toFixed(5));
+                v350Final = 0;
+                v1500Final = 0;
+                for (var k = 0; k < baseDatos.length; k++) {
+                  var dMed = calcularD(pinLat, pinLon, baseDatos[k].lat, baseDatos[k].lon);
+                  if (dMed <= 0.35) v350Final++;
+                  if (dMed <= 1.50) v1500Final++;
+                }
+              }
+            }
+
             var pobZ = POB_ZONAS.get(norm(nombreBarrio)) || POB_REGIONES.get(norm(c.ciudad)) || 60000;
             var esTuristica = /(pinamar|carilo|gesell|bariloche|angostura|san martin de los andes|ushuaia|calafate|iguazu|cafayate|carlos paz|calamuchita|merlo|chapadmalal|playa grande|guemes|mendoza|salta|jujuy)/.test(
               norm(c.ciudad + ' ' + c.ciudadReal + ' ' + nombreBarrio)
@@ -1085,27 +1127,27 @@ const datosJSON = JSON.stringify({
             // Fórmula universal equilibrada:
             // Premia ecosistema gastronómico (vecinos1500m) + ticket del entorno + bono por oportunidad en desarrollo,
             // y penaliza la saturación en las mismas 3 cuadras (vecinos350m).
-            var bonoEcosistema = Math.min(4.2, item.vecinos1500m * 0.48);
+            var bonoEcosistema = Math.min(4.2, v1500Final * 0.48);
             var bonoDesarrollo = esEnDesarrollo ? 2.4 : 0.8;
-            var penalizacionCercana = 1 + (item.vecinos350m * 0.45);
+            var penalizacionCercana = 1 + (v350Final * 0.45);
             var rawScore = (((9.2 + bonoEcosistema + (c.mkt.a * 0.08)) * item.ticketEntorno) / penalizacionCercana) + bonoDesarrollo;
             var score = Number(Math.min(19.5, Math.max(7.5, rawScore)).toFixed(1));
 
             return {
-              latitud: c.lat,
-              longitud: c.lon,
+              latitud: pinLat,
+              longitud: pinLon,
               plaza: plazaNombre,
               corredor: nombreBarrio,
               direccionRef: c.ubicacion,
               tipoCorredor: tipoCorredor,
               esEnDesarrollo: esEnDesarrollo,
               score_potencial: score,
-              vecinos_350m: item.vecinos350m,
-              vecinos_1500m: item.vecinos1500m,
+              vecinos_350m: v350Final,
+              vecinos_1500m: v1500Final,
               atractores_cercanos: c.mkt.a || 18,
               nivel_gasto: c.mkt.g,
               indice_ticket: item.ticketEntorno,
-              circulacion: c.mkt.c || (item.vecinos1500m >= 6 ? 'Muy Alta' : item.vecinos1500m >= 2 ? 'Alta' : 'Media'),
+              circulacion: c.mkt.c || (v1500Final >= 6 ? 'Muy Alta' : v1500Final >= 2 ? 'Alta' : 'Media'),
               publico_objetivo: publico,
               claveUnica: esNacional ? norm(c.ciudad) : norm(nombreBarrio)
             };
