@@ -345,7 +345,7 @@ const datosJSON = JSON.stringify({
       line-height: 1.4;
     }
 
-    /* Tabla y tarjetas en pestaña Datos */
+    /* Tabla en pestaña Datos */
     .datos-table-wrap {
       width: 100%;
       overflow-x: auto;
@@ -463,7 +463,6 @@ const datosJSON = JSON.stringify({
     }
     .mkt-reset-btn:hover { background: var(--coffee-900); color: white; }
 
-    /* Tarjetas de Zonas Recomendadas */
     .mkt-opp-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr));
@@ -495,9 +494,7 @@ const datosJSON = JSON.stringify({
       letter-spacing: .05em;
       color: #1b7f5c;
     }
-    .mkt-opp-card.en-desarrollo .mkt-opp-badge {
-      color: #c85520;
-    }
+    .mkt-opp-card.en-desarrollo .mkt-opp-badge { color: #c85520; }
     .mkt-opp-tag {
       display: inline-block;
       font-size: .66rem;
@@ -552,13 +549,9 @@ const datosJSON = JSON.stringify({
       transition: var(--transition);
     }
     .mkt-opp-btn:hover { background: #146347; }
-    .mkt-opp-card.en-desarrollo .mkt-opp-btn {
-      background: #e86a33;
-      border-color: #e86a33;
-    }
+    .mkt-opp-card.en-desarrollo .mkt-opp-btn { background: #e86a33; border-color: #e86a33; }
     .mkt-opp-card.en-desarrollo .mkt-opp-btn:hover { background: #c85520; }
 
-    /* Tarjetas por Ciudad / Barrio */
     .mkt-zones-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(min(245px, 100%), 1fr));
@@ -578,56 +571,14 @@ const datosJSON = JSON.stringify({
       gap: .35rem;
       box-shadow: var(--shadow-sm);
     }
-    .mkt-zone-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-      background: white;
-    }
-    .mkt-zone-card.active {
-      background: white;
-      box-shadow: 0 0 0 2px var(--coffee-900);
-    }
-    .mkt-zone-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: .4rem;
-    }
-    .mkt-zone-name {
-      font-family: var(--font-display);
-      font-weight: 800;
-      font-size: .98rem;
-      color: var(--coffee-900);
-      line-height: 1.2;
-    }
-    .mkt-zone-count {
-      font-size: .7rem;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 999px;
-      background: rgba(26,15,10,.07);
-      color: var(--coffee-700);
-      white-space: nowrap;
-    }
-    .mkt-zone-percap {
-      font-size: .8rem;
-      font-weight: 700;
-      color: var(--coffee-900);
-    }
-    .mkt-zone-percap span {
-      font-weight: 500;
-      color: var(--coffee-500);
-      font-size: .74rem;
-    }
-    .mkt-zone-stats {
-      display: flex;
-      justify-content: space-between;
-      gap: .5rem;
-      font-size: .76rem;
-      color: var(--coffee-700);
-      padding-top: .25rem;
-      border-top: 1px dashed rgba(196,167,125,.4);
-    }
+    .mkt-zone-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); background: white; }
+    .mkt-zone-card.active { background: white; box-shadow: 0 0 0 2px var(--coffee-900); }
+    .mkt-zone-top { display: flex; justify-content: space-between; align-items: flex-start; gap: .4rem; }
+    .mkt-zone-name { font-family: var(--font-display); font-weight: 800; font-size: .98rem; color: var(--coffee-900); line-height: 1.2; }
+    .mkt-zone-count { font-size: .7rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: rgba(26,15,10,.07); color: var(--coffee-700); white-space: nowrap; }
+    .mkt-zone-percap { font-size: .8rem; font-weight: 700; color: var(--coffee-900); }
+    .mkt-zone-percap span { font-weight: 500; color: var(--coffee-500); font-size: .74rem; }
+    .mkt-zone-stats { display: flex; justify-content: space-between; gap: .5rem; font-size: .76rem; color: var(--coffee-700); padding-top: .25rem; border-top: 1px dashed rgba(196,167,125,.4); }
 
     /* ===== Tarjetas ===== */
     .resultados-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px,100%), 1fr)); gap: 1rem; }
@@ -790,7 +741,7 @@ const datosJSON = JSON.stringify({
         <div id="mkt-zones-grid"></div>
       </div>
 
-      <!-- ===== NUEVA PESTAÑA: DATOS ===== -->
+      <!-- ===== PESTAÑA: DATOS ===== -->
       <div class="buscador-ui hidden" id="vista-datos">
         <div class="search-controls cols-2">
           <select id="select-datos-provincia" class="input-moderno" onchange="cofiActualizarDatosSubfiltro(); cofiRenderDatos()">
@@ -962,6 +913,317 @@ const datosJSON = JSON.stringify({
           });
         });
 
+        // Diccionario Censo 2022 desambiguado por Provincia + Municipio/Departamento/Partido
+        var POB_MUNICIPIOS_POR_PROV = {
+          'Buenos Aires': {
+            'General Pueyrredón': 667082, 'Mar del Plata': 667082,
+            'La Plata': 768470,
+            'La Matanza': 1841247,
+            'Lomas de Zamora': 690323,
+            'Quilmes': 633391,
+            'Almirante Brown': 584827,
+            'Merlo': 582486,
+            'Moreno': 576632,
+            'Florencio Varela': 496433,
+            'Lanús': 461267,
+            'General San Martín': 450335, 'San Martín': 450335,
+            'Tigre': 446949,
+            'Pilar': 394754,
+            'Avellaneda': 367554,
+            'Tres de Febrero': 364176,
+            'Berazategui': 358712,
+            'Malvinas Argentinas': 350674,
+            'Esteban Echeverría': 338480,
+            'Bahía Blanca': 336574,
+            'Morón': 331183,
+            'José C. Paz': 326992, 'Jose C. Paz': 326992,
+            'San Isidro': 297282,
+            'Vicente López': 282281,
+            'San Miguel': 328835,
+            'Escobar': 256268,
+            'Hurlingham': 185641,
+            'Ituzaingó': 180232,
+            'San Fernando': 171616,
+            'Ezeiza': 201511,
+            'San Nicolás': 167824, 'San Nicolás de los Arroyos': 167824,
+            'Tandil': 145575,
+            'Zárate': 132083,
+            'Luján': 111251,
+            'Olavarría': 126328,
+            'Pergamino': 115340,
+            'Campana': 110566,
+            'Junín': 103787,
+            'Necochea': 102110,
+            'La Costa': 100689, 'Partido de La Costa': 100689,
+            'General Rodríguez': 142709,
+            'Presidente Perón': 102106,
+            'San Vicente': 98215,
+            'Cañuelas': 70684,
+            'Marcos Paz': 67011,
+            'Chivilcoy': 70839,
+            'Mercedes': 72980,
+            'Azul': 75905,
+            'Tres Arroyos': 62426,
+            'San Pedro': 68613,
+            'Chacabuco': 53157,
+            '9 de Julio': 52607, 'Nueve de Julio': 52607,
+            'Trenque Lauquen': 49309,
+            'Balcarce': 48982,
+            'Bragado': 46504,
+            'Pehuajó': 44783,
+            'Chascomús': 42452,
+            'Lobos': 41760,
+            'Villa Gesell': 37463,
+            'Pinamar': 39424, 'Pinamar / Cariló': 39424,
+            'Miramar': 35372, 'General Alvarado': 35372,
+            'Coronel Suárez': 40033,
+            'Bolívar': 37594,
+            'Saladillo': 35656,
+            'Lincoln': 45506,
+            'Coronel Rosales': 67503, 'Punta Alta': 67503,
+            'Mar Chiquita': 33110,
+            'Dolores': 32032,
+            '25 de Mayo': 35563,
+            'Baradero': 40002,
+            'Salto': 39425,
+            'Arrecifes': 32215,
+            'Ramallo': 39730,
+            'Exaltación de la Cruz': 40159,
+            'San Antonio de Areco': 26897,
+            'Brandsen': 32448,
+            'Monte': 24868,
+            'Las Flores': 27239,
+            'Ayacucho': 21977,
+            'Rauch': 16635,
+            'Benito Juárez': 22558,
+            'General Madariaga': 22624,
+            'Castelli': 9594,
+            'Lezama': 5351,
+            'Magdalena': 26830,
+            'Punta Indio': 12297,
+            'Patagones': 37646,
+            'Villarino': 32717,
+            'Tornquist': 14810,
+            'Saavedra': 22537,
+            'Coronel Pringles': 24420,
+            'Coronel Dorrego': 15968,
+            'General Villegas': 35251,
+            'Rivadavia': 19849,
+            'Carlos Casares': 23100,
+            'Daireaux': 18422,
+            'Guaminí': 11801,
+            'Adolfo Alsina': 17552,
+            'Puán': 16613
+          },
+          'Córdoba': {
+            'Capital': 1505250, 'Córdoba Capital': 1505250, 'Córdoba': 1505250,
+            'Colón': 303120, 'Villa Allende': 36718, 'Jesús María': 36841, 'La Calera': 47785, 'Río Ceballos': 25690, 'Mendiolaza': 17118, 'Unquillo': 24487, 'Salsipuedes': 16123, 'Colonia Caroya': 26397,
+            'Punilla': 224889, 'Villa Carlos Paz': 71274, 'Cosquín': 25279, 'La Falda': 18595, 'Capilla del Monte': 12817, 'Santa María de Punilla': 12302, 'Tanti': 8543, 'Bialet Massé': 8220,
+            'Río Cuarto': 279923,
+            'San Justo': 234532, 'San Francisco': 69047,
+            'General San Martín': 145622, 'Villa María': 96061,
+            'Santa María': 117395, 'Alta Gracia': 60373,
+            'Río Segundo': 112645, 'Oncativo': 14794, 'Pilar': 17205, 'Villa del Rosario': 17854,
+            'Tercero Arriba': 122127, 'Río Tercero': 53166, 'Oliva': 13128,
+            'Unión': 116894, 'Bell Ville': 37335,
+            'Marcos Juárez': 110665,
+            'Calamuchita': 74642, 'Villa General Belgrano': 11665, 'Santa Rosa de Calamuchita': 16725, 'Embalse': 10306,
+            'San Javier': 65799, 'Villa Dolores': 35116,
+            'San Alberto': 44960, 'Mina Clavero': 11663, 'Nono': 3452,
+            'Cruz del Eje': 66745,
+            'Ischilín': 36552, 'Deán Funes': 25204,
+            'Río Primero': 57087,
+            'Juárez Celman': 68055, 'La Carlota': 13831,
+            'Presidente Roque Sáenz Peña': 38661, 'Laboulaye': 22580,
+            'General Roca': 37838, 'Huinca Renancó': 10542,
+            'Totoral': 23175,
+            'Tulumba': 15388,
+            'Sobremonte': 5309,
+            'Río Seco': 15950,
+            'Pocho': 6029,
+            'Minas': 5444
+          },
+          'Santa Fe': {
+            'Rosario': 1348725,
+            'La Capital': 572265, 'Santa Fe': 572265, 'Santa Fe Capital': 439040, 'Santo Tomé': 75272,
+            'General López': 201574, 'Venado Tuerto': 82757, 'Firmat': 21319, 'Rufino': 20296,
+            'Castellanos': 191983, 'Rafaela': 108520, 'Sunchales': 23989,
+            'General Obligado': 197986, 'Reconquista': 84939, 'Avellaneda': 30217,
+            'San Lorenzo': 194580, 'Funes': 38274, 'Roldán': 30686, 'San Lorenzo': 50636, 'Capitán Bermúdez': 31320,
+            'Las Colonias': 115974, 'Esperanza': 46750,
+            'Constitución': 93905, 'Villa Constitución': 52979,
+            'Caseros': 86862, 'Casilda': 38534,
+            'San Jerónimo': 88928, 'Coronda': 20336,
+            'Iriondo': 74642, 'Cañada de Gómez': 32946,
+            'San Martín': 69482,
+            'San Cristóbal': 70769,
+            'Vera': 56178,
+            'Belgrano': 48781, 'Armstrong': 12722, 'Las Parejas': 14251,
+            'San Justo': 44965,
+            '9 de Julio': 31727,
+            'San Javier': 33339,
+            'Garay': 23780
+          },
+          'Mendoza': {
+            'Capital': 127160, 'Mendoza Capital': 127160, 'Mendoza': 127160,
+            'Guaymallén': 321371,
+            'Las Heras': 229160,
+            'Godoy Cruz': 194044,
+            'Maipú': 214412,
+            'Luján de Cuyo': 172845, 'Chacras de Coria': 172845,
+            'San Rafael': 210018,
+            'San Martín': 138470,
+            'Rivadavia': 63475,
+            'Tunuyán': 59609,
+            'General Alvear': 50209,
+            'Junín': 46421,
+            'Tupungato': 41597,
+            'San Carlos': 39660,
+            'Lavalle': 44731,
+            'Malargüe': 33117,
+            'Santa Rosa': 19337,
+            'La Paz': 11856
+          },
+          'Tucumán': {
+            'Capital': 605767, 'San Miguel de Tucumán': 605767,
+            'Cruz Alta': 224815,
+            'Tafí Viejo': 171186,
+            'Yerba Buena': 102707,
+            'Lules': 87226,
+            'Chicligasta': 93446, 'Concepción': 58000,
+            'Monteros': 72652,
+            'Río Chico': 66760, 'Aguilares': 36500,
+            'Tafí del Valle': 18771
+          },
+          'Salta': {
+            'Capital': 627704, 'Salta Capital': 627704, 'Salta': 627704,
+            'San Lorenzo': 26415,
+            'General José de San Martín': 178212, 'Tartagal': 78000,
+            'Orán': 160916, 'San Ramón de la Nueva Orán': 85000,
+            'Anta': 69484,
+            'General Güemes': 56386,
+            'Metán': 46200,
+            'Rosario de Lerma': 51197,
+            'Cerrillos': 54442,
+            'Cafayate': 17912,
+            'Cachi': 8943
+          },
+          'Jujuy': {
+            'Doctor Manuel Belgrano': 320990, 'San Salvador de Jujuy': 320990,
+            'El Carmen': 122366,
+            'San Pedro': 87696,
+            'Ledesma': 92475,
+            'Palpalá': 65541,
+            'Tilcara': 14721,
+            'Humahuaca': 20914,
+            'Tumbaya': 5390, 'Purmamarca': 5390
+          },
+          'Entre Ríos': {
+            'Paraná': 391696, 'Paraná Capital': 268889,
+            'Concordia': 198802,
+            'Gualeguaychú': 126147,
+            'Uruguay': 116345, 'Concepción del Uruguay': 85000,
+            'Colón': 75305,
+            'Federación': 78691, 'Chajarí': 42000,
+            'Gualeguay': 57093,
+            'La Paz': 74797,
+            'Victoria': 39447,
+            'Diamante': 53595,
+            'Villaguay': 55698,
+            'Nogoyá': 42817
+          },
+          'Misiones': {
+            'Capital': 391498, 'Posadas': 323739,
+            'Oberá': 121990,
+            'Iguazú': 99013, 'Puerto Iguazú': 56000,
+            'Eldorado': 91032,
+            'Guaraní': 78014,
+            'Cainguás': 61693,
+            'San Ignacio': 63522,
+            'Apóstoles': 51203
+          },
+          'Corrientes': {
+            'Capital': 439270, 'Corrientes Capital': 439270, 'Corrientes': 439270,
+            'Goya': 106371,
+            'Santo Tomé': 73977,
+            'Paso de los Libres': 57428,
+            'Curuzú Cuatiá': 51763,
+            'Mercedes': 49166,
+            'Bella Vista': 44965,
+            'Ituzaingó': 39660
+          },
+          'Chaco': {
+            'San Fernando': 418193, 'Resistencia': 418193,
+            'Comandante Fernández': 101960, 'Presidencia Roque Sáenz Peña': 101960,
+            'General Güemes': 79325,
+            'Libertador General San Martín': 66596,
+            'Chacabuco': 34372,
+            'Mayor Luis Jorge Fontana': 62916, 'Villa Ángela': 48000
+          },
+          'Santiago del Estero': {
+            'Capital': 330192, 'Santiago del Estero': 330192,
+            'Banda': 171186, 'La Banda': 142000,
+            'Río Hondo': 66666, 'Termas de Río Hondo': 42000
+          },
+          'San Juan': {
+            'Capital': 118850, 'San Juan Capital': 118850,
+            'Rawson': 136500,
+            'Chimbas': 105482,
+            'Rivadavia': 97425,
+            'Santa Lucía': 58220,
+            'Pocito': 74746,
+            'Caucete': 44241,
+            'Jáchal': 25008
+          },
+          'Neuquén': {
+            'Confluencia': 466851, 'Neuquén': 288896, 'Neuquén Capital': 288896, 'Plottier': 52000, 'Centenario': 48000, 'Cutral Có': 41000,
+            'Lácar': 40702, 'San Martín de los Andes': 40702,
+            'Los Lagos': 16114, 'Villa La Angostura': 16114,
+            'Zapala': 41878
+          },
+          'Río Negro': {
+            'Bariloche': 164065, 'San Carlos de Bariloche': 135755, 'El Bolsón': 24000,
+            'General Roca': 385348, 'Cipolletti': 105482, 'General Roca': 108680, 'Villa Regina': 38000,
+            'Adolfo Alsina': 66912, 'Viedma': 59000,
+            'San Antonio': 36682, 'Las Grutas': 12000, 'San Antonio Oeste': 24000
+          },
+          'San Luis': {
+            'Juan Martín de Pueyrredón': 239302, 'San Luis': 239302, 'Juana Koslay': 17000, 'Potrero de los Funes': 4500,
+            'General Pedernera': 147944, 'Villa Mercedes': 132000,
+            'Junín': 37327, 'Merlo': 24000, 'Villa de Merlo': 24000
+          },
+          'Catamarca': {
+            'Capital': 186947, 'San Fernando del Valle de Catamarca': 186947,
+            'Valle Viejo': 35742,
+            'Fray Mamerto Esquiú': 14635,
+            'Belén': 32145
+          },
+          'La Rioja': {
+            'Capital': 212225, 'La Rioja': 212225,
+            'Chilecito': 59607
+          },
+          'La Pampa': {
+            'Capital': 119069, 'Santa Rosa': 119069,
+            'Maracó': 68055, 'General Pico': 65000
+          },
+          'Chubut': {
+            'Escalante': 215453, 'Comodoro Rivadavia': 201228, 'Rada Tilly': 14000,
+            'Biedma': 105482, 'Puerto Madryn': 103175,
+            'Rawson': 145763, 'Trelew': 106214, 'Rawson': 38000,
+            'Futaleufú': 50304, 'Esquel': 36870, 'Trevelin': 10500
+          },
+          'Santa Cruz': {
+            'Güer Aike': 137895, 'Río Gallegos': 115585,
+            'Deseado': 127706, 'Caleta Olivia': 66000,
+            'Lago Argentino': 29972, 'El Calafate': 22481, 'El Chaltén': 2200
+          },
+          'Tierra del Fuego': {
+            'Ushuaia': 82615,
+            'Río Grande': 98017,
+            'Tolhuin': 5100
+          }
+        };
+
         var POB_REGIONES_RAW = {
           'CABA y Gran Buenos Aires': 13986889,
           'Córdoba': 3840905,
@@ -1001,8 +1263,8 @@ const datosJSON = JSON.stringify({
           'CBA: Centro / Nva Cba / Güemes': 145000, 'CBA: Norte y Noroeste': 310000,
           'CBA: Sur y Suroeste': 285000, 'Córdoba Capital': 1505250, 'Villa Carlos Paz': 71274,
           'Casco Urbano - Centro': 88000, 'City Bell': 38200, 'Gonnet': 26400,
-          'Capital': 127160, 'Mendoza Capital': 127160, 'Godoy Cruz': 194044, 'Luján de Cuyo': 172845,
-          'Rosario': 1030069, 'Santa Fe Capital': 439040,
+          'Mendoza Capital': 127160, 'Godoy Cruz': 194044, 'Luján de Cuyo': 172845,
+          'Rosario': 1348725, 'Santa Fe Capital': 439040,
           'San Carlos de Bariloche': 135755, 'Neuquén Capital': 288896,
           'Tandil': 145575, 'Bahía Blanca': 336574, 'Pinamar / Cariló': 39424, 'Pinamar': 39424,
           'Salta Capital': 627704, 'San Miguel de Tucumán': 605767, 'Yerba Buena': 102707,
@@ -1013,9 +1275,42 @@ const datosJSON = JSON.stringify({
         var POB_PROVINCIAS = new Map(Object.entries(POB_PROVINCIAS_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
         var POB_REGIONES = new Map(Object.entries(POB_REGIONES_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
         var POB_ZONAS = new Map(Object.entries(POB_ZONAS_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
+
+        // Índice normalizado Provincia -> Municipio -> Población
+        var POB_MUNI_INDEX = new Map();
+        Object.keys(POB_MUNICIPIOS_POR_PROV).forEach(function (provName) {
+          var subMap = new Map();
+          var obj = POB_MUNICIPIOS_POR_PROV[provName];
+          Object.keys(obj).forEach(function (mName) {
+            subMap.set(norm(mName), obj[mName]);
+          });
+          POB_MUNI_INDEX.set(norm(provName), subMap);
+        });
+
+        function buscarPoblacionMunicipio(provincia, municipio) {
+          var provMap = POB_MUNI_INDEX.get(norm(provincia));
+          var mNorm = norm(municipio);
+          if (provMap) {
+            if (provMap.has(mNorm)) return provMap.get(mNorm);
+            // Búsqueda parcial segura si el nombre incluye partido o ciudad
+            var encontrado = null;
+            provMap.forEach(function (val, key) {
+              if (!encontrado && key.length >= 5 && (mNorm.indexOf(key) !== -1 || key.indexOf(mNorm) !== -1)) {
+                encontrado = val;
+              }
+            });
+            if (encontrado) return encontrado;
+          }
+          // Evitar colisiones ambiguas como "Capital" o "San Nicolás" fuera de su provincia
+          if (mNorm !== 'capital' && mNorm !== 'san nicolas' && mNorm !== 'san martin' && mNorm !== 'general san martin' && POB_ZONAS.has(mNorm)) {
+            return POB_ZONAS.get(mNorm);
+          }
+          return null;
+        }
+
         var POB_PAIS_TOTAL = 45892285;
 
-        // Clasificador geográfico por Provincia real, Comuna/Barrio (CABA) y Municipio/Ciudad
+        // Clasificador geográfico con verificación de coordenadas + texto (evita que locales de Santa Fe caigan en Córdoba)
         function clasificarGeografia(c) {
           var reg = norm(c.ciudad);
           var z = norm(c.zona);
@@ -1028,7 +1323,14 @@ const datosJSON = JSON.stringify({
           var barrioCaba = '';
           var comunaCaba = '';
 
-          if (reg === 'caba y gran buenos aires') {
+          // 1. Corrección prioritaria por ubicación real en Santa Fe (ej. Rosario o General López mal cargados en otra pestaña)
+          var enSantaFeCoords = (c.lat >= -34.45 && c.lat <= -28.0 && c.lon >= -62.88 && c.lon <= -58.9 &&
+            (/(rosario|santa fe|venado tuerto|general lopez|rafaela|reconquista|san lorenzo|funes|roldan|esperanza|casilda|canada de gomez|villa constitucion|santo tome)/.test(txt) || c.lon > -61.85));
+
+          if (reg === 'santa fe' || (enSantaFeCoords && reg !== 'caba y gran buenos aires' && reg !== 'entre rios')) {
+            provincia = 'Santa Fe';
+            municipio = c.ciudadReal || c.zona || 'Rosario';
+          } else if (reg === 'caba y gran buenos aires') {
             var esBarrioCaba = BARRIO_A_COMUNA.has(z) || BARRIO_A_COMUNA.has(cr);
             var dentroRectCaba = (c.lat >= -34.706 && c.lat <= -34.526 && c.lon >= -58.532 && c.lon <= -58.335 &&
               !/(vicente lopez|olivos|florida|munro|martinez|san isidro|avellaneda|lanus|valentin alsina|caseros|ciudadela|ramos mejia|lomas del mirador|saenz pena|santos lugares|villa lynch|san martin)/.test(txt));
@@ -1040,11 +1342,11 @@ const datosJSON = JSON.stringify({
               municipio = barrioCaba;
             } else {
               provincia = 'Buenos Aires';
-              municipio = c.zona || c.ciudadReal || 'Gran Buenos Aires';
+              municipio = c.ciudadReal || c.zona || 'Gran Buenos Aires';
             }
           } else if (reg === 'mar del plata') {
             provincia = 'Buenos Aires';
-            municipio = 'Mar del Plata';
+            municipio = 'General Pueyrredón';
           } else if (reg === 'la plata') {
             provincia = 'Buenos Aires';
             municipio = 'La Plata';
@@ -1053,41 +1355,38 @@ const datosJSON = JSON.stringify({
             municipio = c.ciudadReal || c.zona || 'Interior Buenos Aires';
           } else if (reg === 'cordoba') {
             provincia = 'Córdoba';
-            municipio = c.ciudadReal || c.zona || 'Córdoba Capital';
-          } else if (reg === 'santa fe') {
-            provincia = 'Santa Fe';
-            municipio = c.ciudadReal || c.zona || 'Rosario / Santa Fe';
+            municipio = c.ciudadReal || c.zona || 'Capital';
           } else if (reg === 'mendoza') {
             provincia = 'Mendoza';
-            municipio = c.ciudadReal || c.zona || 'Mendoza Capital';
+            municipio = c.ciudadReal || c.zona || 'Capital';
           } else if (reg.indexOf('tucuman') !== -1) {
             if (/(catamarca|valle viejo|belen|fiambala)/.test(txt)) provincia = 'Catamarca';
-            else if (/(santiago del estero|la banda|termas de rio hondo)/.test(txt)) provincia = 'Santiago del Estero';
+            else if (/(santiago del estero|la banda|termas de rio hondo|rio hondo)/.test(txt)) provincia = 'Santiago del Estero';
             else provincia = 'Tucumán';
             municipio = c.ciudadReal || c.zona || provincia;
           } else if (reg.indexOf('corrientes') !== -1) {
             if (/(misiones|posadas|iguazu|obera|eldorado)/.test(txt)) provincia = 'Misiones';
-            else if (/(entre rios|parana|concordia|gualeguaychu|colon|concepcion del uruguay)/.test(txt)) provincia = 'Entre Ríos';
+            else if (/(entre rios|parana|concordia|gualeguaychu|colon|concepcion del uruguay|uruguay)/.test(txt)) provincia = 'Entre Ríos';
             else if (/(formosa|clorinda)/.test(txt)) provincia = 'Formosa';
-            else if (/(chaco|resistencia|saenz pena|barranqueras)/.test(txt)) provincia = 'Chaco';
+            else if (/(chaco|resistencia|saenz pena|barranqueras|san fernando)/.test(txt)) provincia = 'Chaco';
             else provincia = 'Corrientes';
             municipio = c.ciudadReal || c.zona || provincia;
           } else if (reg.indexOf('salta') !== -1) {
-            if (/(jujuy|purmamarca|tilcara|humahuaca|palpala|perico|libertador)/.test(txt)) provincia = 'Jujuy';
+            if (/(jujuy|purmamarca|tilcara|humahuaca|palpala|perico|libertador|manuel belgrano|el carmen)/.test(txt)) provincia = 'Jujuy';
             else provincia = 'Salta';
             municipio = c.ciudadReal || c.zona || provincia;
           } else if (reg.indexOf('neuquen') !== -1) {
-            if (/(rio negro|bariloche|cipolletti|general roca|viedma|bolson|las grutas|villa regina)/.test(txt)) provincia = 'Río Negro';
+            if (/(rio negro|bariloche|cipolletti|general roca|viedma|bolson|las grutas|villa regina|adolfo alsina)/.test(txt)) provincia = 'Río Negro';
             else provincia = 'Neuquén';
             municipio = c.ciudadReal || c.zona || provincia;
           } else if (reg.indexOf('san juan') !== -1) {
-            if (/(san luis|merlo|villa mercedes|juana koslay|potrero de los funes)/.test(txt)) provincia = 'San Luis';
+            if (/(san luis|merlo|villa mercedes|juana koslay|potrero de los funes|pueyrredon|pedernera)/.test(txt)) provincia = 'San Luis';
             else if (/(la rioja|chilecito)/.test(txt)) provincia = 'La Rioja';
-            else if (/(la pampa|santa rosa|general pico)/.test(txt)) provincia = 'La Pampa';
+            else if (/(la pampa|santa rosa|general pico|maraco)/.test(txt)) provincia = 'La Pampa';
             else provincia = 'San Juan';
             municipio = c.ciudadReal || c.zona || provincia;
           } else if (reg.indexOf('chubut') !== -1) {
-            if (/(santa cruz|calafate|rio gallegos|chalten|caleta olivia)/.test(txt)) provincia = 'Santa Cruz';
+            if (/(santa cruz|calafate|rio gallegos|chalten|caleta olivia|guer aike|lago argentino)/.test(txt)) provincia = 'Santa Cruz';
             else if (/(tierra del fuego|ushuaia|rio grande|tolhuin)/.test(txt)) provincia = 'Tierra del Fuego';
             else provincia = 'Chubut';
             municipio = c.ciudadReal || c.zona || provincia;
@@ -1104,7 +1403,6 @@ const datosJSON = JSON.stringify({
         // Normalización de marca para contar cafeterías con múltiples sucursales una sola vez
         function obtenerClaveMarcaUnica(nombre) {
           var n = norm(nombre);
-          // Elimina aclaraciones entre paréntesis, sucursales y barrios anexos tras guión
           n = n.replace(/\([^)]*\)/g, ' ');
           n = n.replace(/\b(sucursal|suc|sede|local|express|to go|take away|roasters|coffee|cafe|cafeteria|specialty|especialidad|tostadores|bakery|panaderia|deli|bistro|bar)\b/g, ' ');
           n = n.split(/\s[-–—|•]\s/)[0];
@@ -1337,7 +1635,7 @@ const datosJSON = JSON.stringify({
           sincronizarURL();
         };
 
-        // ---------- Pestaña DATOS (Provincias, Comunas/Barrios CABA, Municipios y Desafío) ----------
+        // ---------- Pestaña DATOS ----------
         function calcularPerCapita(nLocales, poblacion) {
           if (!poblacion || poblacion <= 0 || nLocales <= 0) return null;
           return {
@@ -1384,7 +1682,7 @@ const datosJSON = JSON.stringify({
             .filter(Boolean)
             .sort(function (a, b) { return a.localeCompare(b, 'es'); });
 
-          selSub.innerHTML = '<option value="Todas">Todos los Municipios / Ciudades de ' + esc(prov) + '</option>' +
+          selSub.innerHTML = '<option value="Todas">Todos los Municipios / Departamentos de ' + esc(prov) + '</option>' +
             munis.map(function (m) { return '<option value="MUNI:' + esc(m) + '">' + esc(m) + '</option>'; }).join('');
         };
 
@@ -1411,23 +1709,15 @@ const datosJSON = JSON.stringify({
           var resetBtn = $('datos-reset-btn');
           resetBtn.classList.toggle('hidden', prov === 'Todas' && sub === 'Todas');
 
-          // 1. Filtrar locales según doble filtro
           var filtrados = baseDatos.filter(function (c) {
             if (prov !== 'Todas' && c.geo.provincia !== prov) return false;
             if (sub === 'Todas') return true;
-            if (sub.indexOf('COMUNA:') === 0) {
-              return c.geo.comunaCaba === sub.slice(7);
-            }
-            if (sub.indexOf('BARRIO:') === 0) {
-              return norm(c.geo.barrioCaba) === norm(sub.slice(7));
-            }
-            if (sub.indexOf('MUNI:') === 0) {
-              return norm(c.geo.municipio) === norm(sub.slice(5));
-            }
+            if (sub.indexOf('COMUNA:') === 0) return c.geo.comunaCaba === sub.slice(7);
+            if (sub.indexOf('BARRIO:') === 0) return norm(c.geo.barrioCaba) === norm(sub.slice(7));
+            if (sub.indexOf('MUNI:') === 0) return norm(c.geo.municipio) === norm(sub.slice(5));
             return true;
           });
 
-          // 2. Calcular marcas únicas (sin repetir sucursales) para el desafío de 1 café por día
           var marcasUnicasMap = new Map();
           filtrados.forEach(function (c) {
             if (!marcasUnicasMap.has(c.marcaKey)) {
@@ -1438,7 +1728,6 @@ const datosJSON = JSON.stringify({
           var totalMarcasUnicas = marcasUnicasMap.size;
           var sucursalesRepetidas = Math.max(0, totalLocales - totalMarcasUnicas);
 
-          // Etiqueta legible del lugar seleccionado
           var lugarLabel = 'Todo Argentina';
           if (prov !== 'Todas') {
             if (sub === 'Todas') lugarLabel = prov;
@@ -1447,7 +1736,6 @@ const datosJSON = JSON.stringify({
             else if (sub.indexOf('MUNI:') === 0) lugarLabel = sub.slice(5) + ', ' + prov;
           }
 
-          // Render tarjeta desafío "Ruta de Cafés"
           $('datos-challenge-box').innerHTML =
             '<div>' +
               '<span class="datos-ch-eyebrow">☕ Desafío Cofiteca · 1 café por día</span>' +
@@ -1460,7 +1748,6 @@ const datosJSON = JSON.stringify({
               '<div class="datos-ch-meta"><b>' + totalMarcasUnicas.toLocaleString('es-AR') + '</b> cafeterías únicas · <b>' + totalLocales.toLocaleString('es-AR') + '</b> locales totales relevados</div>' +
             '</div>';
 
-          // 3. KPIs de población y cafés por habitante (Censo 2022)
           var pobSeleccion = null;
           var pobProvinciaRef = prov !== 'Todas' ? POB_PROVINCIAS.get(norm(prov)) : POB_PAIS_TOTAL;
           var localesProvinciaRef = prov !== 'Todas'
@@ -1474,9 +1761,9 @@ const datosJSON = JSON.stringify({
           } else if (sub.indexOf('COMUNA:') === 0) {
             pobSeleccion = COMUNA_POB_MAP.get(norm(sub.slice(7))) || null;
           } else if (sub.indexOf('BARRIO:') === 0) {
-            pobSeleccion = BARRIO_POB_MAP.get(norm(sub.slice(7))) || POB_ZONAS.get(norm(sub.slice(7))) || null;
+            pobSeleccion = BARRIO_POB_MAP.get(norm(sub.slice(7))) || null;
           } else if (sub.indexOf('MUNI:') === 0) {
-            pobSeleccion = POB_ZONAS.get(norm(sub.slice(5))) || null;
+            pobSeleccion = buscarPoblacionMunicipio(prov, sub.slice(5));
           }
 
           var pcSel = calcularPerCapita(totalLocales, pobSeleccion);
@@ -1501,7 +1788,6 @@ const datosJSON = JSON.stringify({
             '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Cafés / Habitante (' + esc(lugarLabel) + ')</span><span class="mkt-kpi-val">' + kpiHabitantesHtml + '</span><span class="mkt-kpi-sub">' + esc(subHabitantesHtml) + '</span></div>' +
             '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Referencia ' + esc(prov === 'Todas' ? 'Nacional' : 'Provincial (' + prov + ')') + '</span><span class="mkt-kpi-val">' + kpiProvHtml + '</span><span class="mkt-kpi-sub">' + esc(subProvHtml) + '</span></div>';
 
-          // 4. Tabla desglosada según nivel de filtro
           var wrap = $('datos-table-wrap');
 
           if (prov === 'Todas') {
@@ -1595,8 +1881,7 @@ const datosJSON = JSON.stringify({
             return;
           }
 
-          // Otras provincias (incluida Provincia de Buenos Aires: GBA, Mar del Plata, La Plata, Interior)
-          $('datos-table-title').textContent = prov + ' · Desglose por Municipio / Ciudad';
+          $('datos-table-title').textContent = prov + ' · Desglose por Municipio / Departamento (Censo 2022)';
           var itemsProvincia = baseDatos.filter(function (c) { return c.geo.provincia === prov; });
           var muniMap = new Map();
           itemsProvincia.forEach(function (c) {
@@ -1608,14 +1893,14 @@ const datosJSON = JSON.stringify({
           var filasMuni = Array.from(muniMap.entries()).map(function (entry) {
             var nombreM = entry[0], list = entry[1];
             var unicas = new Set(list.map(function (c) { return c.marcaKey; })).size;
-            var pob = POB_ZONAS.get(norm(nombreM)) || null;
+            var pob = buscarPoblacionMunicipio(prov, nombreM);
             var pc = calcularPerCapita(list.length, pob);
             return { nombre: nombreM, subVal: 'MUNI:' + nombreM, locales: list.length, unicas: unicas, pob: pob, pc: pc };
           }).sort(function (a, b) { return b.locales - a.locales; });
 
           wrap.innerHTML =
             '<table class="datos-table">' +
-              '<thead><tr><th>Municipio / Ciudad</th><th>Locales</th><th>Marcas únicas (Días)</th><th>Población 2022</th><th>Cafés por habitante</th><th>Cada 100k hab.</th></tr></thead>' +
+              '<thead><tr><th>Municipio / Departamento</th><th>Locales</th><th>Marcas únicas (Días)</th><th>Población 2022</th><th>Cafés por habitante</th><th>Cada 100k hab.</th></tr></thead>' +
               '<tbody>' +
                 filasMuni.map(function (r) {
                   var activa = sub === r.subVal ? ' class="active-row"' : '';
@@ -2626,7 +2911,6 @@ const datosJSON = JSON.stringify({
         $('select-ciudad').innerHTML = '<option value="Todas">Región / Ciudad</option>' + opcionesCiudades;
         $('select-mercado-ciudad').innerHTML = '<option value="Todas">Todo el país (Región / Ciudad)</option>' + opcionesCiudades;
 
-        // Poblar selector de Provincias en pestaña Datos
         var listaProvinciasOrdenadas = Object.keys(POB_PROVINCIAS_RAW);
         $('select-datos-provincia').innerHTML = '<option value="Todas">Todo Argentina (24 Jurisdicciones)</option>' +
           listaProvinciasOrdenadas.map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('');
