@@ -150,10 +150,10 @@ const datosJSON = JSON.stringify({
     @media (max-width: 600px) { .data-header h1 { font-size: 1.5rem; } }
 
     .view-tabs { display: flex; gap: 8px; margin-top: 1rem; flex-wrap: wrap; }
-    @media (max-width: 600px) { .view-tabs { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; } }
-    @media (max-width: 390px) { .view-tabs { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 680px) { .view-tabs { display: grid; grid-template-columns: repeat(5,1fr); gap: 4px; } }
+    @media (max-width: 460px) { .view-tabs { grid-template-columns: repeat(3,1fr); } }
     .view-tab-btn { background: transparent; border: 1px solid rgba(196,167,125,.4); color: var(--coffee-500); font-size: .78rem; font-weight: 600; cursor: pointer; padding: 10px 14px; min-height: 40px; border-radius: var(--radius-sm); transition: var(--transition); text-transform: uppercase; letter-spacing: .05em; }
-    @media (max-width: 600px) { .view-tab-btn { padding: 9px 4px; font-size: .68rem; letter-spacing: .02em; } }
+    @media (max-width: 680px) { .view-tab-btn { padding: 8px 4px; font-size: .66rem; letter-spacing: .01em; } }
     .view-tab-btn:hover { background: rgba(196,167,125,.1); color: var(--coffee-900); border-color: var(--tan-500); }
     .view-tab-btn.active { background: var(--coffee-900); color: white; border-color: var(--coffee-900); box-shadow: 0 4px 10px rgba(26,15,10,.2); }
 
@@ -222,7 +222,7 @@ const datosJSON = JSON.stringify({
     .popup-btn { display: inline-block; background: var(--coffee-900); color: white !important; padding: 7px 14px; border-radius: 5px; font-size: .8rem; text-decoration: none; }
     .popup-link { font-size: .8rem; color: var(--coffee-500); font-weight: 600; text-decoration: underline; padding: 3px 0; }
 
-    /* ===== Vista Mercado ===== */
+    /* ===== Vista Mercado & Datos ===== */
     .mkt-kpis {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -277,6 +277,120 @@ const datosJSON = JSON.stringify({
       font-size: .76rem;
       color: var(--coffee-700);
       line-height: 1.4;
+    }
+
+    /* ===== Desafío Ruta de Cafés (Pestaña Datos) ===== */
+    .datos-challenge-card {
+      background: linear-gradient(135deg, #1a0f0a 0%, #3d2317 100%);
+      color: #faf7f2;
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.4rem;
+      margin-bottom: 1.35rem;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 1.2rem;
+      align-items: center;
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(196,167,125,.35);
+    }
+    @media (max-width: 820px) { .datos-challenge-card { grid-template-columns: 1fr; padding: 1.05rem; } }
+    .datos-ch-eyebrow {
+      font-size: .7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--tan-300);
+      margin-bottom: .3rem;
+      display: block;
+    }
+    .datos-ch-title {
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      font-weight: 800;
+      margin: 0 0 .35rem;
+      line-height: 1.15;
+      color: #ffffff;
+    }
+    .datos-ch-desc {
+      font-size: .82rem;
+      color: rgba(250,247,242,.86);
+      margin: 0;
+      line-height: 1.45;
+    }
+    .datos-ch-stats {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: var(--radius-sm);
+      padding: .9rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+    }
+    .datos-ch-big {
+      font-family: var(--font-display);
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1.05;
+    }
+    .datos-ch-big span {
+      font-family: var(--font-body);
+      font-size: .85rem;
+      font-weight: 600;
+      color: #faf7f2;
+    }
+    .datos-ch-meta {
+      font-size: .76rem;
+      color: var(--tan-300);
+      line-height: 1.4;
+    }
+
+    /* Tabla y tarjetas en pestaña Datos */
+    .datos-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      background: var(--cream-50);
+      border: 1px solid rgba(196,167,125,.4);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
+    .datos-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: .84rem;
+    }
+    .datos-table th {
+      background: rgba(196,167,125,.2);
+      color: var(--coffee-900);
+      font-weight: 800;
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      padding: 11px 14px;
+      border-bottom: 1px solid rgba(196,167,125,.45);
+      white-space: nowrap;
+    }
+    .datos-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(196,167,125,.22);
+      color: var(--coffee-700);
+      vertical-align: middle;
+    }
+    .datos-table tr:last-child td { border-bottom: none; }
+    .datos-table tbody tr { cursor: pointer; transition: background .15s ease; }
+    .datos-table tbody tr:hover { background: rgba(255,255,255,.95); }
+    .datos-table tbody tr.active-row { background: rgba(232,106,51,.1); font-weight: 600; }
+    .datos-num { font-weight: 800; color: var(--coffee-900); white-space: nowrap; }
+    .datos-badge-comuna {
+      display: inline-block;
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(26,15,10,.08);
+      color: var(--coffee-700);
+      margin-left: 6px;
     }
 
     .mkt-legend {
@@ -595,6 +709,7 @@ const datosJSON = JSON.stringify({
           <button class="view-tab-btn" onclick="cofiSwitchTab('ranking')" id="btn-tab-ranking">Rankings</button>
           <button class="view-tab-btn" onclick="cofiSwitchTab('tostadores')" id="btn-tab-tostadores">Tostadores</button>
           <button class="view-tab-btn" onclick="cofiSwitchTab('mercado')" id="btn-tab-mercado">Mercado</button>
+          <button class="view-tab-btn" onclick="cofiSwitchTab('datos')" id="btn-tab-datos">Datos</button>
         </div>
       </div>
 
@@ -674,6 +789,29 @@ const datosJSON = JSON.stringify({
         </div>
         <div id="mkt-zones-grid"></div>
       </div>
+
+      <!-- ===== NUEVA PESTAÑA: DATOS ===== -->
+      <div class="buscador-ui hidden" id="vista-datos">
+        <div class="search-controls cols-2">
+          <select id="select-datos-provincia" class="input-moderno" onchange="cofiActualizarDatosSubfiltro(); cofiRenderDatos()">
+            <option value="Todas">Todo Argentina (24 Jurisdicciones)</option>
+          </select>
+          <select id="select-datos-sub" class="input-moderno" onchange="cofiRenderDatos()">
+            <option value="Todas">Todas las Comunas / Barrios / Municipios</option>
+          </select>
+        </div>
+
+        <div class="datos-challenge-card" id="datos-challenge-box"></div>
+
+        <div class="mkt-kpis" id="datos-kpis"></div>
+
+        <div class="mkt-section-head">
+          <h2 class="mkt-section-title" id="datos-table-title">Estadísticas por Provincia (Censo 2022)</h2>
+          <button type="button" class="mkt-reset-btn hidden" id="datos-reset-btn" onclick="cofiResetDatos()">← Ver todo Argentina</button>
+        </div>
+
+        <div class="datos-table-wrap" id="datos-table-wrap"></div>
+      </div>
     </div>
   </div>
 
@@ -733,6 +871,97 @@ const datosJSON = JSON.stringify({
         var rankingDatos = datos.ranking || { arg: [], sud: [], mun: [] };
         var meta = datos.meta || { cafes: baseDatos.length, tostadores: 0, provincias: 24, ciudades: 140 };
 
+        // ---------- Población Censo 2022 INDEC ----------
+        var POB_PROVINCIAS_RAW = {
+          'Buenos Aires': 17523996,
+          'CABA': 3121707,
+          'Córdoba': 3840905,
+          'Santa Fe': 3544908,
+          'Mendoza': 2043540,
+          'Tucumán': 1731820,
+          'Salta': 1440672,
+          'Entre Ríos': 1425578,
+          'Misiones': 1278873,
+          'Corrientes': 1212696,
+          'Chaco': 1129606,
+          'Santiago del Estero': 1060906,
+          'San Juan': 822853,
+          'Jujuy': 811611,
+          'Río Negro': 750768,
+          'Neuquén': 710814,
+          'Formosa': 607419,
+          'Chubut': 592621,
+          'San Luis': 542069,
+          'Catamarca': 429562,
+          'La Rioja': 383865,
+          'La Pampa': 361859,
+          'Santa Cruz': 337226,
+          'Tierra del Fuego': 185732
+        };
+
+        // Comunas y Barrios de CABA (Censo 2022)
+        var CABA_COMUNAS_BARRIOS = [
+          { comuna: 'Comuna 1', pobComuna: 223554, barrios: [
+            { nombre: 'Retiro', pob: 67177 }, { nombre: 'San Nicolás', pob: 36421 }, { nombre: 'Puerto Madero', pob: 10935 },
+            { nombre: 'San Telmo', pob: 21195 }, { nombre: 'Monserrat', pob: 41435 }, { nombre: 'Constitución', pob: 43838 }
+          ]},
+          { comuna: 'Comuna 2', pobComuna: 161645, barrios: [
+            { nombre: 'Recoleta', pob: 160609 }
+          ]},
+          { comuna: 'Comuna 3', pobComuna: 196240, barrios: [
+            { nombre: 'Balvanera', pob: 143659 }, { nombre: 'San Cristóbal', pob: 49878 }
+          ]},
+          { comuna: 'Comuna 4', pobComuna: 229240, barrios: [
+            { nombre: 'La Boca', pob: 44205 }, { nombre: 'Barracas', pob: 97982 }, { nombre: 'Parque Patricios', pob: 40657 }, { nombre: 'Nueva Pompeya', pob: 44180 }
+          ]},
+          { comuna: 'Comuna 5', pobComuna: 194271, barrios: [
+            { nombre: 'Almagro', pob: 142769 }, { nombre: 'Boedo', pob: 49680 }
+          ]},
+          { comuna: 'Comuna 6', pobComuna: 203043, barrios: [
+            { nombre: 'Caballito', pob: 201764 }
+          ]},
+          { comuna: 'Comuna 7', pobComuna: 215896, barrios: [
+            { nombre: 'Flores', pob: 151440 }, { nombre: 'Parque Chacabuco', pob: 61822 }
+          ]},
+          { comuna: 'Comuna 8', pobComuna: 204367, barrios: [
+            { nombre: 'Villa Soldati', pob: 51560 }, { nombre: 'Villa Riachuelo', pob: 15581 }, { nombre: 'Villa Lugano', pob: 136747 }
+          ]},
+          { comuna: 'Comuna 9', pobComuna: 169063, barrios: [
+            { nombre: 'Liniers', pob: 47093 }, { nombre: 'Mataderos', pob: 67455 }, { nombre: 'Parque Avellaneda', pob: 53360 }
+          ]},
+          { comuna: 'Comuna 10', pobComuna: 173004, barrios: [
+            { nombre: 'Villa Real', pob: 13745 }, { nombre: 'Monte Castro', pob: 35825 }, { nombre: 'Versalles', pob: 16024 },
+            { nombre: 'Floresta', pob: 36846 }, { nombre: 'Vélez Sársfield', pob: 34811 }, { nombre: 'Villa Luro', pob: 34645 }
+          ]},
+          { comuna: 'Comuna 11', pobComuna: 204601, barrios: [
+            { nombre: 'Villa General Mitre', pob: 34250 }, { nombre: 'Villa Devoto', pob: 71602 }, { nombre: 'Villa del Parque', pob: 61236 }, { nombre: 'Villa Santa Rita', pob: 34817 }
+          ]},
+          { comuna: 'Comuna 12', pobComuna: 236887, barrios: [
+            { nombre: 'Coghlan', pob: 20803 }, { nombre: 'Saavedra', pob: 53665 }, { nombre: 'Villa Urquiza', pob: 114293 }, { nombre: 'Villa Pueyrredón', pob: 46603 }
+          ]},
+          { comuna: 'Comuna 13', pobComuna: 264385, barrios: [
+            { nombre: 'Núñez', pob: 64959 }, { nombre: 'Belgrano', pob: 142129 }, { nombre: 'Colegiales', pob: 55242 }
+          ]},
+          { comuna: 'Comuna 14', pobComuna: 248635, barrios: [
+            { nombre: 'Palermo', pob: 247252 }
+          ]},
+          { comuna: 'Comuna 15', pobComuna: 196876, barrios: [
+            { nombre: 'Chacarita', pob: 31321 }, { nombre: 'Villa Crespo', pob: 87877 }, { nombre: 'La Paternal', pob: 21092 },
+            { nombre: 'Villa Ortúzar', pob: 22470 }, { nombre: 'Agronomía', pob: 16500 }, { nombre: 'Parque Chas', pob: 16005 }
+          ]}
+        ];
+
+        var BARRIO_A_COMUNA = new Map();
+        var COMUNA_POB_MAP = new Map();
+        var BARRIO_POB_MAP = new Map();
+        CABA_COMUNAS_BARRIOS.forEach(function (c) {
+          COMUNA_POB_MAP.set(norm(c.comuna), c.pobComuna);
+          c.barrios.forEach(function (b) {
+            BARRIO_A_COMUNA.set(norm(b.nombre), c.comuna);
+            BARRIO_POB_MAP.set(norm(b.nombre), b.pob);
+          });
+        });
+
         var POB_REGIONES_RAW = {
           'CABA y Gran Buenos Aires': 13986889,
           'Córdoba': 3840905,
@@ -750,33 +979,143 @@ const datosJSON = JSON.stringify({
         };
 
         var POB_ZONAS_RAW = {
-          'Palermo': 249016, 'Belgrano': 138942, 'Recoleta': 165494, 'Caballito': 183396,
-          'Almagro': 138942, 'Balvanera': 152198, 'Villa Urquiza': 104351, 'Villa Crespo': 95847,
-          'Núñez': 58134, 'Colegiales': 57101, 'Chacarita': 30223, 'Villa Devoto': 72189,
-          'Villa del Parque': 58912, 'Flores': 164310, 'San Telmo': 24812, 'Monserrat': 39914,
-          'San Nicolás': 33305, 'Retiro': 45002, 'Puerto Madero': 15932, 'Barracas': 98412,
-          'La Boca': 46819, 'Parque Patricios': 42190, 'Boedo': 48520, 'San Cristóbal': 50123,
-          'Constitución': 44107, 'Saavedra': 54312, 'Coghlan': 20415, 'Villa Ortúzar': 23910,
-          'Parque Chas': 19820, 'Agronomía': 15420, 'La Paternal': 21150, 'Villa Pueyrredón': 41210,
+          'Palermo': 247252, 'Belgrano': 142129, 'Recoleta': 160609, 'Caballito': 201764,
+          'Almagro': 142769, 'Balvanera': 143659, 'Villa Urquiza': 114293, 'Villa Crespo': 87877,
+          'Núñez': 64959, 'Colegiales': 55242, 'Chacarita': 31321, 'Villa Devoto': 71602,
+          'Villa del Parque': 61236, 'Flores': 151440, 'San Telmo': 21195, 'Monserrat': 41435,
+          'San Nicolás': 36421, 'Retiro': 67177, 'Puerto Madero': 10935, 'Barracas': 97982,
+          'La Boca': 44205, 'Parque Patricios': 40657, 'Boedo': 49680, 'San Cristóbal': 49878,
+          'Constitución': 43838, 'Saavedra': 53665, 'Coghlan': 20803, 'Villa Ortúzar': 22470,
+          'Parque Chas': 16005, 'Agronomía': 16500, 'La Paternal': 21092, 'Villa Pueyrredón': 46603,
+          'Parque Chacabuco': 61822, 'Villa Lugano': 136747, 'Villa Riachuelo': 15581, 'Villa Soldati': 51560,
+          'Liniers': 47093, 'Mataderos': 67455, 'Parque Avellaneda': 53360, 'Floresta': 36846,
+          'Monte Castro': 35825, 'Vélez Sársfield': 34811, 'Versalles': 16024, 'Villa Luro': 34645,
+          'Villa Real': 13745, 'Villa General Mitre': 34250, 'Villa Santa Rita': 34817, 'Nueva Pompeya': 44180,
           'Vicente López': 282281, 'San Isidro': 297282, 'San Fernando': 171616, 'Tigre': 446949,
           'San Martín': 450335, 'Tres de Febrero': 364176, 'Morón': 331183, 'Ituzaingó': 180232,
           'Hurlingham': 185641, 'La Matanza': 1841247, 'Avellaneda': 367554, 'Lanús': 461267,
           'Lomas de Zamora': 690323, 'Quilmes': 633391, 'Pilar': 394754, 'Escobar': 256268,
+          'Mar del Plata': 667082, 'La Plata': 768470,
           'AREA CENTRO': 48500, 'GUEMES': 26400, 'LA PERLA': 31200, 'CHAUVIN': 24800,
           'LOS TRONCOS': 16500, 'PLAYA GRANDE': 14200, 'CONSTITUCION': 38900,
           'CBA: Centro / Nva Cba / Güemes': 145000, 'CBA: Norte y Noroeste': 310000,
-          'CBA: Sur y Suroeste': 285000, 'Villa Carlos Paz': 71274,
+          'CBA: Sur y Suroeste': 285000, 'Córdoba Capital': 1505250, 'Villa Carlos Paz': 71274,
           'Casco Urbano - Centro': 88000, 'City Bell': 38200, 'Gonnet': 26400,
-          'Capital': 127160, 'Godoy Cruz': 194044, 'Luján de Cuyo': 172845,
+          'Capital': 127160, 'Mendoza Capital': 127160, 'Godoy Cruz': 194044, 'Luján de Cuyo': 172845,
           'Rosario': 1030069, 'Santa Fe Capital': 439040,
           'San Carlos de Bariloche': 135755, 'Neuquén Capital': 288896,
-          'Tandil': 145575, 'Bahía Blanca': 336574, 'Pinamar / Cariló': 39424,
-          'Salta Capital': 627704, 'San Miguel de Tucumán': 605767, 'Yerba Buena': 102707
+          'Tandil': 145575, 'Bahía Blanca': 336574, 'Pinamar / Cariló': 39424, 'Pinamar': 39424,
+          'Salta Capital': 627704, 'San Miguel de Tucumán': 605767, 'Yerba Buena': 102707,
+          'Paraná': 268889, 'Posadas': 323739, 'Corrientes Capital': 439270, 'Resistencia': 418193,
+          'Ushuaia': 82615, 'El Calafate': 22481, 'Puerto Madryn': 103175
         };
 
+        var POB_PROVINCIAS = new Map(Object.entries(POB_PROVINCIAS_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
         var POB_REGIONES = new Map(Object.entries(POB_REGIONES_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
         var POB_ZONAS = new Map(Object.entries(POB_ZONAS_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
-        var POB_PAIS_TOTAL = Object.values(POB_REGIONES_RAW).reduce(function (a, b) { return a + b; }, 0);
+        var POB_PAIS_TOTAL = 45892285;
+
+        // Clasificador geográfico por Provincia real, Comuna/Barrio (CABA) y Municipio/Ciudad
+        function clasificarGeografia(c) {
+          var reg = norm(c.ciudad);
+          var z = norm(c.zona);
+          var cr = norm(c.ciudadReal);
+          var ubi = norm(c.ubicacion);
+          var txt = reg + ' ' + z + ' ' + cr + ' ' + ubi;
+
+          var provincia = 'Buenos Aires';
+          var municipio = c.ciudadReal || c.zona || c.ciudad;
+          var barrioCaba = '';
+          var comunaCaba = '';
+
+          if (reg === 'caba y gran buenos aires') {
+            var esBarrioCaba = BARRIO_A_COMUNA.has(z) || BARRIO_A_COMUNA.has(cr);
+            var dentroRectCaba = (c.lat >= -34.706 && c.lat <= -34.526 && c.lon >= -58.532 && c.lon <= -58.335 &&
+              !/(vicente lopez|olivos|florida|munro|martinez|san isidro|avellaneda|lanus|valentin alsina|caseros|ciudadela|ramos mejia|lomas del mirador|saenz pena|santos lugares|villa lynch|san martin)/.test(txt));
+
+            if (esBarrioCaba || dentroRectCaba) {
+              provincia = 'CABA';
+              barrioCaba = BARRIO_A_COMUNA.has(z) ? c.zona : (BARRIO_A_COMUNA.has(cr) ? c.ciudadReal : 'Otros barrios CABA');
+              comunaCaba = BARRIO_A_COMUNA.get(norm(barrioCaba)) || 'Sin Comuna';
+              municipio = barrioCaba;
+            } else {
+              provincia = 'Buenos Aires';
+              municipio = c.zona || c.ciudadReal || 'Gran Buenos Aires';
+            }
+          } else if (reg === 'mar del plata') {
+            provincia = 'Buenos Aires';
+            municipio = 'Mar del Plata';
+          } else if (reg === 'la plata') {
+            provincia = 'Buenos Aires';
+            municipio = 'La Plata';
+          } else if (reg === 'interior de bs as') {
+            provincia = 'Buenos Aires';
+            municipio = c.ciudadReal || c.zona || 'Interior Buenos Aires';
+          } else if (reg === 'cordoba') {
+            provincia = 'Córdoba';
+            municipio = c.ciudadReal || c.zona || 'Córdoba Capital';
+          } else if (reg === 'santa fe') {
+            provincia = 'Santa Fe';
+            municipio = c.ciudadReal || c.zona || 'Rosario / Santa Fe';
+          } else if (reg === 'mendoza') {
+            provincia = 'Mendoza';
+            municipio = c.ciudadReal || c.zona || 'Mendoza Capital';
+          } else if (reg.indexOf('tucuman') !== -1) {
+            if (/(catamarca|valle viejo|belen|fiambala)/.test(txt)) provincia = 'Catamarca';
+            else if (/(santiago del estero|la banda|termas de rio hondo)/.test(txt)) provincia = 'Santiago del Estero';
+            else provincia = 'Tucumán';
+            municipio = c.ciudadReal || c.zona || provincia;
+          } else if (reg.indexOf('corrientes') !== -1) {
+            if (/(misiones|posadas|iguazu|obera|eldorado)/.test(txt)) provincia = 'Misiones';
+            else if (/(entre rios|parana|concordia|gualeguaychu|colon|concepcion del uruguay)/.test(txt)) provincia = 'Entre Ríos';
+            else if (/(formosa|clorinda)/.test(txt)) provincia = 'Formosa';
+            else if (/(chaco|resistencia|saenz pena|barranqueras)/.test(txt)) provincia = 'Chaco';
+            else provincia = 'Corrientes';
+            municipio = c.ciudadReal || c.zona || provincia;
+          } else if (reg.indexOf('salta') !== -1) {
+            if (/(jujuy|purmamarca|tilcara|humahuaca|palpala|perico|libertador)/.test(txt)) provincia = 'Jujuy';
+            else provincia = 'Salta';
+            municipio = c.ciudadReal || c.zona || provincia;
+          } else if (reg.indexOf('neuquen') !== -1) {
+            if (/(rio negro|bariloche|cipolletti|general roca|viedma|bolson|las grutas|villa regina)/.test(txt)) provincia = 'Río Negro';
+            else provincia = 'Neuquén';
+            municipio = c.ciudadReal || c.zona || provincia;
+          } else if (reg.indexOf('san juan') !== -1) {
+            if (/(san luis|merlo|villa mercedes|juana koslay|potrero de los funes)/.test(txt)) provincia = 'San Luis';
+            else if (/(la rioja|chilecito)/.test(txt)) provincia = 'La Rioja';
+            else if (/(la pampa|santa rosa|general pico)/.test(txt)) provincia = 'La Pampa';
+            else provincia = 'San Juan';
+            municipio = c.ciudadReal || c.zona || provincia;
+          } else if (reg.indexOf('chubut') !== -1) {
+            if (/(santa cruz|calafate|rio gallegos|chalten|caleta olivia)/.test(txt)) provincia = 'Santa Cruz';
+            else if (/(tierra del fuego|ushuaia|rio grande|tolhuin)/.test(txt)) provincia = 'Tierra del Fuego';
+            else provincia = 'Chubut';
+            municipio = c.ciudadReal || c.zona || provincia;
+          }
+
+          return {
+            provincia: provincia,
+            municipio: (municipio && municipio !== '-' && municipio !== 'Sin Zona') ? municipio : provincia,
+            barrioCaba: barrioCaba,
+            comunaCaba: comunaCaba
+          };
+        }
+
+        // Normalización de marca para contar cafeterías con múltiples sucursales una sola vez
+        function obtenerClaveMarcaUnica(nombre) {
+          var n = norm(nombre);
+          // Elimina aclaraciones entre paréntesis, sucursales y barrios anexos tras guión
+          n = n.replace(/\([^)]*\)/g, ' ');
+          n = n.replace(/\b(sucursal|suc|sede|local|express|to go|take away|roasters|coffee|cafe|cafeteria|specialty|especialidad|tostadores|bakery|panaderia|deli|bistro|bar)\b/g, ' ');
+          n = n.split(/\s[-–—|•]\s/)[0];
+          n = n.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+          return n || norm(nombre);
+        }
+
+        baseDatos.forEach(function (c) {
+          c.geo = clasificarGeografia(c);
+          c.marcaKey = obtenerClaveMarcaUnica(c.nombre);
+        });
 
         var REGIONES_OBJETIVO = new Set([
           'caba y gran buenos aires', 'mar del plata', 'la plata', 'cordoba', 'santa fe',
@@ -960,7 +1299,7 @@ const datosJSON = JSON.stringify({
         };
 
         window.cofiSwitchTab = function (tab) {
-          ['mapa', 'ranking', 'tostadores', 'mercado'].forEach(function (t) {
+          ['mapa', 'ranking', 'tostadores', 'mercado', 'datos'].forEach(function (t) {
             $('vista-' + t).classList.toggle('hidden', t !== tab);
             $('btn-tab-' + t).classList.toggle('active', t === tab);
           });
@@ -992,7 +1331,308 @@ const datosJSON = JSON.stringify({
             }
             window.cofiRenderMercado(true);
           }
+          if (tab === 'datos') {
+            window.cofiRenderDatos();
+          }
           sincronizarURL();
+        };
+
+        // ---------- Pestaña DATOS (Provincias, Comunas/Barrios CABA, Municipios y Desafío) ----------
+        function calcularPerCapita(nLocales, poblacion) {
+          if (!poblacion || poblacion <= 0 || nLocales <= 0) return null;
+          return {
+            poblacion: poblacion,
+            habPorCafe: Math.round(poblacion / nLocales),
+            cada100k: Number(((nLocales / poblacion) * 100000).toFixed(1))
+          };
+        }
+
+        function formatearDuracionDias(dias) {
+          if (dias <= 0) return '0 días';
+          if (dias < 45) return dias + (dias === 1 ? ' día' : ' días');
+          var meses = Math.round(dias / 30.4);
+          if (meses < 18) return dias.toLocaleString('es-AR') + ' días (~' + meses + ' meses)';
+          var anios = (dias / 365).toFixed(1).replace('.', ',');
+          return dias.toLocaleString('es-AR') + ' días (~' + anios + ' años)';
+        }
+
+        window.cofiActualizarDatosSubfiltro = function () {
+          var prov = $('select-datos-provincia').value;
+          var selSub = $('select-datos-sub');
+
+          if (prov === 'Todas') {
+            selSub.innerHTML = '<option value="Todas">Todas las Provincias (Comparativa Nacional)</option>';
+            return;
+          }
+
+          if (prov === 'CABA') {
+            var htmlCaba = '<option value="Todas">Toda CABA (15 Comunas y 48 Barrios)</option>';
+            CABA_COMUNAS_BARRIOS.forEach(function (c) {
+              htmlCaba += '<optgroup label="' + esc(c.comuna) + '">';
+              htmlCaba += '<option value="COMUNA:' + esc(c.comuna) + '">📌 Toda ' + esc(c.comuna) + ' (' + c.barrios.map(function (b) { return b.nombre; }).join(', ') + ')</option>';
+              c.barrios.forEach(function (b) {
+                htmlCaba += '<option value="BARRIO:' + esc(b.nombre) + '">Barrio: ' + esc(b.nombre) + ' (' + esc(c.comuna) + ')</option>';
+              });
+              htmlCaba += '</optgroup>';
+            });
+            selSub.innerHTML = htmlCaba;
+            return;
+          }
+
+          var itemsProv = baseDatos.filter(function (c) { return c.geo.provincia === prov; });
+          var munis = Array.from(new Set(itemsProv.map(function (c) { return c.geo.municipio; })))
+            .filter(Boolean)
+            .sort(function (a, b) { return a.localeCompare(b, 'es'); });
+
+          selSub.innerHTML = '<option value="Todas">Todos los Municipios / Ciudades de ' + esc(prov) + '</option>' +
+            munis.map(function (m) { return '<option value="MUNI:' + esc(m) + '">' + esc(m) + '</option>'; }).join('');
+        };
+
+        window.cofiSeleccionarFilaDatos = function (prov, subVal) {
+          if (prov) {
+            $('select-datos-provincia').value = prov;
+            window.cofiActualizarDatosSubfiltro();
+          }
+          if (subVal) {
+            $('select-datos-sub').value = subVal;
+          }
+          window.cofiRenderDatos();
+        };
+
+        window.cofiResetDatos = function () {
+          $('select-datos-provincia').value = 'Todas';
+          window.cofiActualizarDatosSubfiltro();
+          window.cofiRenderDatos();
+        };
+
+        window.cofiRenderDatos = function () {
+          var prov = $('select-datos-provincia').value;
+          var sub = $('select-datos-sub').value;
+          var resetBtn = $('datos-reset-btn');
+          resetBtn.classList.toggle('hidden', prov === 'Todas' && sub === 'Todas');
+
+          // 1. Filtrar locales según doble filtro
+          var filtrados = baseDatos.filter(function (c) {
+            if (prov !== 'Todas' && c.geo.provincia !== prov) return false;
+            if (sub === 'Todas') return true;
+            if (sub.indexOf('COMUNA:') === 0) {
+              return c.geo.comunaCaba === sub.slice(7);
+            }
+            if (sub.indexOf('BARRIO:') === 0) {
+              return norm(c.geo.barrioCaba) === norm(sub.slice(7));
+            }
+            if (sub.indexOf('MUNI:') === 0) {
+              return norm(c.geo.municipio) === norm(sub.slice(5));
+            }
+            return true;
+          });
+
+          // 2. Calcular marcas únicas (sin repetir sucursales) para el desafío de 1 café por día
+          var marcasUnicasMap = new Map();
+          filtrados.forEach(function (c) {
+            if (!marcasUnicasMap.has(c.marcaKey)) {
+              marcasUnicasMap.set(c.marcaKey, c.nombre);
+            }
+          });
+          var totalLocales = filtrados.length;
+          var totalMarcasUnicas = marcasUnicasMap.size;
+          var sucursalesRepetidas = Math.max(0, totalLocales - totalMarcasUnicas);
+
+          // Etiqueta legible del lugar seleccionado
+          var lugarLabel = 'Todo Argentina';
+          if (prov !== 'Todas') {
+            if (sub === 'Todas') lugarLabel = prov;
+            else if (sub.indexOf('COMUNA:') === 0) lugarLabel = sub.slice(7) + ' · CABA';
+            else if (sub.indexOf('BARRIO:') === 0) lugarLabel = sub.slice(7) + ' (' + (BARRIO_A_COMUNA.get(norm(sub.slice(7))) || 'CABA') + ')';
+            else if (sub.indexOf('MUNI:') === 0) lugarLabel = sub.slice(5) + ', ' + prov;
+          }
+
+          // Render tarjeta desafío "Ruta de Cafés"
+          $('datos-challenge-box').innerHTML =
+            '<div>' +
+              '<span class="datos-ch-eyebrow">☕ Desafío Cofiteca · 1 café por día</span>' +
+              '<h3 class="datos-ch-title">¿Cuánto tardarías en conocer ' + esc(lugarLabel) + '?</h3>' +
+              '<p class="datos-ch-desc">Tomando un café distinto cada día y <b>contando una sola vez</b> las cafeterías que tienen varias sucursales' +
+              (sucursalesRepetidas > 0 ? ' (se agruparon <b>' + sucursalesRepetidas + '</b> sucursales repetidas).' : '.') + '</p>' +
+            '</div>' +
+            '<div class="datos-ch-stats">' +
+              '<div class="datos-ch-big">' + formatearDuracionDias(totalMarcasUnicas) + '</div>' +
+              '<div class="datos-ch-meta"><b>' + totalMarcasUnicas.toLocaleString('es-AR') + '</b> cafeterías únicas · <b>' + totalLocales.toLocaleString('es-AR') + '</b> locales totales relevados</div>' +
+            '</div>';
+
+          // 3. KPIs de población y cafés por habitante (Censo 2022)
+          var pobSeleccion = null;
+          var pobProvinciaRef = prov !== 'Todas' ? POB_PROVINCIAS.get(norm(prov)) : POB_PAIS_TOTAL;
+          var localesProvinciaRef = prov !== 'Todas'
+            ? baseDatos.filter(function (c) { return c.geo.provincia === prov; }).length
+            : baseDatos.length;
+
+          if (prov === 'Todas') {
+            pobSeleccion = POB_PAIS_TOTAL;
+          } else if (sub === 'Todas') {
+            pobSeleccion = pobProvinciaRef;
+          } else if (sub.indexOf('COMUNA:') === 0) {
+            pobSeleccion = COMUNA_POB_MAP.get(norm(sub.slice(7))) || null;
+          } else if (sub.indexOf('BARRIO:') === 0) {
+            pobSeleccion = BARRIO_POB_MAP.get(norm(sub.slice(7))) || POB_ZONAS.get(norm(sub.slice(7))) || null;
+          } else if (sub.indexOf('MUNI:') === 0) {
+            pobSeleccion = POB_ZONAS.get(norm(sub.slice(5))) || null;
+          }
+
+          var pcSel = calcularPerCapita(totalLocales, pobSeleccion);
+          var pcProv = calcularPerCapita(localesProvinciaRef, pobProvinciaRef);
+
+          var kpiHabitantesHtml = pcSel
+            ? '1 café c/ ' + pcSel.habPorCafe.toLocaleString('es-AR') + ' <small>hab. (' + pcSel.cada100k + '/100k)</small>'
+            : 'Sin dato censal local';
+          var subHabitantesHtml = pcSel
+            ? 'Población Censo 2022: ' + pcSel.poblacion.toLocaleString('es-AR') + ' hab.'
+            : 'Seleccioná una comuna, barrio o municipio con dato censal.';
+
+          var kpiProvHtml = pcProv
+            ? '1 café c/ ' + pcProv.habPorCafe.toLocaleString('es-AR') + ' <small>hab. (' + pcProv.cada100k + '/100k)</small>'
+            : '-';
+          var subProvHtml = prov === 'Todas'
+            ? 'Promedio nacional sobre 45.892.285 hab. (INDEC 2022).'
+            : 'Total ' + prov + ': ' + localesProvinciaRef + ' locales en ' + pobProvinciaRef.toLocaleString('es-AR') + ' hab.';
+
+          $('datos-kpis').innerHTML =
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Locales vs Marcas Únicas</span><span class="mkt-kpi-val">' + totalLocales.toLocaleString('es-AR') + ' <small>· ' + totalMarcasUnicas.toLocaleString('es-AR') + ' únicas</small></span><span class="mkt-kpi-sub">Total de puntos en el mapa frente a marcas sin sucursales repetidas.</span></div>' +
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Cafés / Habitante (' + esc(lugarLabel) + ')</span><span class="mkt-kpi-val">' + kpiHabitantesHtml + '</span><span class="mkt-kpi-sub">' + esc(subHabitantesHtml) + '</span></div>' +
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Referencia ' + esc(prov === 'Todas' ? 'Nacional' : 'Provincial (' + prov + ')') + '</span><span class="mkt-kpi-val">' + kpiProvHtml + '</span><span class="mkt-kpi-sub">' + esc(subProvHtml) + '</span></div>';
+
+          // 4. Tabla desglosada según nivel de filtro
+          var wrap = $('datos-table-wrap');
+
+          if (prov === 'Todas') {
+            $('datos-table-title').textContent = 'Desglose por Provincia / Jurisdicción (Censo 2022)';
+            var filasProv = Object.keys(POB_PROVINCIAS_RAW).map(function (nombreProv) {
+              var items = baseDatos.filter(function (c) { return c.geo.provincia === nombreProv; });
+              var unicas = new Set(items.map(function (c) { return c.marcaKey; })).size;
+              var pob = POB_PROVINCIAS_RAW[nombreProv];
+              var pc = calcularPerCapita(items.length, pob);
+              return { nombre: nombreProv, locales: items.length, unicas: unicas, pob: pob, pc: pc };
+            }).sort(function (a, b) { return b.locales - a.locales; });
+
+            wrap.innerHTML =
+              '<table class="datos-table">' +
+                '<thead><tr><th>Provincia / Jurisdicción</th><th>Locales</th><th>Marcas únicas (Días)</th><th>Población 2022</th><th>Cafés por habitante</th><th>Cada 100k hab.</th></tr></thead>' +
+                '<tbody>' +
+                  filasProv.map(function (r) {
+                    var txtHab = r.pc ? '1 c/ ' + r.pc.habPorCafe.toLocaleString('es-AR') + ' hab.' : 'Sin locales aún';
+                    var txt100 = r.pc ? r.pc.cada100k : '0,0';
+                    return '<tr onclick="cofiSeleccionarFilaDatos(\'' + esc(r.nombre) + '\', \'Todas\')">' +
+                      '<td class="datos-num">' + esc(r.nombre) + '</td>' +
+                      '<td class="datos-num">' + r.locales + '</td>' +
+                      '<td><b>' + r.unicas + '</b> días</td>' +
+                      '<td>' + r.pob.toLocaleString('es-AR') + '</td>' +
+                      '<td>' + txtHab + '</td>' +
+                      '<td>' + txt100 + '</td>' +
+                    '</tr>';
+                  }).join('') +
+                '</tbody>' +
+              '</table>';
+            return;
+          }
+
+          if (prov === 'CABA') {
+            $('datos-table-title').textContent = 'CABA · Desglose por Comuna y Barrio (Censo 2022)';
+            var filasCaba = [];
+            CABA_COMUNAS_BARRIOS.forEach(function (comObj) {
+              var itemsCom = baseDatos.filter(function (c) { return c.geo.provincia === 'CABA' && c.geo.comunaCaba === comObj.comuna; });
+              var unicasCom = new Set(itemsCom.map(function (c) { return c.marcaKey; })).size;
+              var pcCom = calcularPerCapita(itemsCom.length, comObj.pobComuna);
+              filasCaba.push({
+                esComuna: true,
+                nombre: comObj.comuna,
+                subtexto: comObj.barrios.map(function (b) { return b.nombre; }).join(', '),
+                subVal: 'COMUNA:' + comObj.comuna,
+                locales: itemsCom.length,
+                unicas: unicasCom,
+                pob: comObj.pobComuna,
+                pc: pcCom
+              });
+
+              comObj.barrios.forEach(function (bObj) {
+                var itemsBar = baseDatos.filter(function (c) { return c.geo.provincia === 'CABA' && norm(c.geo.barrioCaba) === norm(bObj.nombre); });
+                var unicasBar = new Set(itemsBar.map(function (c) { return c.marcaKey; })).size;
+                var pcBar = calcularPerCapita(itemsBar.length, bObj.pob);
+                filasCaba.push({
+                  esComuna: false,
+                  comuna: comObj.comuna,
+                  nombre: bObj.nombre,
+                  subVal: 'BARRIO:' + bObj.nombre,
+                  locales: itemsBar.length,
+                  unicas: unicasBar,
+                  pob: bObj.pob,
+                  pc: pcBar
+                });
+              });
+            });
+
+            wrap.innerHTML =
+              '<table class="datos-table">' +
+                '<thead><tr><th>Comuna / Barrio</th><th>Locales</th><th>Marcas únicas (Días)</th><th>Población 2022</th><th>Cafés por habitante</th><th>Cada 100k hab.</th></tr></thead>' +
+                '<tbody>' +
+                  filasCaba.map(function (r) {
+                    var activa = sub === r.subVal ? ' class="active-row"' : '';
+                    var txtHab = r.pc ? '1 c/ ' + r.pc.habPorCafe.toLocaleString('es-AR') + ' hab.' : 'Sin locales aún';
+                    var txt100 = r.pc ? r.pc.cada100k : '0,0';
+                    var tituloCelda = r.esComuna
+                      ? '🏛️ ' + esc(r.nombre) + ' <span style="font-weight:400;font-size:.75rem;color:var(--coffee-500);">(' + esc(r.subtexto) + ')</span>'
+                      : '&nbsp;&nbsp;&nbsp;↳ ' + esc(r.nombre) + '<span class="datos-badge-comuna">' + esc(r.comuna) + '</span>';
+                    return '<tr' + activa + ' onclick="cofiSeleccionarFilaDatos(\'CABA\', \'' + esc(r.subVal) + '\')">' +
+                      '<td class="' + (r.esComuna ? 'datos-num' : '') + '">' + tituloCelda + '</td>' +
+                      '<td class="datos-num">' + r.locales + '</td>' +
+                      '<td><b>' + r.unicas + '</b> días</td>' +
+                      '<td>' + r.pob.toLocaleString('es-AR') + '</td>' +
+                      '<td>' + txtHab + '</td>' +
+                      '<td>' + txt100 + '</td>' +
+                    '</tr>';
+                  }).join('') +
+                '</tbody>' +
+              '</table>';
+            return;
+          }
+
+          // Otras provincias (incluida Provincia de Buenos Aires: GBA, Mar del Plata, La Plata, Interior)
+          $('datos-table-title').textContent = prov + ' · Desglose por Municipio / Ciudad';
+          var itemsProvincia = baseDatos.filter(function (c) { return c.geo.provincia === prov; });
+          var muniMap = new Map();
+          itemsProvincia.forEach(function (c) {
+            var m = c.geo.municipio;
+            if (!muniMap.has(m)) muniMap.set(m, []);
+            muniMap.get(m).push(c);
+          });
+
+          var filasMuni = Array.from(muniMap.entries()).map(function (entry) {
+            var nombreM = entry[0], list = entry[1];
+            var unicas = new Set(list.map(function (c) { return c.marcaKey; })).size;
+            var pob = POB_ZONAS.get(norm(nombreM)) || null;
+            var pc = calcularPerCapita(list.length, pob);
+            return { nombre: nombreM, subVal: 'MUNI:' + nombreM, locales: list.length, unicas: unicas, pob: pob, pc: pc };
+          }).sort(function (a, b) { return b.locales - a.locales; });
+
+          wrap.innerHTML =
+            '<table class="datos-table">' +
+              '<thead><tr><th>Municipio / Ciudad</th><th>Locales</th><th>Marcas únicas (Días)</th><th>Población 2022</th><th>Cafés por habitante</th><th>Cada 100k hab.</th></tr></thead>' +
+              '<tbody>' +
+                filasMuni.map(function (r) {
+                  var activa = sub === r.subVal ? ' class="active-row"' : '';
+                  var txtPob = r.pob ? r.pob.toLocaleString('es-AR') : 'Sin dato censal';
+                  var txtHab = r.pc ? '1 c/ ' + r.pc.habPorCafe.toLocaleString('es-AR') + ' hab.' : '-';
+                  var txt100 = r.pc ? r.pc.cada100k : '-';
+                  return '<tr' + activa + ' onclick="cofiSeleccionarFilaDatos(\'' + esc(prov) + '\', \'' + esc(r.subVal) + '\')">' +
+                    '<td class="datos-num">' + esc(r.nombre) + '</td>' +
+                    '<td class="datos-num">' + r.locales + '</td>' +
+                    '<td><b>' + r.unicas + '</b> días</td>' +
+                    '<td>' + txtPob + '</td>' +
+                    '<td>' + txtHab + '</td>' +
+                    '<td>' + txt100 + '</td>' +
+                  '</tr>';
+                }).join('') +
+              '</tbody>' +
+            '</table>';
         };
 
         // ---------- Mercado: Motor Universal de Polos Gastronómicos y Zonas en Desarrollo ----------
@@ -1002,8 +1642,6 @@ const datosJSON = JSON.stringify({
           });
           if (!delBarrio.length) return null;
 
-          // Medoid comercial: elige el local real del barrio con mayor concentración de vecinos en 650 m.
-          // Evita que un local aislado o la mediana caigan en zonas residenciales sin comercio.
           var mejor = delBarrio[0];
           var maxVecinos = -1;
 
@@ -1026,8 +1664,6 @@ const datosJSON = JSON.stringify({
 
         function obtenerZonasRecomendadasDinamicas(ciu, zon) {
           var esNacional = ciu === 'Todas';
-
-          // Filtro universal de entornos sin frente comercial apto o periféricos residenciales/industriales
           var EXCLUSION_UNIVERSAL = /(terminal|ferroautomotora|estacion norte|estacion sur|estacion terminal|parque industrial|zona industrial|ruta nacional|ruta provincial|autopista|colectora|cementerio|puerto industrial|mercado central|mercado de abasto|aeropuerto|aeroparque|las avenidas|cerrito|san salvador|juramento|puerto comercial|villa soldati|villa lugano|villa riachuelo|nueva pompeya)/;
 
           var pool = baseDatos.filter(function (c) {
@@ -1037,7 +1673,6 @@ const datosJSON = JSON.stringify({
             if (c.ciudad !== ciu) return false;
             if (zon !== 'Todas' && c.zona !== zon) return false;
 
-            // Descarta puntos aislados a más de 1.1 km del núcleo comercial real de su propio barrio
             if (c.zona && c.zona !== '-' && c.zona !== 'Sin Zona') {
               var core = obtenerNucleoComercialZona(c.ciudad, c.zona);
               if (core && core.total >= 2 && calcularD(c.lat, c.lon, core.lat, core.lon) > 1.1) {
@@ -1054,10 +1689,6 @@ const datosJSON = JSON.stringify({
             });
           }
 
-          // Análisis espacial multi-escala en el entorno real de cada punto:
-          // - vecinos350m: saturación en las mismas 3 cuadras
-          // - vecinos650m: continuidad comercial inmediata del corredor
-          // - vecinos1500m: escala del polo gastronómico barrial
           var analizados = pool.map(function (c) {
             var vecinos350m = 0;
             var vecinos650m = 0;
@@ -1086,8 +1717,6 @@ const datosJSON = JSON.stringify({
             };
           });
 
-          // Exigencia de continuidad comercial real (<= 650 m): impide que zonas residenciales linderas
-          // hereden puntaje de un polo lejano sin tener actividad comercial propia.
           var conEcosistema = analizados.filter(function (item) {
             return (item.vecinos650m >= 2 || (item.vecinos650m >= 1 && item.ticketEntorno >= 1.22)) && item.vecinos350m <= 6;
           });
@@ -1102,7 +1731,6 @@ const datosJSON = JSON.stringify({
               ? c.ciudadReal + ' (' + c.ciudad.replace(' y Gran Buenos Aires', '') + ')'
               : c.ciudad;
 
-            // Zona en desarrollo: continuidad comercial inmediata (2-5 cafés a 650m) con baja saturación en la cuadra (0-1 a 350m)
             var esEnDesarrollo = item.vecinos650m >= 2 && item.vecinos650m <= 5 && item.vecinos350m <= 1;
             var tipoCorredor = esEnDesarrollo ? 'Zona en desarrollo' : 'Polo gastronómico';
 
@@ -1111,7 +1739,6 @@ const datosJSON = JSON.stringify({
             var v350Final = item.vecinos350m;
             var v1500Final = item.vecinos1500m;
 
-            // Anclamos los polos consolidados al medoid comercial real del barrio
             if (!esEnDesarrollo && c.zona && c.zona !== '-' && c.zona !== 'Sin Zona') {
               var coreBarrio = obtenerNucleoComercialZona(c.ciudad, c.zona);
               if (coreBarrio && coreBarrio.total >= 2) {
@@ -1234,15 +1861,6 @@ const datosJSON = JSON.stringify({
           item.marker.openPopup();
         };
 
-        function calcularPerCapita(nLocales, poblacion) {
-          if (!poblacion || poblacion <= 0 || nLocales <= 0) return null;
-          return {
-            poblacion: poblacion,
-            habPorCafe: Math.round(poblacion / nLocales),
-            cada100k: Number(((nLocales / poblacion) * 100000).toFixed(1))
-          };
-        }
-
         function resumirGrupoMercado(items, poblacion) {
           var n = items.length || 1;
           var promTicket = Number((items.reduce(function (s, x) { return s + x.mkt.t; }, 0) / n).toFixed(2));
@@ -1311,7 +1929,7 @@ const datosJSON = JSON.stringify({
           var notaPob = '';
           if (esNacional) {
             pobScope = POB_PAIS_TOTAL;
-            notaPob = 'Base total país Censo 2022 (~46,0M hab.).';
+            notaPob = 'Base total país Censo 2022 (45,89M hab.).';
           } else if (zon !== 'Todas') {
             var pobBarrio = POB_ZONAS.get(norm(zon));
             if (pobBarrio) {
@@ -1749,7 +2367,7 @@ const datosJSON = JSON.stringify({
             if (opt) { $('select-ciudad').value = c; window.cofiActualizarZonas(); }
           }
           if (q) $('input-busqueda').value = q;
-          if (v && ['ranking', 'tostadores', 'mercado'].indexOf(v) !== -1) {
+          if (v && ['ranking', 'tostadores', 'mercado', 'datos'].indexOf(v) !== -1) {
             window.cofiSwitchTab(v);
           }
         }
@@ -2008,6 +2626,11 @@ const datosJSON = JSON.stringify({
         $('select-ciudad').innerHTML = '<option value="Todas">Región / Ciudad</option>' + opcionesCiudades;
         $('select-mercado-ciudad').innerHTML = '<option value="Todas">Todo el país (Región / Ciudad)</option>' + opcionesCiudades;
 
+        // Poblar selector de Provincias en pestaña Datos
+        var listaProvinciasOrdenadas = Object.keys(POB_PROVINCIAS_RAW);
+        $('select-datos-provincia').innerHTML = '<option value="Todas">Todo Argentina (24 Jurisdicciones)</option>' +
+          listaProvinciasOrdenadas.map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('');
+
         var ciudadesTost = Array.from(new Set(tostadoresDatos.map(function (t) { return t.ciudad; }))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
         $('select-ciudad-tostadores').innerHTML = '<option value="Todas">Todas las Ciudades</option>' + ciudadesTost.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
 
@@ -2027,6 +2650,7 @@ const datosJSON = JSON.stringify({
         renderRecientes();
         window.cofiActualizarZonas();
         window.cofiActualizarMercadoZonas();
+        window.cofiActualizarDatosSubfiltro();
         window.cofiActualizarMetricas();
         hidratarDesdeURL();
         var vieneConFiltro = $('input-busqueda').value.trim() !== '' || $('select-ciudad').value !== 'Todas';
