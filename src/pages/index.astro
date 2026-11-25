@@ -2116,7 +2116,7 @@ const datosJSON = JSON.stringify({
                 '<tbody>' +
                   filasProv.map(function (r) {
                     var txtHab = r.pc ? '1 c/ ' + r.pc.habPorCafe.toLocaleString('es-AR') + ' hab.' : 'Sin locales aún';
-                    return '<tr onclick="cofiSeleccionarFilaDatos('' + esc(r.nombre) + '', 'Todas')">' +
+                    return '<tr onclick="cofiSeleccionarFilaDatos(\'' + esc(r.nombre) + '\', \'Todas\')">' +
                       '<td class="datos-num">' + esc(r.nombre) + '</td>' +
                       '<td class="datos-num">' + r.locales + '</td>' +
                       '<td><b>' + r.unicas + '</b> días</td>' +
@@ -2177,7 +2177,7 @@ const datosJSON = JSON.stringify({
                     var tituloCelda = r.esComuna
                       ? '🏛️ ' + esc(r.nombre) + ' <span style="font-weight:400;font-size:.75rem;color:var(--coffee-500);">(' + esc(r.subtexto) + ')</span>'
                       : '&nbsp;&nbsp;&nbsp;↳ ' + esc(r.nombre) + '<span class="datos-badge-comuna">' + esc(r.comuna) + '</span>';
-                    return '<tr' + activa + ' onclick="cofiSeleccionarFilaDatos('CABA', '' + esc(r.subVal) + '')">' +
+                    return '<tr' + activa + ' onclick="cofiSeleccionarFilaDatos(\'CABA\', \'' + esc(r.subVal) + '\')">' +
                       '<td class="' + (r.esComuna ? 'datos-num' : '') + '">' + tituloCelda + '</td>' +
                       '<td class="datos-num">' + r.locales + '</td>' +
                       '<td><b>' + r.unicas + '</b> días</td>' +
@@ -2220,7 +2220,7 @@ const datosJSON = JSON.stringify({
                   var txtGastro = r.econ ? r.econ[1].toLocaleString('es-AR') : '-';
                   var txtOfi = r.econ ? r.econ[3] + '%' : '-';
                   var txtEst = r.econ ? '±' + r.econ[5] + '%' : '-';
-                  return '<tr' + activa + ' onclick="cofiSeleccionarFilaDatos('' + esc(prov) + '', '' + esc(r.subVal) + '')">' +
+                  return '<tr' + activa + ' onclick="cofiSeleccionarFilaDatos(\'' + esc(prov) + '\', \'' + esc(r.subVal) + '\')">' +
                     '<td class="datos-num">' + esc(r.nombre) + '</td>' +
                     '<td class="datos-num">' + r.locales + '</td>' +
                     '<td><b>' + r.unicas + '</b> días</td>' +
