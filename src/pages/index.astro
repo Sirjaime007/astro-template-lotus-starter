@@ -150,8 +150,7 @@ const datosJSON = JSON.stringify({
     @media (max-width: 600px) { .data-header h1 { font-size: 1.5rem; } }
 
     .view-tabs { display: flex; gap: 8px; margin-top: 1rem; flex-wrap: wrap; }
-    @media (max-width: 680px) { .view-tabs { display: grid; grid-template-columns: repeat(5,1fr); gap: 4px; } }
-    @media (max-width: 460px) { .view-tabs { grid-template-columns: repeat(3,1fr); } }
+    @media (max-width: 680px) { .view-tabs { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; } }
     .view-tab-btn { background: transparent; border: 1px solid rgba(196,167,125,.4); color: var(--coffee-500); font-size: .78rem; font-weight: 600; cursor: pointer; padding: 10px 14px; min-height: 40px; border-radius: var(--radius-sm); transition: var(--transition); text-transform: uppercase; letter-spacing: .05em; }
     @media (max-width: 680px) { .view-tab-btn { padding: 8px 4px; font-size: .66rem; letter-spacing: .01em; } }
     .view-tab-btn:hover { background: rgba(196,167,125,.1); color: var(--coffee-900); border-color: var(--tan-500); }
@@ -345,7 +344,7 @@ const datosJSON = JSON.stringify({
       line-height: 1.4;
     }
 
-    /* Tabla en pestaña Datos */
+    /* Tabla en pestaña Datos & Importaciones */
     .datos-table-wrap {
       width: 100%;
       overflow-x: auto;
@@ -661,6 +660,7 @@ const datosJSON = JSON.stringify({
           <button class="view-tab-btn" onclick="cofiSwitchTab('tostadores')" id="btn-tab-tostadores">Tostadores</button>
           <button class="view-tab-btn" onclick="cofiSwitchTab('mercado')" id="btn-tab-mercado">Mercado</button>
           <button class="view-tab-btn" onclick="cofiSwitchTab('datos')" id="btn-tab-datos">Datos</button>
+          <button class="view-tab-btn" onclick="cofiSwitchTab('importaciones')" id="btn-tab-importaciones">Importaciones</button>
         </div>
       </div>
 
@@ -741,7 +741,7 @@ const datosJSON = JSON.stringify({
         <div id="mkt-zones-grid"></div>
       </div>
 
-      <!-- ===== PESTAÑA: DATOS ===== -->
+      <!-- ===== PESTAÑA: DATOS (LIMPIA SIN EMPLEO NI ESTACIONALIDAD) ===== -->
       <div class="buscador-ui hidden" id="vista-datos">
         <div class="search-controls cols-2">
           <select id="select-datos-provincia" class="input-moderno" onchange="cofiActualizarDatosSubfiltro(); cofiRenderDatos()">
@@ -754,33 +754,33 @@ const datosJSON = JSON.stringify({
 
         <div class="datos-challenge-card" id="datos-challenge-box"></div>
 
-        <div class="mkt-kpis" id="datos-kpis" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));"></div>
+        <div class="mkt-kpis" id="datos-kpis" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));"></div>
 
         <div class="mkt-section-head">
-          <h2 class="mkt-section-title" id="datos-table-title">Estadísticas por Provincia (Censo 2022 + Empleo Formal)</h2>
+          <h2 class="mkt-section-title" id="datos-table-title">Estadísticas por Provincia (Censo 2022)</h2>
           <button type="button" class="mkt-reset-btn hidden" id="datos-reset-btn" onclick="cofiResetDatos()">← Ver todo Argentina</button>
         </div>
 
         <div class="datos-table-wrap" id="datos-table-wrap"></div>
+      </div>
 
-        <!-- ===== BLOQUE COMERCIO EXTERIOR: IMPORTACIONES CAFÉ VERDE CRUDO ===== -->
-        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(196,167,125,.4);">
-          <div class="mkt-section-head" style="margin-bottom: .9rem;">
-            <div>
-              <span style="display:block;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:.2rem;">Comercio Exterior Argentina · Posición NCM 0901.11.10</span>
-              <h2 class="mkt-section-title">Importación de Café Verde sin Tostar (Especialidad vs. Comercial)</h2>
-            </div>
-            <div class="quick-chips" style="margin-bottom:0;" id="imp-filter-bar">
-              <button type="button" class="filter-pill active" data-seg="ALL" onclick="cofiFiltrarImportaciones('ALL', this)">Todos (25.205 tn)</button>
-              <button type="button" class="filter-pill" data-seg="ESP" onclick="cofiFiltrarImportaciones('ESP', this)">Especialidad ≥ USD 7/kg (9,13%)</button>
-              <button type="button" class="filter-pill" data-seg="MICRO" onclick="cofiFiltrarImportaciones('MICRO', this)">Micro-lotes ≥ USD 10,50/kg</button>
-              <button type="button" class="filter-pill" data-seg="COM" onclick="cofiFiltrarImportaciones('COM', this)">Comercial &lt; USD 7/kg</button>
-            </div>
+      <!-- ===== PESTAÑA: IMPORTACIONES DE CAFÉ ===== -->
+      <div class="buscador-ui hidden" id="vista-importaciones">
+        <div class="mkt-section-head" style="margin-bottom: 1rem;">
+          <div>
+            <span style="display:block;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:.2rem;">Comercio Exterior Argentina · Posición NCM 0901.11.10</span>
+            <h2 class="mkt-section-title">Importación de Café Verde sin Tostar (Especialidad vs. Comercial)</h2>
           </div>
-
-          <div class="mkt-kpis" id="imp-kpis" style="grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));"></div>
-          <div class="datos-table-wrap" id="imp-table-wrap"></div>
+          <div class="quick-chips" style="margin-bottom:0;" id="imp-filter-bar">
+            <button type="button" class="filter-pill active" data-seg="ALL" onclick="cofiFiltrarImportaciones('ALL', this)">Todos (25.205 tn)</button>
+            <button type="button" class="filter-pill" data-seg="ESP" onclick="cofiFiltrarImportaciones('ESP', this)">Especialidad ≥ USD 7/kg (9,13%)</button>
+            <button type="button" class="filter-pill" data-seg="MICRO" onclick="cofiFiltrarImportaciones('MICRO', this)">Micro-lotes ≥ USD 10,50/kg</button>
+            <button type="button" class="filter-pill" data-seg="COM" onclick="cofiFiltrarImportaciones('COM', this)">Comercial &lt; USD 7/kg</button>
+          </div>
         </div>
+
+        <div class="mkt-kpis" id="imp-kpis" style="grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));"></div>
+        <div class="datos-table-wrap" id="imp-table-wrap"></div>
       </div>
     </div>
   </div>
@@ -869,7 +869,6 @@ const datosJSON = JSON.stringify({
           'Tierra del Fuego': 185732
         };
 
-        // Comunas y Barrios de CABA (Censo 2022)
         var CABA_COMUNAS_BARRIOS = [
           { comuna: 'Comuna 1', pobComuna: 223554, barrios: [
             { nombre: 'Retiro', pob: 67177 }, { nombre: 'San Nicolás', pob: 36421 }, { nombre: 'Puerto Madero', pob: 10935 },
@@ -932,7 +931,6 @@ const datosJSON = JSON.stringify({
           });
         });
 
-        // Diccionario Censo 2022 desambiguado por Provincia + Municipio/Departamento/Partido
         var POB_MUNICIPIOS_POR_PROV = {
           'Buenos Aires': {
             'General Pueyrredón': 667082, 'Mar del Plata': 667082,
@@ -1295,7 +1293,6 @@ const datosJSON = JSON.stringify({
         var POB_REGIONES = new Map(Object.entries(POB_REGIONES_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
         var POB_ZONAS = new Map(Object.entries(POB_ZONAS_RAW).map(function (e) { return [norm(e[0]), e[1]]; }));
 
-        // Índice normalizado Provincia -> Municipio -> Población
         var POB_MUNI_INDEX = new Map();
         Object.keys(POB_MUNICIPIOS_POR_PROV).forEach(function (provName) {
           var subMap = new Map();
@@ -1311,7 +1308,6 @@ const datosJSON = JSON.stringify({
           var mNorm = norm(municipio);
           if (provMap) {
             if (provMap.has(mNorm)) return provMap.get(mNorm);
-            // Búsqueda parcial segura si el nombre incluye partido o ciudad
             var encontrado = null;
             provMap.forEach(function (val, key) {
               if (!encontrado && key.length >= 5 && (mNorm.indexOf(key) !== -1 || key.indexOf(mNorm) !== -1)) {
@@ -1320,7 +1316,6 @@ const datosJSON = JSON.stringify({
             });
             if (encontrado) return encontrado;
           }
-          // Evitar colisiones ambiguas como "Capital" o "San Nicolás" fuera de su provincia
           if (mNorm !== 'capital' && mNorm !== 'san nicolas' && mNorm !== 'san martin' && mNorm !== 'general san martin' && POB_ZONAS.has(mNorm)) {
             return POB_ZONAS.get(mNorm);
           }
@@ -1329,7 +1324,6 @@ const datosJSON = JSON.stringify({
 
         var POB_PAIS_TOTAL = 45892285;
 
-        // Clasificador geográfico con verificación de coordenadas GPS + texto para todas las hojas compartidas
         function clasificarGeografia(c) {
           var reg = norm(c.ciudad);
           var z = norm(c.zona);
@@ -1343,7 +1337,6 @@ const datosJSON = JSON.stringify({
           var barrioCaba = '';
           var comunaCaba = '';
 
-          // 1. Corrección prioritaria para Santa Fe si quedó cargada en otra pestaña
           var enSantaFeCoords = (lat >= -34.45 && lat <= -28.0 && lon >= -62.88 && lon <= -58.9 &&
             (/(rosario|santa fe|venado tuerto|general lopez|rafaela|reconquista|san lorenzo|funes|roldan|esperanza|casilda|canada de gomez|villa constitucion|santo tome)/.test(txt) || lon > -61.85));
 
@@ -1380,7 +1373,6 @@ const datosJSON = JSON.stringify({
             provincia = 'Mendoza';
             municipio = c.ciudadReal || c.zona || 'Capital';
           } else if (reg.indexOf('tucuman') !== -1) {
-            // Hoja: Catamarca, Tucumán y Santiago del Estero
             if (/(catamarca|valle viejo|belen|fiambala|fray mamerto)/.test(txt) || (lon <= -65.55 && lat <= -27.55)) {
               provincia = 'Catamarca';
             } else if (/(santiago del estero|la banda|termas de rio hondo|rio hondo|fernandez|frias|anatuya)/.test(txt) || lon >= -64.65) {
@@ -1390,7 +1382,6 @@ const datosJSON = JSON.stringify({
             }
             municipio = c.ciudadReal || c.zona || provincia;
           } else if (reg.indexOf('corrientes') !== -1) {
-            // Hoja: Corrientes, Misiones, Entre Ríos, Formosa y Chaco
             if (/(entre rios|parana|concordia|gualeguaychu|colon|concepcion del uruguay|uruguay|federacion|chajari|victoria|diamante|gualeguay|villaguay|nogoya)/.test(txt) || lat <= -30.15) {
               provincia = 'Entre Ríos';
             } else if (/(misiones|posadas|iguazu|obera|eldorado|apostoles|san ignacio|guarani|cainguas)/.test(txt) || (lon >= -56.15 && lat >= -28.2)) {
@@ -1404,7 +1395,6 @@ const datosJSON = JSON.stringify({
             }
             municipio = c.ciudadReal || c.zona || provincia;
           } else if (reg.indexOf('salta') !== -1) {
-            // Hoja: Salta y Jujuy
             if (/(jujuy|purmamarca|tilcara|humahuaca|palpala|perico|libertador|manuel belgrano|el carmen|tumbaya|maimara)/.test(txt) || (lat >= -24.55 && lon <= -64.85)) {
               provincia = 'Jujuy';
             } else {
@@ -1412,7 +1402,6 @@ const datosJSON = JSON.stringify({
             }
             municipio = c.ciudadReal || c.zona || provincia;
           } else if (reg.indexOf('neuquen') !== -1) {
-            // Hoja: Neuquén y Río Negro
             if (/(rio negro|bariloche|cipolletti|general roca|viedma|bolson|las grutas|villa regina|adolfo alsina|san antonio|allen|catriel|cinco saltos)/.test(txt) || lat <= -40.25 || lon >= -67.95) {
               provincia = 'Río Negro';
             } else {
@@ -1420,7 +1409,6 @@ const datosJSON = JSON.stringify({
             }
             municipio = c.ciudadReal || c.zona || provincia;
           } else if (reg.indexOf('san juan') !== -1) {
-            // Hoja: San Juan, San Luis, La Rioja y La Pampa
             if (/(la pampa|santa rosa|general pico|maraco|toay|realico|eduardo castex)/.test(txt) || lat <= -35.0) {
               provincia = 'La Pampa';
             } else if (/(san luis|merlo|villa mercedes|juana koslay|potrero de los funes|pueyrredon|pedernera|carpinteria|cortaderas)/.test(txt) || (lon >= -67.35 && lat <= -31.85)) {
@@ -1432,7 +1420,6 @@ const datosJSON = JSON.stringify({
             }
             municipio = c.ciudadReal || c.zona || provincia;
           } else if (reg.indexOf('chubut') !== -1) {
-            // Hoja: Chubut, Santa Cruz y Tierra del Fuego
             if (/(tierra del fuego|ushuaia|rio grande|tolhuin)/.test(txt) || lat <= -52.5) {
               provincia = 'Tierra del Fuego';
             } else if (/(santa cruz|calafate|rio gallegos|chalten|caleta olivia|guer aike|lago argentino|deseado)/.test(txt) || lat <= -46.0) {
@@ -1451,7 +1438,6 @@ const datosJSON = JSON.stringify({
           };
         }
 
-        // Normalización de marca para contar cafeterías con múltiples sucursales una sola vez
         function obtenerClaveMarcaUnica(nombre) {
           var n = norm(nombre);
           n = n.replace(/\([^)]*\)/g, ' ');
@@ -1648,7 +1634,7 @@ const datosJSON = JSON.stringify({
         };
 
         window.cofiSwitchTab = function (tab) {
-          ['mapa', 'ranking', 'tostadores', 'mercado', 'datos'].forEach(function (t) {
+          ['mapa', 'ranking', 'tostadores', 'mercado', 'datos', 'importaciones'].forEach(function (t) {
             $('vista-' + t).classList.toggle('hidden', t !== tab);
             $('btn-tab-' + t).classList.toggle('active', t === tab);
           });
@@ -1683,10 +1669,13 @@ const datosJSON = JSON.stringify({
           if (tab === 'datos') {
             window.cofiRenderDatos();
           }
+          if (tab === 'importaciones') {
+            window.cofiRenderImportaciones();
+          }
           sincronizarURL();
         };
 
-        // ---------- Pestaña DATOS ----------
+        // ---------- Pestaña DATOS (SÓLO MÉTRICAS CAFETERAS + CENSO 2022) ----------
         function calcularPerCapita(nLocales, poblacion) {
           if (!poblacion || poblacion <= 0 || nLocales <= 0) return null;
           return {
@@ -1754,7 +1743,297 @@ const datosJSON = JSON.stringify({
           window.cofiRenderDatos();
         };
 
-        // Base oficial de empleo privado formal por departamento (CLAE 2 dígitos)
+        window.cofiRenderDatos = function () {
+          var prov = $('select-datos-provincia').value;
+          var sub = $('select-datos-sub').value;
+          var resetBtn = $('datos-reset-btn');
+          resetBtn.classList.toggle('hidden', prov === 'Todas' && sub === 'Todas');
+
+          var filtrados = baseDatos.filter(function (c) {
+            if (prov !== 'Todas' && c.geo.provincia !== prov) return false;
+            if (sub === 'Todas') return true;
+            if (sub.indexOf('COMUNA:') === 0) return c.geo.comunaCaba === sub.slice(7);
+            if (sub.indexOf('BARRIO:') === 0) return norm(c.geo.barrioCaba) === norm(sub.slice(7));
+            if (sub.indexOf('MUNI:') === 0) return norm(c.geo.municipio) === norm(sub.slice(5));
+            return true;
+          });
+
+          var marcasUnicasMap = new Map();
+          filtrados.forEach(function (c) {
+            if (!marcasUnicasMap.has(c.marcaKey)) {
+              marcasUnicasMap.set(c.marcaKey, c.nombre);
+            }
+          });
+          var totalLocales = filtrados.length;
+          var totalMarcasUnicas = marcasUnicasMap.size;
+          var sucursalesRepetidas = Math.max(0, totalLocales - totalMarcasUnicas);
+
+          var lugarLabel = 'Todo Argentina';
+          if (prov !== 'Todas') {
+            if (sub === 'Todas') lugarLabel = prov;
+            else if (sub.indexOf('COMUNA:') === 0) lugarLabel = sub.slice(7) + ' · CABA';
+            else if (sub.indexOf('BARRIO:') === 0) lugarLabel = sub.slice(7) + ' (' + (BARRIO_A_COMUNA.get(norm(sub.slice(7))) || 'CABA') + ')';
+            else if (sub.indexOf('MUNI:') === 0) lugarLabel = sub.slice(5) + ', ' + prov;
+          }
+
+          $('datos-challenge-box').innerHTML =
+            '<div>' +
+              '<span class="datos-ch-eyebrow">☕ Desafío Cofiteca · 1 café por día</span>' +
+              '<h3 class="datos-ch-title">¿Cuánto tardarías en conocer ' + esc(lugarLabel) + '?</h3>' +
+              '<p class="datos-ch-desc">Tomando un café distinto cada día y <b>contando una sola vez</b> las cafeterías que tienen varias sucursales' +
+              (sucursalesRepetidas > 0 ? ' (se agruparon <b>' + sucursalesRepetidas + '</b> sucursales repetidas).' : '.') + '</p>' +
+            '</div>' +
+            '<div class="datos-ch-stats">' +
+              '<div class="datos-ch-big">' + formatearDuracionDias(totalMarcasUnicas) + '</div>' +
+              '<div class="datos-ch-meta"><b>' + totalMarcasUnicas.toLocaleString('es-AR') + '</b> cafeterías únicas · <b>' + totalLocales.toLocaleString('es-AR') + '</b> locales totales relevados</div>' +
+            '</div>';
+
+          var pobSeleccion = null;
+          var pobProvinciaRef = prov !== 'Todas' ? POB_PROVINCIAS.get(norm(prov)) : POB_PAIS_TOTAL;
+
+          if (prov === 'Todas') {
+            pobSeleccion = POB_PAIS_TOTAL;
+          } else if (sub === 'Todas') {
+            pobSeleccion = pobProvinciaRef;
+          } else if (sub.indexOf('COMUNA:') === 0) {
+            pobSeleccion = COMUNA_POB_MAP.get(norm(sub.slice(7))) || null;
+          } else if (sub.indexOf('BARRIO:') === 0) {
+            pobSeleccion = BARRIO_POB_MAP.get(norm(sub.slice(7))) || null;
+          } else if (sub.indexOf('MUNI:') === 0) {
+            pobSeleccion = buscarPoblacionMunicipio(prov, sub.slice(5));
+          }
+
+          var pcSel = calcularPerCapita(totalLocales, pobSeleccion);
+          var ratioSucursales = totalMarcasUnicas > 0 ? (totalLocales / totalMarcasUnicas).toFixed(2).replace('.', ',') : '1,00';
+
+          var kpiHabitantesHtml = pcSel
+            ? '1 café c/ ' + pcSel.habPorCafe.toLocaleString('es-AR') + ' <small>hab. (' + pcSel.cada100k + '/100k)</small>'
+            : 'Sin dato censal local';
+          var subHabitantesHtml = pcSel
+            ? 'Población Censo 2022: ' + pcSel.poblacion.toLocaleString('es-AR') + ' hab.'
+            : 'Seleccioná una comuna, barrio o municipio con dato censal.';
+
+          $('datos-kpis').innerHTML =
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Locales vs Marcas Únicas</span><span class="mkt-kpi-val">' + totalLocales.toLocaleString('es-AR') + ' <small>· ' + totalMarcasUnicas.toLocaleString('es-AR') + ' únicas</small></span><span class="mkt-kpi-sub">Total de puntos en el mapa frente a marcas sin sucursales repetidas.</span></div>' +
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Cafés / Habitante (' + esc(lugarLabel) + ')</span><span class="mkt-kpi-val">' + kpiHabitantesHtml + '</span><span class="mkt-kpi-sub">' + esc(subHabitantesHtml) + '</span></div>' +
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Expansión de Cadenas / Sucursales</span><span class="mkt-kpi-val">' + ratioSucursales + ' <small>locales / marca</small></span><span class="mkt-kpi-sub">' + (sucursalesRepetidas > 0 ? sucursalesRepetidas.toLocaleString('es-AR') + ' sucursales adicionales en este recorte.' : 'Todas son marcas independientes sin sucursales.') + '</span></div>';
+
+          var wrap = $('datos-table-wrap');
+
+          if (prov === 'Todas') {
+            $('datos-table-title').textContent = 'Desglose por Provincia / Jurisdicción (Censo 2022)';
+            var filasProv = Object.keys(POB_PROVINCIAS_RAW).map(function (nombreProv) {
+              var items = baseDatos.filter(function (c) { return c.geo.provincia === nombreProv; });
+              var unicas = new Set(items.map(function (c) { return c.marcaKey; })).size;
+              var pob = POB_PROVINCIAS_RAW[nombreProv];
+              var pc = calcularPerCapita(items.length, pob);
+              return { nombre: nombreProv, locales: items.length, unicas: unicas, pob: pob, pc: pc };
+            }).sort(function (a, b) { return b.locales - a.locales; });
+
+            wrap.innerHTML =
+              '<table class="datos-table">' +
+                '<thead><tr><th>Provincia / Jurisdicción</th><th>Locales</th><th>Marcas únicas (Días)</th><th>Población 2022</th><th>Cafés por habitante</th><th>Cada 100k hab.</th></tr></thead>' +
+                '<tbody>' +
+                  filasProv.map(function (r) {
+                    var txtHab = r.pc ? '1 c/ ' + r.pc.habPorCafe.toLocaleString('es-AR') + ' hab.' : 'Sin locales aún';
+                    var txt100 = r.pc ? r.pc.cada100k : '0,0';
+                    return '<tr onclick="cofiSeleccionarFilaDatos(\'' + esc(r.nombre) + '\', \'Todas\')">' +
+                      '<td class="datos-num">' + esc(r.nombre) + '</td>' +
+                      '<td class="datos-num">' + r.locales + '</td>' +
+                      '<td><b>' + r.unicas + '</b> días</td>' +
+                      '<td>' + r.pob.toLocaleString('es-AR') + '</td>' +
+                      '<td>' + txtHab + '</td>' +
+                      '<td>' + txt100 + '</td>' +
+                    '</tr>';
+                  }).join('') +
+                '</tbody>' +
+              '</table>';
+            return;
+          }
+
+          if (prov === 'CABA') {
+            $('datos-table-title').textContent = 'CABA · Desglose por Comuna y Barrio (Censo 2022)';
+            var filasCaba = [];
+            CABA_COMUNAS_BARRIOS.forEach(function (comObj) {
+              var itemsCom = baseDatos.filter(function (c) { return c.geo.provincia === 'CABA' && c.geo.comunaCaba === comObj.comuna; });
+              var unicasCom = new Set(itemsCom.map(function (c) { return c.marcaKey; })).size;
+              var pcCom = calcularPerCapita(itemsCom.length, comObj.pobComuna);
+              filasCaba.push({
+                esComuna: true,
+                nombre: comObj.comuna,
+                subtexto: comObj.barrios.map(function (b) { return b.nombre; }).join(', '),
+                subVal: 'COMUNA:' + comObj.comuna,
+                locales: itemsCom.length,
+                unicas: unicasCom,
+                pob: comObj.pobComuna,
+                pc: pcCom
+              });
+
+              comObj.barrios.forEach(function (bObj) {
+                var itemsBar = baseDatos.filter(function (c) { return c.geo.provincia === 'CABA' && norm(c.geo.barrioCaba) === norm(bObj.nombre); });
+                var unicasBar = new Set(itemsBar.map(function (c) { return c.marcaKey; })).size;
+                var pcBar = calcularPerCapita(itemsBar.length, bObj.pob);
+                filasCaba.push({
+                  esComuna: false,
+                  comuna: comObj.comuna,
+                  nombre: bObj.nombre,
+                  subVal: 'BARRIO:' + bObj.nombre,
+                  locales: itemsBar.length,
+                  unicas: unicasBar,
+                  pob: bObj.pob,
+                  pc: pcBar
+                });
+              });
+            });
+
+            wrap.innerHTML =
+              '<table class="datos-table">' +
+                '<thead><tr><th>Comuna / Barrio</th><th>Locales</th><th>Marcas únicas (Días)</th><th>Población 2022</th><th>Cafés por habitante</th><th>Cada 100k hab.</th></tr></thead>' +
+                '<tbody>' +
+                  filasCaba.map(function (r) {
+                    var activa = sub === r.subVal ? ' class="active-row"' : '';
+                    var txtHab = r.pc ? '1 c/ ' + r.pc.habPorCafe.toLocaleString('es-AR') + ' hab.' : 'Sin locales aún';
+                    var txt100 = r.pc ? r.pc.cada100k : '0,0';
+                    var tituloCelda = r.esComuna
+                      ? '🏛️ ' + esc(r.nombre) + ' <span style="font-weight:400;font-size:.75rem;color:var(--coffee-500);">(' + esc(r.subtexto) + ')</span>'
+                      : '&nbsp;&nbsp;&nbsp;↳ ' + esc(r.nombre) + '<span class="datos-badge-comuna">' + esc(r.comuna) + '</span>';
+                    return '<tr' + activa + ' onclick="cofiSeleccionarFilaDatos(\'CABA\', \'' + esc(r.subVal) + '\')">' +
+                      '<td class="' + (r.esComuna ? 'datos-num' : '') + '">' + tituloCelda + '</td>' +
+                      '<td class="datos-num">' + r.locales + '</td>' +
+                      '<td><b>' + r.unicas + '</b> días</td>' +
+                      '<td>' + r.pob.toLocaleString('es-AR') + '</td>' +
+                      '<td>' + txtHab + '</td>' +
+                      '<td>' + txt100 + '</td>' +
+                    '</tr>';
+                  }).join('') +
+                '</tbody>' +
+              '</table>';
+            return;
+          }
+
+          $('datos-table-title').textContent = prov + ' · Desglose por Municipio / Departamento (Censo 2022)';
+          var itemsProvincia = baseDatos.filter(function (c) { return c.geo.provincia === prov; });
+          var muniMap = new Map();
+          itemsProvincia.forEach(function (c) {
+            var m = c.geo.municipio;
+            if (!muniMap.has(m)) muniMap.set(m, []);
+            muniMap.get(m).push(c);
+          });
+
+          var filasMuni = Array.from(muniMap.entries()).map(function (entry) {
+            var nombreM = entry[0], list = entry[1];
+            var unicas = new Set(list.map(function (c) { return c.marcaKey; })).size;
+            var pob = buscarPoblacionMunicipio(prov, nombreM);
+            var pc = calcularPerCapita(list.length, pob);
+            return { nombre: nombreM, subVal: 'MUNI:' + nombreM, locales: list.length, unicas: unicas, pob: pob, pc: pc };
+          }).sort(function (a, b) { return b.locales - a.locales; });
+
+          wrap.innerHTML =
+            '<table class="datos-table">' +
+              '<thead><tr><th>Municipio / Departamento</th><th>Locales</th><th>Marcas únicas (Días)</th><th>Población 2022</th><th>Cafés por habitante</th><th>Cada 100k hab.</th></tr></thead>' +
+              '<tbody>' +
+                filasMuni.map(function (r) {
+                  var activa = sub === r.subVal ? ' class="active-row"' : '';
+                  var txtPob = r.pob ? r.pob.toLocaleString('es-AR') : 'Sin dato censal';
+                  var txtHab = r.pc ? '1 c/ ' + r.pc.habPorCafe.toLocaleString('es-AR') + ' hab.' : '-';
+                  var txt100 = r.pc ? r.pc.cada100k : '-';
+                  return '<tr' + activa + ' onclick="cofiSeleccionarFilaDatos(\'' + esc(prov) + '\', \'' + esc(r.subVal) + '\')">' +
+                    '<td class="datos-num">' + esc(r.nombre) + '</td>' +
+                    '<td class="datos-num">' + r.locales + '</td>' +
+                    '<td><b>' + r.unicas + '</b> días</td>' +
+                    '<td>' + txtPob + '</td>' +
+                    '<td>' + txtHab + '</td>' +
+                    '<td>' + txt100 + '</td>' +
+                  '</tr>';
+                }).join('') +
+              '</tbody>' +
+            '</table>';
+        };
+
+        // ---------- Pestaña IMPORTACIONES DE CAFÉ ----------
+        var IMPORTACIONES_CAFE = [
+          { pais: "Brasil", kg: 22746008, cif: 132550472.67, usdKg: 5.83, seg: "Comercial / Volumen" },
+          { pais: "Colombia", kg: 1441353, cif: 13229815.73, usdKg: 9.18, seg: "Especialidad" },
+          { pais: "Perú", kg: 280810, cif: 2496624.46, usdKg: 8.89, seg: "Especialidad" },
+          { pais: "Honduras", kg: 168590, cif: 1434548.6, usdKg: 8.51, seg: "Especialidad" },
+          { pais: "Guatemala", kg: 122989, cif: 1149292.25, usdKg: 9.34, seg: "Especialidad" },
+          { pais: "Etiopía", kg: 65884, cif: 659225.57, usdKg: 10.01, seg: "Especialidad" },
+          { pais: "India", kg: 60000, cif: 277560.0, usdKg: 4.63, seg: "Comercial / Volumen" },
+          { pais: "Viet Nam", kg: 58400, cif: 253437.99, usdKg: 4.34, seg: "Comercial / Volumen" },
+          { pais: "Nicaragua", kg: 50835, cif: 465326.83, usdKg: 9.15, seg: "Especialidad" },
+          { pais: "Kenya", kg: 50760, cif: 489981.73, usdKg: 9.65, seg: "Especialidad" },
+          { pais: "Bolivia", kg: 45055, cif: 355208.01, usdKg: 7.88, seg: "Especialidad" },
+          { pais: "Madagascar", kg: 38400, cif: 168632.83, usdKg: 4.39, seg: "Comercial / Volumen" },
+          { pais: "Costa Rica", kg: 27815, cif: 280431.47, usdKg: 10.08, seg: "Especialidad" },
+          { pais: "El Salvador", kg: 15539, cif: 167302.57, usdKg: 10.77, seg: "Micro-lotes / Alta Gama" },
+          { pais: "Rwanda", kg: 14700, cif: 166455.01, usdKg: 11.32, seg: "Micro-lotes / Alta Gama" },
+          { pais: "México", kg: 10080, cif: 109713.76, usdKg: 10.88, seg: "Micro-lotes / Alta Gama" },
+          { pais: "Burundi", kg: 4980, cif: 44264.91, usdKg: 8.89, seg: "Especialidad" },
+          { pais: "Indonesia", kg: 2520, cif: 24913.05, usdKg: 9.89, seg: "Especialidad" },
+          { pais: "Panamá", kg: 360, cif: 13973.05, usdKg: 38.81, seg: "Micro-lotes / Alta Gama" },
+          { pais: "Ecuador", kg: 25, cif: 370.87, usdKg: 14.83, seg: "Micro-lotes / Alta Gama" }
+        ];
+
+        var impFiltroSeg = 'ALL';
+
+        window.cofiFiltrarImportaciones = function (seg, btnEl) {
+          impFiltroSeg = seg;
+          if (btnEl) {
+            document.querySelectorAll('#imp-filter-bar .filter-pill').forEach(function (b) {
+              b.classList.remove('active');
+            });
+            btnEl.classList.add('active');
+          }
+          window.cofiRenderImportaciones();
+        };
+
+        window.cofiRenderImportaciones = function () {
+          var kpiBox = $('imp-kpis');
+          var tableWrap = $('imp-table-wrap');
+          if (!kpiBox || !tableWrap) return;
+
+          var filtrados = IMPORTACIONES_CAFE.filter(function (r) {
+            if (impFiltroSeg === 'ESP') return r.usdKg >= 7.0;
+            if (impFiltroSeg === 'MICRO') return r.usdKg >= 10.5;
+            if (impFiltroSeg === 'COM') return r.usdKg < 7.0;
+            return true;
+          });
+
+          var sumKg = filtrados.reduce(function (acc, r) { return acc + r.kg; }, 0);
+          var sumCif = filtrados.reduce(function (acc, r) { return acc + r.cif; }, 0);
+          var promUsdKg = sumKg > 0 ? (sumCif / sumKg) : 0;
+          var bolsas = Math.round(sumKg / 60);
+          var tazasEst = Math.round((sumKg * 0.85) / 0.018 / 1000000);
+
+          kpiBox.innerHTML =
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Volumen Importado</span><span class="mkt-kpi-val">' + sumKg.toLocaleString('es-AR') + ' <small>kg</small></span><span class="mkt-kpi-sub">' + bolsas.toLocaleString('es-AR') + ' bolsas estándar de 60 kg.</span></div>' +
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Valor CIF Total</span><span class="mkt-kpi-val">USD ' + Math.round(sumCif).toLocaleString('es-AR') + '</span><span class="mkt-kpi-sub">Especialidad representa 13,66% de las divisas cafeteras.</span></div>' +
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Precio Promedio CIF</span><span class="mkt-kpi-val">USD ' + promUsdKg.toFixed(2).replace('.', ',') + ' <small>/ kg</small></span><span class="mkt-kpi-sub">Promedio especialidad: USD 9,16 / kg verde.</span></div>' +
+            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Equivalente en Tazas</span><span class="mkt-kpi-val">~' + tazasEst.toLocaleString('es-AR') + ' M <small>tazas</small></span><span class="mkt-kpi-sub">Estimado con 15% merma de tueste y 18 g por bebida.</span></div>';
+
+          tableWrap.innerHTML =
+            '<table class="datos-table">' +
+              '<thead><tr><th>País de Origen</th><th>Segmento (Precio CIF)</th><th>Peso Neto (kg)</th><th>Bolsas (60 kg)</th><th>Monto CIF (USD)</th><th>Precio CIF (USD/kg)</th><th>% Volumen</th></tr></thead>' +
+              '<tbody>' +
+                filtrados.map(function (r) {
+                  var badgeColor = r.usdKg >= 10.5 ? '#7c2d12' : (r.usdKg >= 7.0 ? '#166534' : '#57534e');
+                  var badgeBg = r.usdKg >= 10.5 ? '#ffedd5' : (r.usdKg >= 7.0 ? '#dcfce7' : '#f5f5f4');
+                  var pctVol = sumKg > 0 ? ((r.kg / sumKg) * 100).toFixed(2).replace('.', ',') + '%' : '0%';
+                  return '<tr>' +
+                    '<td class="datos-num">' + esc(r.pais) + '</td>' +
+                    '<td><span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:700;background:' + badgeBg + ';color:' + badgeColor + ';">' + esc(r.seg) + '</span></td>' +
+                    '<td class="datos-num">' + r.kg.toLocaleString('es-AR') + '</td>' +
+                    '<td>' + Math.round(r.kg / 60).toLocaleString('es-AR') + '</td>' +
+                    '<td>$' + Math.round(r.cif).toLocaleString('es-AR') + '</td>' +
+                    '<td class="datos-num">USD ' + r.usdKg.toFixed(2).replace('.', ',') + '</td>' +
+                    '<td>' + pctVol + '</td>' +
+                  '</tr>';
+                }).join('') +
+              '</tbody>' +
+            '</table>';
+        };
+
+        // ---------- Datos Macroeconómicos (SOLO PARA MOTOR DE ZONAS POTENCIALES EN MERCADO) ----------
         // [puestosPrivados, puestosGastro, pctGastro, pctOficinas, puestosAlojamiento, estacionalidadPct]
         var ECONOMIA_DEPTOS_RAW = {
           "CABA|CABA": [828193, 38493, 4.65, 18.84, 7005, 2.2],
@@ -1894,347 +2173,6 @@ const datosJSON = JSON.stringify({
           return null;
         }
 
-        var GASTRO_PROVINCIAS = {
-          "CABA": 38493, "Buenos Aires": 89140, "Córdoba": 18210, "Santa Fe": 15430,
-          "Mendoza": 9280, "Tucumán": 3890, "Salta": 4420, "Jujuy": 1890,
-          "Entre Ríos": 3910, "Misiones": 2840, "Corrientes": 3120, "Chaco": 1950,
-          "Santiago del Estero": 1680, "San Juan": 1720, "Neuquén": 3980, "Río Negro": 4890,
-          "San Luis": 1540, "Catamarca": 1120, "La Rioja": 1090, "La Pampa": 1180,
-          "Chubut": 2850, "Santa Cruz": 1790, "Tierra del Fuego": 1490, "Formosa": 920
-        };
-
-        var IMPORTACIONES_CAFE = [
-          { pais: "Brasil", kg: 22746008, cif: 132550472.67, usdKg: 5.83, seg: "Comercial / Volumen" },
-          { pais: "Colombia", kg: 1441353, cif: 13229815.73, usdKg: 9.18, seg: "Especialidad" },
-          { pais: "Perú", kg: 280810, cif: 2496624.46, usdKg: 8.89, seg: "Especialidad" },
-          { pais: "Honduras", kg: 168590, cif: 1434548.6, usdKg: 8.51, seg: "Especialidad" },
-          { pais: "Guatemala", kg: 122989, cif: 1149292.25, usdKg: 9.34, seg: "Especialidad" },
-          { pais: "Etiopía", kg: 65884, cif: 659225.57, usdKg: 10.01, seg: "Especialidad" },
-          { pais: "India", kg: 60000, cif: 277560.0, usdKg: 4.63, seg: "Comercial / Volumen" },
-          { pais: "Viet Nam", kg: 58400, cif: 253437.99, usdKg: 4.34, seg: "Comercial / Volumen" },
-          { pais: "Nicaragua", kg: 50835, cif: 465326.83, usdKg: 9.15, seg: "Especialidad" },
-          { pais: "Kenya", kg: 50760, cif: 489981.73, usdKg: 9.65, seg: "Especialidad" },
-          { pais: "Bolivia", kg: 45055, cif: 355208.01, usdKg: 7.88, seg: "Especialidad" },
-          { pais: "Madagascar", kg: 38400, cif: 168632.83, usdKg: 4.39, seg: "Comercial / Volumen" },
-          { pais: "Costa Rica", kg: 27815, cif: 280431.47, usdKg: 10.08, seg: "Especialidad" },
-          { pais: "El Salvador", kg: 15539, cif: 167302.57, usdKg: 10.77, seg: "Micro-lotes / Alta Gama" },
-          { pais: "Rwanda", kg: 14700, cif: 166455.01, usdKg: 11.32, seg: "Micro-lotes / Alta Gama" },
-          { pais: "México", kg: 10080, cif: 109713.76, usdKg: 10.88, seg: "Micro-lotes / Alta Gama" },
-          { pais: "Burundi", kg: 4980, cif: 44264.91, usdKg: 8.89, seg: "Especialidad" },
-          { pais: "Indonesia", kg: 2520, cif: 24913.05, usdKg: 9.89, seg: "Especialidad" },
-          { pais: "Panamá", kg: 360, cif: 13973.05, usdKg: 38.81, seg: "Micro-lotes / Alta Gama" },
-          { pais: "Ecuador", kg: 25, cif: 370.87, usdKg: 14.83, seg: "Micro-lotes / Alta Gama" }
-        ];
-
-        var impFiltroSeg = 'ALL';
-
-        window.cofiFiltrarImportaciones = function (seg, btnEl) {
-          impFiltroSeg = seg;
-          if (btnEl) {
-            document.querySelectorAll('#imp-filter-bar .filter-pill').forEach(function (b) {
-              b.classList.remove('active');
-            });
-            btnEl.classList.add('active');
-          }
-          window.cofiRenderImportaciones();
-        };
-
-        window.cofiRenderImportaciones = function () {
-          var kpiBox = $('imp-kpis');
-          var tableWrap = $('imp-table-wrap');
-          if (!kpiBox || !tableWrap) return;
-
-          var filtrados = IMPORTACIONES_CAFE.filter(function (r) {
-            if (impFiltroSeg === 'ESP') return r.usdKg >= 7.0;
-            if (impFiltroSeg === 'MICRO') return r.usdKg >= 10.5;
-            if (impFiltroSeg === 'COM') return r.usdKg < 7.0;
-            return true;
-          });
-
-          var sumKg = filtrados.reduce(function (acc, r) { return acc + r.kg; }, 0);
-          var sumCif = filtrados.reduce(function (acc, r) { return acc + r.cif; }, 0);
-          var promUsdKg = sumKg > 0 ? (sumCif / sumKg) : 0;
-          var bolsas = Math.round(sumKg / 60);
-          var tazasEst = Math.round((sumKg * 0.85) / 0.018 / 1000000);
-
-          kpiBox.innerHTML =
-            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Volumen Importado</span><span class="mkt-kpi-val">' + sumKg.toLocaleString('es-AR') + ' <small>kg</small></span><span class="mkt-kpi-sub">' + bolsas.toLocaleString('es-AR') + ' bolsas estándar de 60 kg.</span></div>' +
-            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Valor CIF Total</span><span class="mkt-kpi-val">USD ' + Math.round(sumCif).toLocaleString('es-AR') + '</span><span class="mkt-kpi-sub">Especialidad representa 13,66% de las divisas cafeteras.</span></div>' +
-            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Precio Promedio CIF</span><span class="mkt-kpi-val">USD ' + promUsdKg.toFixed(2).replace('.', ',') + ' <small>/ kg</small></span><span class="mkt-kpi-sub">Promedio especialidad: USD 9,16 / kg verde.</span></div>' +
-            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Equivalente en Tazas</span><span class="mkt-kpi-val">~' + tazasEst.toLocaleString('es-AR') + ' M <small>tazas</small></span><span class="mkt-kpi-sub">Estimado con 15% merma de tueste y 18 g por bebida.</span></div>';
-
-          tableWrap.innerHTML =
-            '<table class="datos-table">' +
-              '<thead><tr><th>País de Origen</th><th>Segmento (Precio CIF)</th><th>Peso Neto (kg)</th><th>Bolsas (60 kg)</th><th>Monto CIF (USD)</th><th>Precio CIF (USD/kg)</th></tr></thead>' +
-              '<tbody>' +
-                filtrados.map(function (r) {
-                  var badgeColor = r.usdKg >= 10.5 ? '#7c2d12' : (r.usdKg >= 7.0 ? '#166534' : '#57534e');
-                  var badgeBg = r.usdKg >= 10.5 ? '#ffedd5' : (r.usdKg >= 7.0 ? '#dcfce7' : '#f5f5f4');
-                  return '<tr>' +
-                    '<td class="datos-num">' + esc(r.pais) + '</td>' +
-                    '<td><span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:700;background:' + badgeBg + ';color:' + badgeColor + ';">' + esc(r.seg) + '</span></td>' +
-                    '<td class="datos-num">' + r.kg.toLocaleString('es-AR') + '</td>' +
-                    '<td>' + Math.round(r.kg / 60).toLocaleString('es-AR') + '</td>' +
-                    '<td>$' + Math.round(r.cif).toLocaleString('es-AR') + '</td>' +
-                    '<td class="datos-num">USD ' + r.usdKg.toFixed(2).replace('.', ',') + '</td>' +
-                  '</tr>';
-                }).join('') +
-              '</tbody>' +
-            '</table>';
-        };
-
-        window.cofiRenderDatos = function () {
-          var prov = $('select-datos-provincia').value;
-          var sub = $('select-datos-sub').value;
-          var resetBtn = $('datos-reset-btn');
-          resetBtn.classList.toggle('hidden', prov === 'Todas' && sub === 'Todas');
-
-          var filtrados = baseDatos.filter(function (c) {
-            if (prov !== 'Todas' && c.geo.provincia !== prov) return false;
-            if (sub === 'Todas') return true;
-            if (sub.indexOf('COMUNA:') === 0) return c.geo.comunaCaba === sub.slice(7);
-            if (sub.indexOf('BARRIO:') === 0) return norm(c.geo.barrioCaba) === norm(sub.slice(7));
-            if (sub.indexOf('MUNI:') === 0) return norm(c.geo.municipio) === norm(sub.slice(5));
-            return true;
-          });
-
-          var marcasUnicasMap = new Map();
-          filtrados.forEach(function (c) {
-            if (!marcasUnicasMap.has(c.marcaKey)) {
-              marcasUnicasMap.set(c.marcaKey, c.nombre);
-            }
-          });
-          var totalLocales = filtrados.length;
-          var totalMarcasUnicas = marcasUnicasMap.size;
-          var sucursalesRepetidas = Math.max(0, totalLocales - totalMarcasUnicas);
-
-          var lugarLabel = 'Todo Argentina';
-          if (prov !== 'Todas') {
-            if (sub === 'Todas') lugarLabel = prov;
-            else if (sub.indexOf('COMUNA:') === 0) lugarLabel = sub.slice(7) + ' · CABA';
-            else if (sub.indexOf('BARRIO:') === 0) lugarLabel = sub.slice(7) + ' (' + (BARRIO_A_COMUNA.get(norm(sub.slice(7))) || 'CABA') + ')';
-            else if (sub.indexOf('MUNI:') === 0) lugarLabel = sub.slice(5) + ', ' + prov;
-          }
-
-          $('datos-challenge-box').innerHTML =
-            '<div>' +
-              '<span class="datos-ch-eyebrow">☕ Desafío Cofiteca · 1 café por día</span>' +
-              '<h3 class="datos-ch-title">¿Cuánto tardarías en conocer ' + esc(lugarLabel) + '?</h3>' +
-              '<p class="datos-ch-desc">Tomando un café distinto cada día y <b>contando una sola vez</b> las cafeterías que tienen varias sucursales' +
-              (sucursalesRepetidas > 0 ? ' (se agruparon <b>' + sucursalesRepetidas + '</b> sucursales repetidas).' : '.') + '</p>' +
-            '</div>' +
-            '<div class="datos-ch-stats">' +
-              '<div class="datos-ch-big">' + formatearDuracionDias(totalMarcasUnicas) + '</div>' +
-              '<div class="datos-ch-meta"><b>' + totalMarcasUnicas.toLocaleString('es-AR') + '</b> cafeterías únicas · <b>' + totalLocales.toLocaleString('es-AR') + '</b> locales totales relevados</div>' +
-            '</div>';
-
-          var pobSeleccion = null;
-          var pobProvinciaRef = prov !== 'Todas' ? POB_PROVINCIAS.get(norm(prov)) : POB_PAIS_TOTAL;
-          var localesProvinciaRef = prov !== 'Todas'
-            ? baseDatos.filter(function (c) { return c.geo.provincia === prov; }).length
-            : baseDatos.length;
-
-          var puestosGastro = 0;
-          var perfilDemandaVal = '241.933 puestos';
-          var perfilDemandaSub = '+5,48% crecimiento interanual en gastronomía (CLAE 56)';
-
-          if (prov === 'Todas') {
-            pobSeleccion = POB_PAIS_TOTAL;
-            puestosGastro = 241933;
-          } else if (sub === 'Todas') {
-            pobSeleccion = pobProvinciaRef;
-            puestosGastro = GASTRO_PROVINCIAS[prov] || 0;
-            var econCap = buscarEconomiaDepto(prov, 'Capital') || buscarEconomiaDepto(prov, 'CABA') || buscarEconomiaDepto(prov, 'Rosario');
-            if (econCap) {
-              perfilDemandaVal = econCap[3] + '% oficinas';
-              perfilDemandaSub = 'Estacionalidad en cabecera: ±' + econCap[5] + '% anual';
-            } else {
-              perfilDemandaVal = 'Provincial';
-              perfilDemandaSub = 'Seleccioná un departamento para ver oficinas y estacionalidad';
-            }
-          } else if (sub.indexOf('COMUNA:') === 0) {
-            pobSeleccion = COMUNA_POB_MAP.get(norm(sub.slice(7))) || null;
-            var econCaba = ECONOMIA_DEPTOS.get('caba|caba');
-            puestosGastro = econCaba ? econCaba[1] : 38493;
-            perfilDemandaVal = '18,84% oficinas';
-            perfilDemandaSub = 'Estacionalidad anual CABA: ±2,2% (demanda estable)';
-          } else if (sub.indexOf('BARRIO:') === 0) {
-            pobSeleccion = BARRIO_POB_MAP.get(norm(sub.slice(7))) || null;
-            puestosGastro = 38493;
-            perfilDemandaVal = '18,84% oficinas';
-            perfilDemandaSub = 'Mercado CABA · Estacionalidad anual: ±2,2%';
-          } else if (sub.indexOf('MUNI:') === 0) {
-            var muniNombre = sub.slice(5);
-            pobSeleccion = buscarPoblacionMunicipio(prov, muniNombre);
-            var econMuni = buscarEconomiaDepto(prov, muniNombre);
-            if (econMuni) {
-              puestosGastro = econMuni[1];
-              perfilDemandaVal = econMuni[3] + '% oficinas';
-              perfilDemandaSub = 'Gastro: ' + econMuni[2] + '% empleo priv. · Estacionalidad: ±' + econMuni[5] + '%';
-            } else {
-              perfilDemandaVal = 'Sin desglose';
-              perfilDemandaSub = 'Dato laboral disponible a nivel cabecera departamental';
-            }
-          }
-
-          var pcSel = calcularPerCapita(totalLocales, pobSeleccion);
-
-          var kpiHabitantesHtml = pcSel
-            ? '1 café c/ ' + pcSel.habPorCafe.toLocaleString('es-AR') + ' <small>hab. (' + pcSel.cada100k + '/100k)</small>'
-            : 'Sin dato censal local';
-          var subHabitantesHtml = pcSel
-            ? 'Población Censo 2022: ' + pcSel.poblacion.toLocaleString('es-AR') + ' hab.'
-            : 'Seleccioná una comuna, barrio o municipio con dato censal.';
-
-          var kpiGastroHtml = puestosGastro > 0 ? puestosGastro.toLocaleString('es-AR') + ' <small>puestos</small>' : '-';
-          var subGastroHtml = puestosGastro > 0
-            ? 'Equivale a ' + (totalLocales > 0 ? (puestosGastro / totalLocales).toFixed(1).replace('.', ',') : '-') + ' puestos gastro por café relevado'
-            : 'Sin dato laboral específico para este recorte';
-
-          $('datos-kpis').innerHTML =
-            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Locales vs Marcas Únicas</span><span class="mkt-kpi-val">' + totalLocales.toLocaleString('es-AR') + ' <small>· ' + totalMarcasUnicas.toLocaleString('es-AR') + ' únicas</small></span><span class="mkt-kpi-sub">Total de puntos en el mapa frente a marcas sin sucursales repetidas.</span></div>' +
-            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Cafés / Habitante (' + esc(lugarLabel) + ')</span><span class="mkt-kpi-val">' + kpiHabitantesHtml + '</span><span class="mkt-kpi-sub">' + esc(subHabitantesHtml) + '</span></div>' +
-            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Empleo Gastronómico (CLAE 56)</span><span class="mkt-kpi-val">' + kpiGastroHtml + '</span><span class="mkt-kpi-sub">' + esc(subGastroHtml) + '</span></div>' +
-            '<div class="mkt-kpi-card"><span class="mkt-kpi-lbl">Perfil de Demanda Diurna</span><span class="mkt-kpi-val">' + esc(perfilDemandaVal) + '</span><span class="mkt-kpi-sub">' + esc(perfilDemandaSub) + '</span></div>';
-
-          var wrap = $('datos-table-wrap');
-
-          if (prov === 'Todas') {
-            $('datos-table-title').textContent = 'Desglose por Provincia / Jurisdicción (Censo 2022 + Empleo Formal)';
-            var filasProv = Object.keys(POB_PROVINCIAS_RAW).map(function (nombreProv) {
-              var items = baseDatos.filter(function (c) { return c.geo.provincia === nombreProv; });
-              var unicas = new Set(items.map(function (c) { return c.marcaKey; })).size;
-              var pob = POB_PROVINCIAS_RAW[nombreProv];
-              var pc = calcularPerCapita(items.length, pob);
-              var gastro = GASTRO_PROVINCIAS[nombreProv] || 0;
-              return { nombre: nombreProv, locales: items.length, unicas: unicas, pob: pob, pc: pc, gastro: gastro };
-            }).sort(function (a, b) { return b.locales - a.locales; });
-
-            wrap.innerHTML =
-              '<table class="datos-table">' +
-                '<thead><tr><th>Provincia / Jurisdicción</th><th>Locales</th><th>Marcas únicas (Días)</th><th>Población 2022</th><th>Cafés por habitante</th><th>Puestos Gastro</th></tr></thead>' +
-                '<tbody>' +
-                  filasProv.map(function (r) {
-                    var txtHab = r.pc ? '1 c/ ' + r.pc.habPorCafe.toLocaleString('es-AR') + ' hab.' : 'Sin locales aún';
-                    return '<tr onclick="cofiSeleccionarFilaDatos(\'' + esc(r.nombre) + '\', \'Todas\')">' +
-                      '<td class="datos-num">' + esc(r.nombre) + '</td>' +
-                      '<td class="datos-num">' + r.locales + '</td>' +
-                      '<td><b>' + r.unicas + '</b> días</td>' +
-                      '<td>' + r.pob.toLocaleString('es-AR') + '</td>' +
-                      '<td>' + txtHab + '</td>' +
-                      '<td>' + r.gastro.toLocaleString('es-AR') + '</td>' +
-                    '</tr>';
-                  }).join('') +
-                '</tbody>' +
-              '</table>';
-            window.cofiRenderImportaciones();
-            return;
-          }
-
-          if (prov === 'CABA') {
-            $('datos-table-title').textContent = 'CABA · Desglose por Comuna y Barrio (Censo 2022)';
-            var filasCaba = [];
-            CABA_COMUNAS_BARRIOS.forEach(function (comObj) {
-              var itemsCom = baseDatos.filter(function (c) { return c.geo.provincia === 'CABA' && c.geo.comunaCaba === comObj.comuna; });
-              var unicasCom = new Set(itemsCom.map(function (c) { return c.marcaKey; })).size;
-              var pcCom = calcularPerCapita(itemsCom.length, comObj.pobComuna);
-              filasCaba.push({
-                esComuna: true,
-                nombre: comObj.comuna,
-                subtexto: comObj.barrios.map(function (b) { return b.nombre; }).join(', '),
-                subVal: 'COMUNA:' + comObj.comuna,
-                locales: itemsCom.length,
-                unicas: unicasCom,
-                pob: comObj.pobComuna,
-                pc: pcCom
-              });
-
-              comObj.barrios.forEach(function (bObj) {
-                var itemsBar = baseDatos.filter(function (c) { return c.geo.provincia === 'CABA' && norm(c.geo.barrioCaba) === norm(bObj.nombre); });
-                var unicasBar = new Set(itemsBar.map(function (c) { return c.marcaKey; })).size;
-                var pcBar = calcularPerCapita(itemsBar.length, bObj.pob);
-                filasCaba.push({
-                  esComuna: false,
-                  comuna: comObj.comuna,
-                  nombre: bObj.nombre,
-                  subVal: 'BARRIO:' + bObj.nombre,
-                  locales: itemsBar.length,
-                  unicas: unicasBar,
-                  pob: bObj.pob,
-                  pc: pcBar
-                });
-              });
-            });
-
-            wrap.innerHTML =
-              '<table class="datos-table">' +
-                '<thead><tr><th>Comuna / Barrio</th><th>Locales</th><th>Marcas únicas (Días)</th><th>Población 2022</th><th>Cafés por habitante</th><th>Cada 100k hab.</th></tr></thead>' +
-                '<tbody>' +
-                  filasCaba.map(function (r) {
-                    var activa = sub === r.subVal ? ' class="active-row"' : '';
-                    var txtHab = r.pc ? '1 c/ ' + r.pc.habPorCafe.toLocaleString('es-AR') + ' hab.' : 'Sin locales aún';
-                    var txt100 = r.pc ? r.pc.cada100k : '0,0';
-                    var tituloCelda = r.esComuna
-                      ? '🏛️ ' + esc(r.nombre) + ' <span style="font-weight:400;font-size:.75rem;color:var(--coffee-500);">(' + esc(r.subtexto) + ')</span>'
-                      : '&nbsp;&nbsp;&nbsp;↳ ' + esc(r.nombre) + '<span class="datos-badge-comuna">' + esc(r.comuna) + '</span>';
-                    return '<tr' + activa + ' onclick="cofiSeleccionarFilaDatos(\'CABA\', \'' + esc(r.subVal) + '\')">' +
-                      '<td class="' + (r.esComuna ? 'datos-num' : '') + '">' + tituloCelda + '</td>' +
-                      '<td class="datos-num">' + r.locales + '</td>' +
-                      '<td><b>' + r.unicas + '</b> días</td>' +
-                      '<td>' + r.pob.toLocaleString('es-AR') + '</td>' +
-                      '<td>' + txtHab + '</td>' +
-                      '<td>' + txt100 + '</td>' +
-                    '</tr>';
-                  }).join('') +
-                '</tbody>' +
-              '</table>';
-            window.cofiRenderImportaciones();
-            return;
-          }
-
-          $('datos-table-title').textContent = prov + ' · Desglose por Municipio / Departamento (Censo 2022 + Empleo Formal)';
-          var itemsProvincia = baseDatos.filter(function (c) { return c.geo.provincia === prov; });
-          var muniMap = new Map();
-          itemsProvincia.forEach(function (c) {
-            var m = c.geo.municipio;
-            if (!muniMap.has(m)) muniMap.set(m, []);
-            muniMap.get(m).push(c);
-          });
-
-          var filasMuni = Array.from(muniMap.entries()).map(function (entry) {
-            var nombreM = entry[0], list = entry[1];
-            var unicas = new Set(list.map(function (c) { return c.marcaKey; })).size;
-            var pob = buscarPoblacionMunicipio(prov, nombreM);
-            var pc = calcularPerCapita(list.length, pob);
-            var econ = buscarEconomiaDepto(prov, nombreM);
-            return { nombre: nombreM, subVal: 'MUNI:' + nombreM, locales: list.length, unicas: unicas, pob: pob, pc: pc, econ: econ };
-          }).sort(function (a, b) { return b.locales - a.locales; });
-
-          wrap.innerHTML =
-            '<table class="datos-table">' +
-              '<thead><tr><th>Municipio / Departamento</th><th>Locales</th><th>Marcas únicas</th><th>Población 2022</th><th>Puestos Gastro</th><th>% Oficinas</th><th>Estacionalidad</th></tr></thead>' +
-              '<tbody>' +
-                filasMuni.map(function (r) {
-                  var activa = sub === r.subVal ? ' class="active-row"' : '';
-                  var txtPob = r.pob ? r.pob.toLocaleString('es-AR') : 'Sin dato censal';
-                  var txtGastro = r.econ ? r.econ[1].toLocaleString('es-AR') : '-';
-                  var txtOfi = r.econ ? r.econ[3] + '%' : '-';
-                  var txtEst = r.econ ? '±' + r.econ[5] + '%' : '-';
-                  return '<tr' + activa + ' onclick="cofiSeleccionarFilaDatos(\'' + esc(prov) + '\', \'' + esc(r.subVal) + '\')">' +
-                    '<td class="datos-num">' + esc(r.nombre) + '</td>' +
-                    '<td class="datos-num">' + r.locales + '</td>' +
-                    '<td><b>' + r.unicas + '</b> días</td>' +
-                    '<td>' + txtPob + '</td>' +
-                    '<td>' + txtGastro + '</td>' +
-                    '<td>' + txtOfi + '</td>' +
-                    '<td>' + txtEst + '</td>' +
-                  '</tr>';
-                }).join('') +
-              '</tbody>' +
-            '</table>';
-          window.cofiRenderImportaciones();
-        };
-
         // ---------- Mercado: Motor Universal de Polos Gastronómicos y Zonas en Desarrollo ----------
         function obtenerNucleoComercialZona(ciudad, zona) {
           var delBarrio = baseDatos.filter(function (x) {
@@ -2354,23 +2292,36 @@ const datosJSON = JSON.stringify({
               }
             }
 
+            // Cruce con datos de empleo formal/oficinas y estacionalidad EXCLUSIVO para estimar demanda futura
+            var econ = buscarEconomiaDepto(c.geo.provincia, c.geo.municipio) ||
+                       (c.geo.provincia === 'CABA' ? ECONOMIA_DEPTOS.get('caba|caba') : null);
+            var pctOficinas = econ ? econ[3] : 6.0;
+            var estacionalidad = econ ? econ[5] : 10.0;
+
+            var bonoDemandaDiurna = pctOficinas >= 12 ? 1.4 : (pctOficinas >= 8 ? 0.8 : 0.2);
+            var ajusteEstacional = estacionalidad > 45 ? -0.9 : (estacionalidad <= 8 ? 0.5 : 0);
+
             var pobZ = POB_ZONAS.get(norm(nombreBarrio)) || POB_REGIONES.get(norm(c.ciudad)) || 60000;
             var esTuristica = /(pinamar|carilo|gesell|bariloche|angostura|san martin de los andes|ushuaia|calafate|iguazu|cafayate|carlos paz|calamuchita|merlo|chapadmalal|playa grande|alem|base naval|guemes|mendoza|salta|jujuy)/.test(
               norm(c.ciudad + ' ' + c.ciudadReal + ' ' + nombreBarrio)
             );
 
-            var publico = esEnDesarrollo
-              ? 'Expansión comercial lindera a corredor activo con margen para nueva apertura'
-              : esTuristica
-                ? 'Polo gastronómico y turístico de alto poder adquisitivo y rotación'
-                : pobZ >= 120000
-                  ? 'Polo gastronómico consolidado, oficinas, estudiantes y hábito diario'
-                  : 'Corredor comercial activo con flujo peatonal y demanda de cercanía';
+            var publico = pctOficinas >= 11
+              ? 'Alta demanda diurna de oficinas y corporativo (' + pctOficinas + '% empleo formal) con baja estacionalidad'
+              : estacionalidad >= 30
+                ? 'Plaza turística con fuerte pico estacional (±' + estacionalidad + '% anual) y alto gasto en temporada'
+                : esEnDesarrollo
+                  ? 'Expansión comercial lindera a corredor activo con margen para nueva apertura'
+                  : esTuristica
+                    ? 'Polo gastronómico y turístico de alto poder adquisitivo y rotación'
+                    : pobZ >= 120000
+                      ? 'Polo gastronómico consolidado, estudiantes y hábito diario estable'
+                      : 'Corredor comercial activo con flujo peatonal y demanda de cercanía';
 
             var bonoEcosistema = Math.min(4.5, (item.vecinos650m * 0.65) + (v1500Final * 0.18));
             var bonoDesarrollo = esEnDesarrollo ? 2.2 : 0.9;
             var penalizacionCercana = 1 + (v350Final * 0.42);
-            var rawScore = (((9.0 + bonoEcosistema + (c.mkt.a * 0.08)) * item.ticketEntorno) / penalizacionCercana) + bonoDesarrollo;
+            var rawScore = (((9.0 + bonoEcosistema + (c.mkt.a * 0.08)) * item.ticketEntorno) / penalizacionCercana) + bonoDesarrollo + bonoDemandaDiurna + ajusteEstacional;
             var score = Number(Math.min(19.5, Math.max(7.5, rawScore)).toFixed(1));
 
             return {
@@ -2967,7 +2918,7 @@ const datosJSON = JSON.stringify({
             if (opt) { $('select-ciudad').value = c; window.cofiActualizarZonas(); }
           }
           if (q) $('input-busqueda').value = q;
-          if (v && ['ranking', 'tostadores', 'mercado', 'datos'].indexOf(v) !== -1) {
+          if (v && ['ranking', 'tostadores', 'mercado', 'datos', 'importaciones'].indexOf(v) !== -1) {
             window.cofiSwitchTab(v);
           }
         }
